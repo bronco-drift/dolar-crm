@@ -1,5 +1,17 @@
 import { useEffect, useState } from 'react'
-import { porCasa, porFuente, useBolivares, useCotizaciones, valorVe } from '../lib/cotizaciones'
+import {
+  MAX_TASAS,
+  TASAS_DISPONIBLES,
+  getTasasElegidas,
+  porCasa,
+  porFuente,
+  porMoneda,
+  saveTasasElegidas,
+  useBolivares,
+  useCotizaciones,
+  useMonedas,
+  valorVe,
+} from '../lib/cotizaciones'
 
 const pesos = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -24,6 +36,9 @@ function haceCuanto(iso: string): string {
 export default function Landing() {
   const { cotizaciones, error } = useCotizaciones()
   const { bolivares: ve } = useBolivares()
+  const { monedas } = useMonedas()
+  const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
+  const [editando, setEditando] = useState(false)
   // Re-render por minuto para que el "hace X minutos" no quede congelado.
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -35,8 +50,41 @@ export default function Landing() {
   const oficial = porCasa(cotizaciones, 'oficial')
   const mep = porCasa(cotizaciones, 'bolsa')
   const cripto = porCasa(cotizaciones, 'cripto')
-  const bcv = valorVe(porFuente(ve, 'oficial'))
-  const paralelo = valorVe(porFuente(ve, 'paralelo'))
+
+  const valorTasa = (id: string): { nombre: string; valor: string } | null => {
+    switch (id) {
+      case 've-bcv': {
+        const v = valorVe(porFuente(ve, 'oficial'))
+        return v != null ? { nombre: 'BCV', valor: `Bs ${bolivares.format(v)}` } : null
+      }
+      case 've-paralelo': {
+        const v = valorVe(porFuente(ve, 'paralelo'))
+        return v != null ? { nombre: 'Dólar negro', valor: `Bs ${bolivares.format(v)}` } : null
+      }
+      case 'ars-eur': {
+        const c = porMoneda(monedas, 'EUR')
+        return c ? { nombre: 'Euro', valor: pesos.format(c.venta) } : null
+      }
+      case 'ars-brl': {
+        const c = porMoneda(monedas, 'BRL')
+        return c ? { nombre: 'Real', valor: pesos.format(c.venta) } : null
+      }
+      default:
+        return null
+    }
+  }
+
+  const toggleTasa = (id: string) => {
+    setTasas((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((t) => t !== id)
+        : prev.length < MAX_TASAS
+          ? [...prev, id]
+          : prev
+      saveTasasElegidas(next)
+      return next
+    })
+  }
 
   return (
     <div className="landing">
@@ -49,7 +97,7 @@ export default function Landing() {
 
         {blue && (
           <section className="blue-hero">
-            <h1 className="blue-label">Blue</h1>
+            <h1 className="blue-label">Dólar blue</h1>
             <p className="blue-venta">{pesos.format(blue.venta)}</p>
             <p className="blue-compra">compra {pesos.format(blue.compra)}</p>
           </section>
@@ -78,25 +126,57 @@ export default function Landing() {
           </section>
         )}
 
-        {(bcv != null || paralelo != null) && (
-          <section className="ve-block">
-            <h2 className="ve-titulo">Bolívares por dólar</h2>
-            <div className="secundarias">
-              {bcv != null && (
-                <div className="cotiz-card">
-                  <span className="cotiz-nombre">BCV</span>
-                  <span className="cotiz-valor">Bs {bolivares.format(bcv)}</span>
-                </div>
-              )}
-              {paralelo != null && (
-                <div className="cotiz-card">
-                  <span className="cotiz-nombre">Paralelo</span>
-                  <span className="cotiz-valor">Bs {bolivares.format(paralelo)}</span>
-                </div>
-              )}
+        <section className="tasas-block">
+          <div className="tasas-head">
+            <h2 className="tasas-titulo">Otras tasas</h2>
+            <button type="button" className="tasas-editar" onClick={() => setEditando((e) => !e)}>
+              {editando ? 'Listo' : 'Editar'}
+            </button>
+          </div>
+
+          {editando && (
+            <div className="tasas-picker">
+              {TASAS_DISPONIBLES.map((t) => {
+                const on = tasas.includes(t.id)
+                const bloqueada = !on && tasas.length >= MAX_TASAS
+                return (
+                  <button
+                    type="button"
+                    key={t.id}
+                    className={`tasa-opcion ${on ? 'is-on' : ''}`}
+                    disabled={bloqueada}
+                    onClick={() => toggleTasa(t.id)}
+                  >
+                    <span className="tasa-check" aria-hidden="true">
+                      {on ? '✓' : ''}
+                    </span>
+                    <span className="tasa-textos">
+                      <strong>{t.nombre}</strong>
+                      <em>{t.descripcion}</em>
+                    </span>
+                  </button>
+                )
+              })}
+              <p className="tasas-limite">Hasta {MAX_TASAS} tasas.</p>
             </div>
-          </section>
-        )}
+          )}
+
+          {tasas.length > 0 && (
+            <div className="secundarias">
+              {tasas.map((id) => {
+                const t = valorTasa(id)
+                return (
+                  t && (
+                    <div className="cotiz-card" key={id}>
+                      <span className="cotiz-nombre">{t.nombre}</span>
+                      <span className="cotiz-valor">{t.valor}</span>
+                    </div>
+                  )
+                )
+              })}
+            </div>
+          )}
+        </section>
       </main>
 
       <footer className="landing-footer">
