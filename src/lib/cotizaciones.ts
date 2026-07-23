@@ -144,7 +144,7 @@ export const TASAS_DISPONIBLES: TasaDef[] = [
   { id: 've-usdt', nombre: '🇻🇪 USDT', descripcion: 'bolívares por USDT, Binance P2P' },
 ]
 
-export const MAX_TASAS = 3
+export const MAX_TASAS = 4
 
 const TASAS_KEY = 'dolar-crm:tasas-landing'
 const TASAS_DEFAULT = ['ve-paralelo', 'ars-eur']

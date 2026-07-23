@@ -55,8 +55,10 @@ export default function Landing() {
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
   const [editando, setEditando] = useState(false)
   const [convirtiendo, setConvirtiendo] = useState(false)
+  const [mostrandoInfo, setMostrandoInfo] = useState(false)
   const [monto, setMonto] = useState('100')
   const [moneda, setMoneda] = useState<MonedaConv>('usd')
+  const [destino, setDestino] = useState<MonedaConv>('ars')
   // Re-render por minuto para que el "hace X minutos" no quede congelado.
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -122,6 +124,21 @@ export default function Landing() {
   const montoNum = Number(monto.replace(',', '.'))
   const usdBase =
     usdPor[moneda] != null && Number.isFinite(montoNum) ? montoNum * usdPor[moneda] : null
+
+  const convertir = (id: MonedaConv): number | null => {
+    const factor = usdPor[id]
+    return usdBase != null && factor != null ? usdBase / factor : null
+  }
+
+  // Origen y destino nunca pueden coincidir: el otro select se corre solo.
+  const cambiarOrigen = (m: MonedaConv) => {
+    setMoneda(m)
+    if (m === destino) setDestino(m === 'usd' ? 'ars' : 'usd')
+  }
+  const cambiarDestino = (m: MonedaConv) => {
+    setDestino(m)
+    if (m === moneda) setMoneda(m === 'usd' ? 'ars' : 'usd')
+  }
 
   const formatearConv = (id: MonedaConv, valor: number): string => {
     switch (id) {
@@ -241,6 +258,10 @@ export default function Landing() {
               })}
             </div>
           )}
+
+          <button type="button" className="info-btn" onClick={() => setMostrandoInfo(true)}>
+            Info
+          </button>
         </section>
       </main>
 
@@ -249,6 +270,57 @@ export default function Landing() {
         {cotizaciones?.stale && <span className="stale-badge">desactualizado</span>}
       </footer>
 
+      {mostrandoInfo && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(e) => e.target === e.currentTarget && setMostrandoInfo(false)}
+        >
+          <div className="modal">
+            <h2>Fuentes de datos</h2>
+            <ul className="info-lista">
+              <li>
+                <strong>DolarAPI</strong>
+                <span>
+                  Dólares argentinos (blue, oficial, MEP) y monedas en pesos (euro, real).{' '}
+                  <a href="https://dolarapi.com" target="_blank" rel="noreferrer">
+                    dolarapi.com
+                  </a>
+                </span>
+              </li>
+              <li>
+                <strong>DolarAPI Venezuela</strong>
+                <span>
+                  BCV y dólar paralelo en bolívares.{' '}
+                  <a href="https://ve.dolarapi.com" target="_blank" rel="noreferrer">
+                    ve.dolarapi.com
+                  </a>
+                </span>
+              </li>
+              <li>
+                <strong>CriptoYa</strong>
+                <span>
+                  USDT real vía Binance P2P, en pesos y en bolívares.{' '}
+                  <a href="https://criptoya.com" target="_blank" rel="noreferrer">
+                    criptoya.com
+                  </a>
+                </span>
+              </li>
+            </ul>
+            <p className="conv-nota">
+              Los datos se actualizan cada 5 minutos. Son valores de referencia, no cotizaciones
+              operables.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setMostrandoInfo(false)}
+            >
+              Listo
+            </button>
+          </div>
+        </div>
+      )}
+
       {convirtiendo && (
         <div
           className="modal-backdrop"
@@ -256,22 +328,35 @@ export default function Landing() {
         >
           <div className="modal">
             <h2>Convertir</h2>
+            <label>
+              Monto
+              <input
+                type="number"
+                min="0"
+                step="any"
+                inputMode="decimal"
+                value={monto}
+                autoFocus
+                onChange={(e) => setMonto(e.target.value)}
+              />
+            </label>
             <div className="field-row">
               <label>
-                Monto
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  inputMode="decimal"
-                  value={monto}
-                  autoFocus
-                  onChange={(e) => setMonto(e.target.value)}
-                />
+                De
+                <select value={moneda} onChange={(e) => cambiarOrigen(e.target.value as MonedaConv)}>
+                  {MONEDAS_CONV.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nombre}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
-                Moneda
-                <select value={moneda} onChange={(e) => setMoneda(e.target.value as MonedaConv)}>
+                A
+                <select
+                  value={destino}
+                  onChange={(e) => cambiarDestino(e.target.value as MonedaConv)}
+                >
                   {MONEDAS_CONV.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.nombre}
@@ -280,10 +365,12 @@ export default function Landing() {
                 </select>
               </label>
             </div>
-            <ul className="conv-lista">
-              {MONEDAS_CONV.filter((m) => m.id !== moneda).map((m) => {
-                const factor = usdPor[m.id]
-                const valor = usdBase != null && factor != null ? usdBase / factor : null
+            <div className="conv-resultado">
+              {convertir(destino) != null ? formatearConv(destino, convertir(destino)!) : '—'}
+            </div>
+            <ul className="conv-lista conv-lista-menor">
+              {MONEDAS_CONV.filter((m) => m.id !== moneda && m.id !== destino).map((m) => {
+                const valor = convertir(m.id)
                 return (
                   <li key={m.id} className="conv-item">
                     <span className="conv-moneda">{m.nombre}</span>

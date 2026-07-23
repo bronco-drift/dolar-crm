@@ -330,7 +330,49 @@ button {
   color: var(--muted);
 }
 
+.info-btn {
+  font-size: 13px;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+
+.info-btn:hover {
+  color: var(--ink);
+}
+
+.info-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+.info-lista strong {
+  display: block;
+  font-size: 14px;
+}
+
+.info-lista span {
+  color: var(--muted);
+}
+
+.info-lista a {
+  color: var(--ink);
+}
+
 /* Conversor */
+.conv-resultado {
+  text-align: center;
+  padding: 4px 0;
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
 .conv-lista {
   list-style: none;
   margin: 0;
@@ -355,6 +397,23 @@ button {
 .conv-valor {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.conv-lista-menor {
+  gap: 6px;
+  padding-top: 0;
+  border-top: 1px solid var(--line);
+  padding: 10px 0 2px;
+}
+
+.conv-lista-menor .conv-moneda,
+.conv-lista-menor .conv-valor {
+  font-size: 12.5px;
+  color: #a1a1a6;
+}
+
+.conv-lista-menor .conv-valor {
+  font-weight: 500;
 }
 
 .conv-nota {
