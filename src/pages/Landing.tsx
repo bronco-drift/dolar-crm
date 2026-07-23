@@ -10,6 +10,9 @@ import {
   useBolivares,
   useCotizaciones,
   useMonedas,
+  useUsdtArs,
+  useUsdtVes,
+  valorUsdt,
   valorVe,
 } from '../lib/cotizaciones'
 
@@ -19,9 +22,9 @@ const pesos = new Intl.NumberFormat('es-AR', {
   maximumFractionDigits: 0,
 })
 
-const bolivares = new Intl.NumberFormat('es-VE', {
-  maximumFractionDigits: 2,
+const num2 = new Intl.NumberFormat('es-AR', {
   minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 })
 
 function haceCuanto(iso: string): string {
@@ -33,12 +36,27 @@ function haceCuanto(iso: string): string {
   return h === 1 ? 'hace 1 hora' : `hace ${h} horas`
 }
 
+type MonedaConv = 'ars' | 'usd' | 'usdt' | 'eur' | 'ves'
+
+const MONEDAS_CONV: { id: MonedaConv; nombre: string; corto: string }[] = [
+  { id: 'ars', nombre: '🇦🇷 Peso argentino', corto: 'ARS' },
+  { id: 'usd', nombre: '🇺🇸 Dólar (blue)', corto: 'USD' },
+  { id: 'usdt', nombre: '₮ USDT', corto: 'USDT' },
+  { id: 'eur', nombre: '🇪🇺 Euro', corto: 'EUR' },
+  { id: 'ves', nombre: '🇻🇪 Bolívar', corto: 'Bs' },
+]
+
 export default function Landing() {
   const { cotizaciones, error } = useCotizaciones()
   const { bolivares: ve } = useBolivares()
   const { monedas } = useMonedas()
+  const { usdtArs } = useUsdtArs()
+  const { usdtVes } = useUsdtVes()
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
   const [editando, setEditando] = useState(false)
+  const [convirtiendo, setConvirtiendo] = useState(false)
+  const [monto, setMonto] = useState('100')
+  const [moneda, setMoneda] = useState<MonedaConv>('usd')
   // Re-render por minuto para que el "hace X minutos" no quede congelado.
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -50,23 +68,27 @@ export default function Landing() {
   const oficial = porCasa(cotizaciones, 'oficial')
   const mep = porCasa(cotizaciones, 'bolsa')
   const cripto = porCasa(cotizaciones, 'cripto')
+  const eurArs = porMoneda(monedas, 'EUR')
+  const paralelo = valorVe(porFuente(ve, 'paralelo'))
+  const usdtEnPesos = valorUsdt(usdtArs)
+  const usdtEnBs = valorUsdt(usdtVes)
 
   const valorTasa = (id: string): { nombre: string; valor: string } | null => {
     switch (id) {
       case 've-bcv': {
         const v = valorVe(porFuente(ve, 'oficial'))
-        return v != null ? { nombre: '🇻🇪 BCV', valor: `Bs ${bolivares.format(v)}` } : null
+        return v != null ? { nombre: '🇻🇪 BCV', valor: `Bs ${num2.format(v)}` } : null
       }
-      case 've-paralelo': {
-        const v = valorVe(porFuente(ve, 'paralelo'))
-        return v != null
-          ? { nombre: '🇻🇪 Dólar paralelo', valor: `Bs ${bolivares.format(v)}` }
+      case 've-paralelo':
+        return paralelo != null
+          ? { nombre: '🇻🇪 Dólar paralelo', valor: `Bs ${num2.format(paralelo)}` }
           : null
-      }
-      case 'ars-eur': {
-        const c = porMoneda(monedas, 'EUR')
-        return c ? { nombre: '🇦🇷 Euro', valor: pesos.format(c.venta) } : null
-      }
+      case 've-usdt':
+        return usdtEnBs != null
+          ? { nombre: '🇻🇪 USDT', valor: `Bs ${num2.format(usdtEnBs)}` }
+          : null
+      case 'ars-eur':
+        return eurArs ? { nombre: '🇦🇷 Euro', valor: pesos.format(eurArs.venta) } : null
       case 'ars-brl': {
         const c = porMoneda(monedas, 'BRL')
         return c ? { nombre: '🇦🇷 Real', valor: pesos.format(c.venta) } : null
@@ -86,6 +108,34 @@ export default function Landing() {
       saveTasasElegidas(next)
       return next
     })
+  }
+
+  // Conversor: todo pivotea por USD. usdPor[x] = cuántos USD vale 1 unidad de x.
+  const usdPor: Partial<Record<MonedaConv, number>> = { usd: 1 }
+  if (blue) {
+    usdPor.ars = 1 / blue.venta
+    if (eurArs) usdPor.eur = eurArs.venta / blue.venta
+    if (usdtEnPesos != null) usdPor.usdt = usdtEnPesos / blue.venta
+  }
+  if (paralelo != null) usdPor.ves = 1 / paralelo
+
+  const montoNum = Number(monto.replace(',', '.'))
+  const usdBase =
+    usdPor[moneda] != null && Number.isFinite(montoNum) ? montoNum * usdPor[moneda] : null
+
+  const formatearConv = (id: MonedaConv, valor: number): string => {
+    switch (id) {
+      case 'ars':
+        return `$ ${num2.format(valor)}`
+      case 'usd':
+        return `US$ ${num2.format(valor)}`
+      case 'eur':
+        return `€ ${num2.format(valor)}`
+      case 'ves':
+        return `Bs ${num2.format(valor)}`
+      case 'usdt':
+        return `₮ ${num2.format(valor)}`
+    }
   }
 
   return (
@@ -119,13 +169,26 @@ export default function Landing() {
                 <span className="cotiz-valor">{pesos.format(mep.venta)}</span>
               </div>
             )}
-            {cripto && (
+            {usdtEnPesos != null ? (
               <div className="cotiz-card">
-                <span className="cotiz-nombre">Cripto</span>
-                <span className="cotiz-valor">{pesos.format(cripto.venta)}</span>
+                <span className="cotiz-nombre">USDT</span>
+                <span className="cotiz-valor">{pesos.format(usdtEnPesos)}</span>
               </div>
+            ) : (
+              cripto && (
+                <div className="cotiz-card">
+                  <span className="cotiz-nombre">Cripto</span>
+                  <span className="cotiz-valor">{pesos.format(cripto.venta)}</span>
+                </div>
+              )
             )}
           </section>
+        )}
+
+        {blue && (
+          <button type="button" className="btn btn-ghost" onClick={() => setConvirtiendo(true)}>
+            ⇄ Convertir
+          </button>
         )}
 
         <section className="tasas-block">
@@ -185,6 +248,65 @@ export default function Landing() {
         {blue && <span>{haceCuanto(blue.fechaActualizacion)}</span>}
         {cotizaciones?.stale && <span className="stale-badge">desactualizado</span>}
       </footer>
+
+      {convirtiendo && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(e) => e.target === e.currentTarget && setConvirtiendo(false)}
+        >
+          <div className="modal">
+            <h2>Convertir</h2>
+            <div className="field-row">
+              <label>
+                Monto
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputMode="decimal"
+                  value={monto}
+                  autoFocus
+                  onChange={(e) => setMonto(e.target.value)}
+                />
+              </label>
+              <label>
+                Moneda
+                <select value={moneda} onChange={(e) => setMoneda(e.target.value as MonedaConv)}>
+                  {MONEDAS_CONV.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <ul className="conv-lista">
+              {MONEDAS_CONV.filter((m) => m.id !== moneda).map((m) => {
+                const factor = usdPor[m.id]
+                const valor = usdBase != null && factor != null ? usdBase / factor : null
+                return (
+                  <li key={m.id} className="conv-item">
+                    <span className="conv-moneda">{m.nombre}</span>
+                    <span className="conv-valor">
+                      {valor != null ? formatearConv(m.id, valor) : '—'}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="conv-nota">
+              Al blue, paralelo y USDT Binance P2P. Valores de referencia.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setConvirtiendo(false)}
+            >
+              Listo
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

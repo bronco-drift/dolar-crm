@@ -20,11 +20,13 @@ export interface CotizacionVe {
   fechaActualizacion: string
 }
 
-interface CacheState<T> {
-  data: T[]
+interface RawCache<D> {
+  data: D
   fetchedAt: number
   stale: boolean
 }
+
+type CacheState<T> = RawCache<T[]>
 
 export type CotizacionesState = CacheState<Cotizacion>
 export type BolivaresState = CacheState<CotizacionVe>
@@ -40,15 +42,31 @@ export interface CotizacionMoneda {
 
 export type MonedasState = CacheState<CotizacionMoneda>
 
+// USDT real (Binance P2P y otros) vía CriptoYa: objeto exchange → precios
+export interface UsdtExchange {
+  ask: number
+  totalAsk: number
+  bid: number
+  totalBid: number
+  time: number
+}
+
+export type UsdtData = Record<string, UsdtExchange>
+export type UsdtState = RawCache<UsdtData>
+
 const TTL_MS = 5 * 60 * 1000
 const AR_URL = 'https://dolarapi.com/v1/dolares'
 const VE_URL = 'https://ve.dolarapi.com/v1/dolares'
 const MON_URL = 'https://dolarapi.com/v1/cotizaciones'
+const USDT_ARS_URL = 'https://criptoya.com/api/usdt/ars/1'
+const USDT_VES_URL = 'https://criptoya.com/api/usdt/ves/1'
 const AR_KEY = 'dolar-crm:cotizaciones'
 const VE_KEY = 'dolar-crm:bolivares'
 const MON_KEY = 'dolar-crm:monedas'
+const USDT_ARS_KEY = 'dolar-crm:usdt-ars'
+const USDT_VES_KEY = 'dolar-crm:usdt-ves'
 
-function readCache<T>(key: string): { data: T[]; fetchedAt: number } | null {
+function readCache<D>(key: string): { data: D; fetchedAt: number } | null {
   try {
     const raw = localStorage.getItem(key)
     return raw ? JSON.parse(raw) : null
@@ -57,28 +75,42 @@ function readCache<T>(key: string): { data: T[]; fetchedAt: number } | null {
   }
 }
 
-async function fetchCached<T>(url: string, key: string): Promise<CacheState<T>> {
-  const cached = readCache<T>(key)
+async function fetchCached<D>(url: string, key: string): Promise<RawCache<D>> {
+  const cached = readCache<D>(key)
   if (cached && Date.now() - cached.fetchedAt < TTL_MS) {
     return { ...cached, stale: false }
   }
   try {
     const res = await fetch(url)
-    if (!res.ok) throw new Error(`DolarAPI ${res.status}`)
-    const data: T[] = await res.json()
+    if (!res.ok) throw new Error(`API ${res.status}`)
+    const data: D = await res.json()
     const fresh = { data, fetchedAt: Date.now() }
     localStorage.setItem(key, JSON.stringify(fresh))
     return { ...fresh, stale: false }
   } catch {
     // Sin red o API caída: servir el último valor conocido, marcado.
     if (cached) return { ...cached, stale: true }
-    throw new Error('No hay conexión con DolarAPI ni datos guardados')
+    throw new Error('No hay conexión con la API ni datos guardados')
   }
 }
 
-export const getCotizaciones = () => fetchCached<Cotizacion>(AR_URL, AR_KEY)
-export const getBolivares = () => fetchCached<CotizacionVe>(VE_URL, VE_KEY)
-export const getMonedas = () => fetchCached<CotizacionMoneda>(MON_URL, MON_KEY)
+export const getCotizaciones = () => fetchCached<Cotizacion[]>(AR_URL, AR_KEY)
+export const getBolivares = () => fetchCached<CotizacionVe[]>(VE_URL, VE_KEY)
+export const getMonedas = () => fetchCached<CotizacionMoneda[]>(MON_URL, MON_KEY)
+export const getUsdtArs = () => fetchCached<UsdtData>(USDT_ARS_URL, USDT_ARS_KEY)
+export const getUsdtVes = () => fetchCached<UsdtData>(USDT_VES_URL, USDT_VES_KEY)
+
+// Precio de referencia USDT: Binance P2P si está, si no la mediana de asks.
+export function valorUsdt(state: UsdtState | null): number | null {
+  if (!state) return null
+  const preferido = state.data.binancep2p ?? state.data.bybitp2p ?? state.data.okexp2p
+  if (preferido && preferido.ask > 0) return preferido.ask
+  const asks = Object.values(state.data)
+    .map((e) => e?.ask)
+    .filter((n): n is number => typeof n === 'number' && n > 0)
+    .sort((a, b) => a - b)
+  return asks.length ? asks[Math.floor(asks.length / 2)] : null
+}
 
 export function porCasa(state: CotizacionesState | null, casa: string) {
   return state?.data.find((c) => c.casa === casa) ?? null
@@ -109,6 +141,7 @@ export const TASAS_DISPONIBLES: TasaDef[] = [
   { id: 've-bcv', nombre: '🇻🇪 BCV', descripcion: 'bolívares por dólar, oficial' },
   { id: 'ars-eur', nombre: '🇦🇷 Euro', descripcion: 'pesos argentinos por euro' },
   { id: 'ars-brl', nombre: '🇦🇷 Real', descripcion: 'pesos argentinos por real' },
+  { id: 've-usdt', nombre: '🇻🇪 USDT', descripcion: 'bolívares por USDT, Binance P2P' },
 ]
 
 export const MAX_TASAS = 3
@@ -130,8 +163,8 @@ export function saveTasasElegidas(ids: string[]) {
   localStorage.setItem(TASAS_KEY, JSON.stringify(ids.slice(0, MAX_TASAS)))
 }
 
-function useCached<T>(fetcher: () => Promise<CacheState<T>>) {
-  const [state, setState] = useState<CacheState<T> | null>(null)
+function useCached<S>(fetcher: () => Promise<S>) {
+  const [state, setState] = useState<S | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -171,4 +204,14 @@ export function useBolivares() {
 export function useMonedas() {
   const { state, error } = useCached(getMonedas)
   return { monedas: state, error }
+}
+
+export function useUsdtArs() {
+  const { state } = useCached(getUsdtArs)
+  return { usdtArs: state }
+}
+
+export function useUsdtVes() {
+  const { state } = useCached(getUsdtVes)
+  return { usdtVes: state }
 }
