@@ -340,7 +340,7 @@ export default function Landing() {
                 onChange={(e) => setMonto(e.target.value)}
               />
             </label>
-            <div className="field-row">
+            <div className="field-row conv-par">
               <label>
                 De
                 <select value={moneda} onChange={(e) => cambiarOrigen(e.target.value as MonedaConv)}>

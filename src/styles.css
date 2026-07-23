@@ -399,6 +399,15 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+.conv-par label {
+  min-width: 0;
+}
+
+.conv-par select {
+  width: 100%;
+  min-width: 0;
+}
+
 .conv-lista-menor {
   gap: 6px;
   padding-top: 0;
@@ -938,5 +947,10 @@ button {
 
   .field-row {
     flex-direction: column;
+  }
+
+  /* El par De/A del conversor se mantiene en una sola línea */
+  .field-row.conv-par {
+    flex-direction: row;
   }
 }
