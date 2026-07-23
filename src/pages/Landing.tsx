@@ -55,19 +55,21 @@ export default function Landing() {
     switch (id) {
       case 've-bcv': {
         const v = valorVe(porFuente(ve, 'oficial'))
-        return v != null ? { nombre: 'BCV', valor: `Bs ${bolivares.format(v)}` } : null
+        return v != null ? { nombre: '🇻🇪 BCV', valor: `Bs ${bolivares.format(v)}` } : null
       }
       case 've-paralelo': {
         const v = valorVe(porFuente(ve, 'paralelo'))
-        return v != null ? { nombre: 'Dólar negro', valor: `Bs ${bolivares.format(v)}` } : null
+        return v != null
+          ? { nombre: '🇻🇪 Dólar paralelo', valor: `Bs ${bolivares.format(v)}` }
+          : null
       }
       case 'ars-eur': {
         const c = porMoneda(monedas, 'EUR')
-        return c ? { nombre: 'Euro', valor: pesos.format(c.venta) } : null
+        return c ? { nombre: '🇦🇷 Euro', valor: pesos.format(c.venta) } : null
       }
       case 'ars-brl': {
         const c = porMoneda(monedas, 'BRL')
-        return c ? { nombre: 'Real', valor: pesos.format(c.venta) } : null
+        return c ? { nombre: '🇦🇷 Real', valor: pesos.format(c.venta) } : null
       }
       default:
         return null
@@ -97,7 +99,7 @@ export default function Landing() {
 
         {blue && (
           <section className="blue-hero">
-            <h1 className="blue-label">Dólar blue</h1>
+            <h1 className="blue-label">🇦🇷 Dólar blue</h1>
             <p className="blue-venta">{pesos.format(blue.venta)}</p>
             <p className="blue-compra">compra {pesos.format(blue.compra)}</p>
           </section>

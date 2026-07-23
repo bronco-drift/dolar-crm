@@ -105,10 +105,10 @@ export interface TasaDef {
 }
 
 export const TASAS_DISPONIBLES: TasaDef[] = [
-  { id: 've-paralelo', nombre: 'Dólar negro', descripcion: 'bolívares por dólar, paralelo' },
-  { id: 've-bcv', nombre: 'BCV', descripcion: 'bolívares por dólar, oficial' },
-  { id: 'ars-eur', nombre: 'Euro', descripcion: 'pesos argentinos por euro' },
-  { id: 'ars-brl', nombre: 'Real', descripcion: 'pesos argentinos por real' },
+  { id: 've-paralelo', nombre: '🇻🇪 Dólar paralelo', descripcion: 'bolívares por dólar, paralelo' },
+  { id: 've-bcv', nombre: '🇻🇪 BCV', descripcion: 'bolívares por dólar, oficial' },
+  { id: 'ars-eur', nombre: '🇦🇷 Euro', descripcion: 'pesos argentinos por euro' },
+  { id: 'ars-brl', nombre: '🇦🇷 Real', descripcion: 'pesos argentinos por real' },
 ]
 
 export const MAX_TASAS = 3
