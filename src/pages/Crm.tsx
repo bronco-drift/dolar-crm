@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { porCasa, useCotizaciones } from '../lib/cotizaciones'
 import {
   type Contact,
@@ -210,12 +209,7 @@ export default function Crm() {
   return (
     <div className="crm">
       <header className="crm-header">
-        <div className="crm-title">
-          <Link to="/" className="nav-link">
-            ← Dólar
-          </Link>
-          <h1>Contactos</h1>
-        </div>
+        <h1>Contactos</h1>
         <button type="button" className="btn btn-primary" onClick={() => setEditing(newContact())}>
           + Agregar
         </button>

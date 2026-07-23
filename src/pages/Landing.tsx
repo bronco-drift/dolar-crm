@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { porCasa, porFuente, useBolivares, useCotizaciones, valorVe } from '../lib/cotizaciones'
 
 const pesos = new Intl.NumberFormat('es-AR', {
@@ -43,9 +42,6 @@ export default function Landing() {
     <div className="landing">
       <header className="landing-header">
         <span className="wordmark">Dólar hoy</span>
-        <Link to="/crm" className="nav-link">
-          CRM →
-        </Link>
       </header>
 
       <main className="landing-main">

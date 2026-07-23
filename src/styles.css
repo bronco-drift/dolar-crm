@@ -49,15 +49,51 @@ button {
   cursor: pointer;
 }
 
-.nav-link {
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.15s;
+/* Tab bar flotante estilo iOS */
+.tabbar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(14px + var(--safe-bottom));
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  background: rgb(255 255 255 / 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  box-shadow: var(--shadow);
+  z-index: 40;
 }
 
-.nav-link:hover {
+.tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 110px;
+  height: 40px;
+  border-radius: 99px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: color 0.15s, background 0.15s;
+}
+
+.tab svg {
+  width: 19px;
+  height: 19px;
+}
+
+.tab:hover {
   color: var(--ink);
+}
+
+.tab.is-active {
+  background: var(--ink);
+  color: #fff;
 }
 
 /* Botones: geometría única en toda la app */
@@ -211,7 +247,7 @@ button {
   display: flex;
   justify-content: center;
   gap: 12px;
-  padding: 24px 24px calc(24px + var(--safe-bottom));
+  padding: 24px 24px calc(84px + var(--safe-bottom));
   color: var(--muted);
   font-size: 13px;
 }
@@ -245,7 +281,7 @@ button {
   max-width: 860px;
   margin: 0 auto;
   padding: calc(28px + var(--safe-top)) calc(24px + var(--safe-right))
-    calc(40px + var(--safe-bottom)) calc(24px + var(--safe-left));
+    calc(104px + var(--safe-bottom)) calc(24px + var(--safe-left));
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -259,13 +295,7 @@ button {
   align-items: flex-end;
 }
 
-.crm-title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.crm-title h1 {
+.crm-header h1 {
   margin: 0;
   font-family: var(--font-display);
   font-size: 30px;

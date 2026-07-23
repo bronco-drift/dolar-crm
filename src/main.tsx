@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Crm from './pages/Crm'
+import TabBar from './components/TabBar'
 import './styles.css'
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<Landing />} />
         <Route path="/crm" element={<Crm />} />
       </Routes>
+      <TabBar />
     </BrowserRouter>
   </StrictMode>,
 )
