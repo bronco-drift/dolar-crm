@@ -54,6 +54,7 @@ function EstadoPill({
         className={`pill pill-${contact.estado}`}
         onClick={() => setOpen((o) => !o)}
       >
+        <span className={`dot dot-${contact.estado}`} />
         {contact.estado}
       </button>
       {open && (
@@ -156,25 +157,24 @@ function ContactForm({
           <textarea rows={3} value={draft.nota} onChange={(e) => set('nota', e.target.value)} />
         </label>
         <div className="modal-actions">
-          {onDelete && (
-            <button
-              type="button"
-              className="btn-danger"
-              onClick={() => {
-                if (confirm(`¿Borrar a ${draft.nombre}?`)) onDelete(draft.id)
-              }}
-            >
-              Borrar
-            </button>
-          )}
-          <span className="spacer" />
-          <button type="button" className="btn-ghost" onClick={onCancel}>
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
             Cancelar
           </button>
-          <button type="submit" className="btn-primary">
+          <button type="submit" className="btn btn-primary">
             Guardar
           </button>
         </div>
+        {onDelete && (
+          <button
+            type="button"
+            className="btn-danger"
+            onClick={() => {
+              if (confirm(`¿Borrar a ${draft.nombre}?`)) onDelete(draft.id)
+            }}
+          >
+            Borrar contacto
+          </button>
+        )}
       </form>
     </div>
   )
@@ -216,7 +216,7 @@ export default function Crm() {
           </Link>
           <h1>Contactos</h1>
         </div>
-        <button type="button" className="btn-primary" onClick={() => setEditing(newContact())}>
+        <button type="button" className="btn btn-primary" onClick={() => setEditing(newContact())}>
           + Agregar
         </button>
       </header>
@@ -249,7 +249,7 @@ export default function Crm() {
               <p>Todavía no hay contactos.</p>
               <button
                 type="button"
-                className="btn-primary"
+                className="btn btn-primary"
                 onClick={() => setEditing(newContact())}
               >
                 Agregar el primero
