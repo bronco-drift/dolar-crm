@@ -328,3 +328,46 @@ export function deleteHabito(id: string): Habito[] {
   write(K_HABITOS, habitos)
   return habitos
 }
+
+// ── Mis tareas (kanban) ──
+
+export interface KanbanColumna {
+  id: string
+  nombre: string
+}
+
+export interface Tarea {
+  id: string
+  titulo: string
+  nota: string
+  columnaId: string
+  createdAt: string
+}
+
+export interface KanbanState {
+  columnas: KanbanColumna[]
+  tareas: Tarea[]
+}
+
+const K_KANBAN = 'dolar-crm:kanban'
+
+const COLUMNAS_DEFAULT: KanbanColumna[] = [
+  { id: 'todo', nombre: 'To do' },
+  { id: 'progreso', nombre: 'In progress' },
+  { id: 'hecho', nombre: 'Hecho' },
+  { id: 'cerrada', nombre: 'Cerrada' },
+]
+
+export function getKanban(): KanbanState {
+  try {
+    const raw = localStorage.getItem(K_KANBAN)
+    if (raw) return JSON.parse(raw) as KanbanState
+  } catch {
+    /* usar defaults */
+  }
+  return { columnas: COLUMNAS_DEFAULT, tareas: [] }
+}
+
+export function saveKanban(state: KanbanState) {
+  write(K_KANBAN, state)
+}

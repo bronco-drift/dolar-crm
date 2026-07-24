@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import CalendarioMes, { type DiaRender } from '../components/CalendarioMes'
+import CalendarioMes, { CalendarioSemanas, type DiaRender } from '../components/CalendarioMes'
 import { type Habito, type TipoHabito, deleteHabito, getHabitos, saveHabito } from '../lib/storage'
 
 const MESES = [
@@ -40,10 +40,29 @@ function fechaCorta(f: string): string {
   return `${d} de ${MESES[m - 1]}`
 }
 
+function parseF(s: string): Date {
+  const [y, m, d] = s.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function addDias(s: string, n: number): string {
+  const d = parseF(s)
+  d.setDate(d.getDate() + n)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function lunesDe(f: string): string {
+  const d = parseF(f)
+  const dia = d.getDay()
+  return addDias(f, -(dia === 0 ? 6 : dia - 1))
+}
+
 export default function Habitos() {
   const [habitos, setHabitos] = useState<Habito[]>(getHabitos)
   const hoy = hoyStr()
+  const [vista, setVista] = useState<'mes' | 'semana'>('mes')
   const [mesVista, setMesVista] = useState(() => hoy.slice(0, 7))
+  const [semana, setSemana] = useState(() => lunesDe(hoy))
   const [diaSel, setDiaSel] = useState(hoy)
   const [texto, setTexto] = useState('')
 
@@ -107,31 +126,66 @@ export default function Habitos() {
         </div>
       </div>
 
+      <div className="segmented" role="tablist">
+        {(['mes', 'semana'] as const).map((v) => (
+          <button
+            type="button"
+            role="tab"
+            key={v}
+            aria-selected={vista === v}
+            className={`segment ${vista === v ? 'is-active' : ''}`}
+            onClick={() => setVista(v)}
+          >
+            {v === 'mes' ? 'Mes' : 'Semana'}
+          </button>
+        ))}
+      </div>
+
       <div className="mes-nav">
         <button
           type="button"
           className="mes-flecha"
-          onClick={() => setMesVista(sumarMes(mesVista, -1))}
+          onClick={() =>
+            vista === 'mes'
+              ? setMesVista(sumarMes(mesVista, -1))
+              : setSemana(addDias(semana, -7))
+          }
         >
           ‹
         </button>
-        <span className="mes-label">{etiquetaMes(mesVista)}</span>
+        <span className="mes-label">
+          {vista === 'mes'
+            ? etiquetaMes(mesVista)
+            : `${fechaCorta(semana)} – ${fechaCorta(addDias(semana, 6))}`}
+        </span>
         <button
           type="button"
           className="mes-flecha"
-          onClick={() => setMesVista(sumarMes(mesVista, 1))}
+          onClick={() =>
+            vista === 'mes' ? setMesVista(sumarMes(mesVista, 1)) : setSemana(addDias(semana, 7))
+          }
         >
           ›
         </button>
       </div>
 
-      <CalendarioMes
-        año={Number(mesVista.slice(0, 4))}
-        mes={Number(mesVista.slice(5, 7)) - 1}
-        inicioSemana={1}
-        dia={renderDia}
-        onDiaDown={setDiaSel}
-      />
+      {vista === 'mes' ? (
+        <CalendarioMes
+          año={Number(mesVista.slice(0, 4))}
+          mes={Number(mesVista.slice(5, 7)) - 1}
+          inicioSemana={1}
+          dia={renderDia}
+          onDiaDown={setDiaSel}
+        />
+      ) : (
+        <CalendarioSemanas
+          desde={semana}
+          hasta={addDias(semana, 6)}
+          inicioSemana={1}
+          dia={renderDia}
+          onDiaDown={setDiaSel}
+        />
+      )}
 
       {delDia.length > 0 && (
         <ul className="hab-lista">
