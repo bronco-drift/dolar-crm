@@ -7,11 +7,12 @@ const IconDolar = (
   </svg>
 )
 
-const IconCrm = (
+const IconHerramientas = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-    <circle cx="9" cy="8.5" r="3.2" />
-    <path d="M3.5 19c.6-3 2.8-4.7 5.5-4.7s4.9 1.7 5.5 4.7" strokeLinecap="round" />
-    <path d="M16.5 8h4M16.5 12h4M18.5 16h2" strokeLinecap="round" />
+    <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
   </svg>
 )
 
@@ -22,9 +23,12 @@ export default function TabBar() {
         {IconDolar}
         <span>Dólar</span>
       </NavLink>
-      <NavLink to="/crm" className={({ isActive }) => `tab ${isActive ? 'is-active' : ''}`}>
-        {IconCrm}
-        <span>CRM</span>
+      <NavLink
+        to="/herramientas"
+        className={({ isActive }) => `tab ${isActive ? 'is-active' : ''}`}
+      >
+        {IconHerramientas}
+        <span>Herramientas</span>
       </NavLink>
     </nav>
   )

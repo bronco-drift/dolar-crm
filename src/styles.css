@@ -72,7 +72,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  width: 110px;
+  min-width: 96px;
+  padding: 0 16px;
   height: 40px;
   border-radius: 99px;
   color: var(--muted);
@@ -528,6 +529,126 @@ button {
   font-size: 30px;
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+/* Tabs de herramientas (nivel superior, subrayado) */
+.tools-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.tool-tab {
+  padding: 0 2px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tool-tab:hover {
+  color: var(--ink);
+}
+
+.tool-tab.is-active {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--ink);
+}
+
+/* Gastos: navegador de mes, total y reporte */
+.mes-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.mes-flecha {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 18px;
+  color: var(--muted);
+  transition: color 0.15s, background 0.15s;
+}
+
+.mes-flecha:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.mes-label {
+  min-width: 150px;
+  text-align: center;
+  font-weight: 600;
+  text-transform: capitalize;
+  font-variant-numeric: tabular-nums;
+}
+
+.gastos-total {
+  margin: -6px 0 0;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gasto-cat {
+  text-transform: capitalize;
+}
+
+.rep-lista {
+  list-style: none;
+  margin: 0;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.rep-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.rep-cat {
+  font-size: 13.5px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.rep-monto {
+  font-size: 13.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rep-barra {
+  height: 8px;
+  background: var(--soft);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.rep-fill {
+  height: 100%;
+  background: var(--ink);
+  border-radius: 99px;
+  transition: width 0.3s ease;
 }
 
 /* Segmented control estilo iOS */

@@ -313,7 +313,7 @@ export default function Crm() {
   const esNuevaVenta = editingVenta != null && !ventas.some((v) => v.id === editingVenta.id)
 
   return (
-    <div className="crm">
+    <>
       <header className="crm-header">
         <h1>CRM</h1>
         <button type="button" className="btn btn-primary" onClick={agregar}>
@@ -526,6 +526,6 @@ export default function Crm() {
           }}
         />
       )}
-    </div>
+    </>
   )
 }
