@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import CalendarioMes, { type DiaRender } from '../components/CalendarioMes'
+import CalendarioMes, { CalendarioSemanas, type DiaRender } from '../components/CalendarioMes'
 import { PAISES_FERIADOS, useFeriados } from '../lib/feriados'
 import { type PtoState, getPto, savePto } from '../lib/storage'
 
@@ -71,7 +71,6 @@ export default function Pto() {
   const hoy = hoyStr()
   const [vista, setVista] = useState<'mes' | 'continuo'>('mes')
   const [mesVista, setMesVista] = useState(() => hoy.slice(0, 7))
-  const [mesesExtra, setMesesExtra] = useState(2)
   const [ajustes, setAjustes] = useState(false)
   const [toast, setToast] = useState('')
   const toastTimer = useRef<number | undefined>(undefined)
@@ -228,8 +227,6 @@ export default function Pto() {
     onDiaTouchEnd: () => clearTimeout(longPress.current),
   }
 
-  const mesesContinuo = Array.from({ length: mesesExtra + 1 }, (_, i) => sumarMes(mesVista, i))
-
   return (
     <>
       <header className="crm-header">
@@ -279,42 +276,39 @@ export default function Pto() {
         ))}
       </div>
 
-      <div className="mes-nav">
-        <button type="button" className="mes-flecha" onClick={() => setMesVista(sumarMes(mesVista, -1))}>
-          ‹
-        </button>
-        <span className="mes-label">{etiquetaMes(mesVista)}</span>
-        <button type="button" className="mes-flecha" onClick={() => setMesVista(sumarMes(mesVista, 1))}>
-          ›
-        </button>
-      </div>
-
       {vista === 'mes' ? (
-        <CalendarioMes
-          año={Number(mesVista.slice(0, 4))}
-          mes={Number(mesVista.slice(5, 7)) - 1}
+        <>
+          <div className="mes-nav">
+            <button
+              type="button"
+              className="mes-flecha"
+              onClick={() => setMesVista(sumarMes(mesVista, -1))}
+            >
+              ‹
+            </button>
+            <span className="mes-label">{etiquetaMes(mesVista)}</span>
+            <button
+              type="button"
+              className="mes-flecha"
+              onClick={() => setMesVista(sumarMes(mesVista, 1))}
+            >
+              ›
+            </button>
+          </div>
+          <CalendarioMes
+            año={Number(mesVista.slice(0, 4))}
+            mes={Number(mesVista.slice(5, 7)) - 1}
+            {...propsCalendario}
+          />
+        </>
+      ) : (
+        // La ventana sigue al viaje: una semana antes y una después.
+        // Al arrastrar el viaje hacia un borde, la ventana se extiende sola.
+        <CalendarioSemanas
+          desde={addDias(estado.viajeInicio, -7)}
+          hasta={addDias(estado.viajeFin, 7)}
           {...propsCalendario}
         />
-      ) : (
-        <div className="pto-continuo">
-          {mesesContinuo.map((m) => (
-            <div key={m}>
-              <h3 className="pto-mes-titulo">{etiquetaMes(m)}</h3>
-              <CalendarioMes
-                año={Number(m.slice(0, 4))}
-                mes={Number(m.slice(5, 7)) - 1}
-                {...propsCalendario}
-              />
-            </div>
-          ))}
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => setMesesExtra((n) => n + 1)}
-          >
-            Cargar mes siguiente
-          </button>
-        </div>
       )}
 
       <p className="conv-nota">

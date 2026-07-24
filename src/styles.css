@@ -712,18 +712,19 @@ button {
   letter-spacing: 0.06em;
 }
 
-.pto-continuo {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.cal-mes-mini {
+  position: absolute;
+  bottom: 2px;
+  left: 4px;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
 }
 
-.pto-mes-titulo {
-  margin: 0 0 8px;
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
-  text-transform: capitalize;
+.cal-viaje .cal-mes-mini {
+  color: rgb(255 255 255 / 0.7);
 }
 
 .pto-toast {
