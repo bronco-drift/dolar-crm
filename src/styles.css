@@ -754,6 +754,131 @@ button {
   color: rgb(27 67 50 / 0.65);
 }
 
+/* ─── Hábitos ────────────────────────────────────────────────── */
+.hab-registro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.hab-dia-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.hab-botones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hab-btn {
+  height: 44px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.hab-btn:active {
+  transform: scale(0.97);
+}
+
+.hab-btn-bien {
+  background: #a8e6cf;
+  color: #1b4332;
+}
+
+.hab-btn-bien:hover {
+  filter: brightness(0.95);
+}
+
+.hab-btn-mal {
+  background: #f5c0b8;
+  color: #7f1d1d;
+}
+
+.hab-btn-mal:hover {
+  filter: brightness(0.95);
+}
+
+.cal-dia.cal-hab-bien {
+  background: #a8e6cf;
+  color: #1b4332;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.cal-dia.cal-hab-mal {
+  background: #f5c0b8;
+  color: #7f1d1d;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.cal-dia.cal-hab-mixto {
+  background: linear-gradient(135deg, #a8e6cf 50%, #f5c0b8 50%);
+  color: #3f3f46;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.cal-dia.cal-sel {
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.hab-lista {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.hab-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+}
+
+.hab-item + .hab-item {
+  border-top: 1px solid var(--line);
+}
+
+.hab-dot-bien {
+  background: #4cbc93;
+}
+
+.hab-dot-mal {
+  background: #dd7a68;
+}
+
+.hab-texto {
+  flex: 1;
+  font-size: 14px;
+}
+
+.hab-borrar {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.hab-borrar:hover {
+  color: #b0452f;
+  background: var(--soft);
+}
+
 /* Reiniciar viaje */
 .pto-reset {
   display: inline-flex;

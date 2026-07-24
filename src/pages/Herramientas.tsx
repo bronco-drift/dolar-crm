@@ -2,11 +2,13 @@ import { useState } from 'react'
 import Crm from './Crm'
 import Gastos from './Gastos'
 import Pto from './Pto'
+import Habitos from './Habitos'
 
 const TOOLS = [
   { id: 'crm', label: 'CRM' },
   { id: 'gastos', label: 'Gastos' },
   { id: 'pto', label: 'PTO Planner' },
+  { id: 'habitos', label: 'Hábitos' },
 ] as const
 
 type ToolId = (typeof TOOLS)[number]['id']
@@ -42,6 +44,7 @@ export default function Herramientas() {
       {tool === 'crm' && <Crm />}
       {tool === 'gastos' && <Gastos />}
       {tool === 'pto' && <Pto />}
+      {tool === 'habitos' && <Habitos />}
     </div>
   )
 }
