@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Crm from './Crm'
 import Gastos from './Gastos'
+import Pto from './Pto'
 
 const TOOLS = [
   { id: 'crm', label: 'CRM' },
@@ -40,16 +41,7 @@ export default function Herramientas() {
 
       {tool === 'crm' && <Crm />}
       {tool === 'gastos' && <Gastos />}
-      {tool === 'pto' && (
-        <>
-          <header className="crm-header">
-            <h1>PTO Planner</h1>
-          </header>
-          <div className="empty">
-            <p>Próximamente. Acá va el planificador de días libres.</p>
-          </div>
-        </>
-      )}
+      {tool === 'pto' && <Pto />}
     </div>
   )
 }

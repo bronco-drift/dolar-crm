@@ -651,6 +651,233 @@ button {
   transition: width 0.3s ease;
 }
 
+/* ─── PTO Planner ────────────────────────────────────────────── */
+.pto-kpi-principal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.pto-consume {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pto-unidad {
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.pto-restan {
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pto-restan.is-negativo {
+  color: #b0452f;
+}
+
+.pto-minis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.pto-mini {
+  text-align: center;
+  padding: 10px 4px;
+  background: var(--soft);
+  border-radius: var(--radius);
+}
+
+.pto-mini strong {
+  display: block;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pto-mini span {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pto-continuo {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pto-mes-titulo {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.pto-toast {
+  position: fixed;
+  bottom: calc(84px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 60;
+  max-width: 90%;
+  text-align: center;
+  animation: rise 0.2s ease both;
+}
+
+.ajuste-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px !important;
+  color: var(--ink) !important;
+}
+
+.ajuste-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ink);
+}
+
+/* Calendario genérico */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-nombre-dia {
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 6px;
+}
+
+.cal-dia {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+  transition: background-color 0.12s ease;
+}
+
+.cal-dia.cal-vacio {
+  cursor: default;
+}
+
+.cal-dia:not(.cal-vacio):not(.cal-viaje):hover {
+  background-color: rgb(0 0 0 / 0.04);
+}
+
+.cal-finde {
+  color: var(--muted);
+  background-color: rgb(0 0 0 / 0.025);
+}
+
+.cal-feriado {
+  font-weight: 700;
+}
+
+.cal-feriado::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.cal-hoy {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+
+.cal-remoto::after {
+  content: '💻';
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 9px;
+}
+
+.cal-viaje {
+  touch-action: none;
+}
+
+.cal-viaje-cuerpo {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+.cal-viaje-borde {
+  background: #48484a;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.cal-viaje-ini {
+  border-radius: 12px 4px 4px 12px;
+}
+
+.cal-viaje-fin {
+  border-radius: 4px 12px 12px 4px;
+}
+
+.cal-viaje-unico {
+  border-radius: 12px !important;
+}
+
+.cal-viaje-off {
+  opacity: 0.45;
+}
+
+.cal-dia.cal-viaje-cuerpo:hover {
+  background-color: #2c2c2e;
+}
+
+.cal-dia.cal-viaje-borde:hover {
+  background-color: #3a3a3c;
+}
+
+.cal-dia.cal-viaje-cuerpo.cal-feriado::before,
+.cal-dia.cal-viaje-borde.cal-feriado::before {
+  background: #fff;
+}
+
 /* Segmented control estilo iOS */
 .segmented {
   display: grid;
