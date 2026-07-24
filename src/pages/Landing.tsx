@@ -396,6 +396,18 @@ export default function Landing() {
                   ))}
                 </select>
               </label>
+              <button
+                type="button"
+                className="conv-swap"
+                title="Invertir monedas"
+                onClick={() => {
+                  const m = moneda
+                  setMoneda(destino)
+                  setDestino(m)
+                }}
+              >
+                ⇄
+              </button>
               <label>
                 A
                 <select

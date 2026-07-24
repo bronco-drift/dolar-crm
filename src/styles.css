@@ -410,8 +410,35 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+.conv-par {
+  align-items: flex-end;
+}
+
 .conv-par label {
   min-width: 0;
+}
+
+.conv-swap {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--muted);
+  transition: color 0.15s, background 0.15s;
+}
+
+.conv-swap:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.conv-swap:active {
+  transform: scale(0.94);
 }
 
 .conv-par select {
