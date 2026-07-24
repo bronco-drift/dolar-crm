@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import {
   MAX_TASAS,
   TASAS_DISPONIBLES,
+  getPrincipal,
   getTasasElegidas,
   porCasa,
   porFuente,
   porMoneda,
+  savePrincipal,
   saveTasasElegidas,
   useBolivares,
   useCotizaciones,
@@ -46,6 +48,16 @@ const MONEDAS_CONV: { id: MonedaConv; nombre: string; corto: string }[] = [
   { id: 'ves', nombre: '🇻🇪 Bolívar', corto: 'Bs' },
 ]
 
+// Los cuatro dólares argentinos de la fila principal.
+const DOLARES_AR = ['blue', 'oficial', 'mep', 'usdt'] as const
+
+interface RateInfo {
+  corto: string
+  largo: string
+  valor: string | null
+  compra?: string | null
+}
+
 export default function Landing() {
   const { cotizaciones, error } = useCotizaciones()
   const { bolivares: ve } = useBolivares()
@@ -53,6 +65,7 @@ export default function Landing() {
   const { usdtArs } = useUsdtArs()
   const { usdtVes } = useUsdtVes()
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
+  const [principal, setPrincipal] = useState<string>(getPrincipal)
   const [editando, setEditando] = useState(false)
   const [convirtiendo, setConvirtiendo] = useState(false)
   const [mostrandoInfo, setMostrandoInfo] = useState(false)
@@ -72,33 +85,81 @@ export default function Landing() {
   const cripto = porCasa(cotizaciones, 'cripto')
   const eurArs = porMoneda(monedas, 'EUR')
   const paralelo = valorVe(porFuente(ve, 'paralelo'))
-  const usdtEnPesos = valorUsdt(usdtArs)
+  const usdtEnPesos = valorUsdt(usdtArs) ?? cripto?.venta ?? null
   const usdtEnBs = valorUsdt(usdtVes)
 
-  const valorTasa = (id: string): { nombre: string; valor: string } | null => {
+  const rateInfo = (id: string): RateInfo | null => {
     switch (id) {
+      case 'blue':
+        return blue
+          ? {
+              corto: 'Blue',
+              largo: '🇦🇷 Dólar blue',
+              valor: pesos.format(blue.venta),
+              compra: pesos.format(blue.compra),
+            }
+          : null
+      case 'oficial':
+        return oficial
+          ? {
+              corto: 'Oficial',
+              largo: '🇦🇷 Dólar oficial',
+              valor: pesos.format(oficial.venta),
+              compra: pesos.format(oficial.compra),
+            }
+          : null
+      case 'mep':
+        return mep
+          ? {
+              corto: 'MEP',
+              largo: '🇦🇷 Dólar MEP',
+              valor: pesos.format(mep.venta),
+              compra: pesos.format(mep.compra),
+            }
+          : null
+      case 'usdt':
+        return usdtEnPesos != null
+          ? { corto: 'USDT', largo: '🇦🇷 USDT', valor: pesos.format(usdtEnPesos) }
+          : null
       case 've-bcv': {
         const v = valorVe(porFuente(ve, 'oficial'))
-        return v != null ? { nombre: '🇻🇪 BCV', valor: `Bs ${num2.format(v)}` } : null
+        return v != null
+          ? { corto: '🇻🇪 BCV', largo: '🇻🇪 BCV', valor: `Bs ${num2.format(v)}` }
+          : null
       }
       case 've-paralelo':
         return paralelo != null
-          ? { nombre: '🇻🇪 Dólar paralelo', valor: `Bs ${num2.format(paralelo)}` }
+          ? {
+              corto: '🇻🇪 Dólar paralelo',
+              largo: '🇻🇪 Dólar paralelo',
+              valor: `Bs ${num2.format(paralelo)}`,
+            }
           : null
       case 've-usdt':
         return usdtEnBs != null
-          ? { nombre: '🇻🇪 USDT', valor: `Bs ${num2.format(usdtEnBs)}` }
+          ? { corto: '🇻🇪 USDT', largo: '🇻🇪 USDT', valor: `Bs ${num2.format(usdtEnBs)}` }
           : null
       case 'ars-eur':
-        return eurArs ? { nombre: '🇦🇷 Euro', valor: pesos.format(eurArs.venta) } : null
+        return eurArs
+          ? { corto: '🇦🇷 Euro', largo: '🇦🇷 Euro', valor: pesos.format(eurArs.venta) }
+          : null
       case 'ars-brl': {
         const c = porMoneda(monedas, 'BRL')
-        return c ? { nombre: '🇦🇷 Real', valor: pesos.format(c.venta) } : null
+        return c ? { corto: '🇦🇷 Real', largo: '🇦🇷 Real', valor: pesos.format(c.venta) } : null
       }
       default:
         return null
     }
   }
+
+  const elegirPrincipal = (id: string) => {
+    setPrincipal(id)
+    savePrincipal(id)
+  }
+
+  // Si la elegida todavía no tiene datos, el hero cae al blue.
+  const heroId = rateInfo(principal)?.valor != null ? principal : 'blue'
+  const hero = rateInfo(heroId)
 
   const toggleTasa = (id: string) => {
     setTasas((prev) => {
@@ -155,6 +216,24 @@ export default function Landing() {
     }
   }
 
+  const cardTasa = (id: string) => {
+    const t = rateInfo(id)
+    return (
+      t && (
+        <button
+          type="button"
+          className="cotiz-card"
+          key={id}
+          title="Fijar como principal"
+          onClick={() => elegirPrincipal(id)}
+        >
+          <span className="cotiz-nombre">{t.corto}</span>
+          <span className="cotiz-valor">{t.valor}</span>
+        </button>
+      )
+    )
+  }
+
   return (
     <div className="landing">
       <header className="landing-header">
@@ -162,50 +241,26 @@ export default function Landing() {
       </header>
 
       <main className="landing-main">
-        {error && !blue && <p className="landing-error">{error}</p>}
+        {error && !hero && <p className="landing-error">{error}</p>}
 
-        {blue && (
-          <section className="blue-hero">
-            <h1 className="blue-label">🇦🇷 Dólar blue</h1>
-            <p className="blue-venta">{pesos.format(blue.venta)}</p>
-            <p className="blue-compra">compra {pesos.format(blue.compra)}</p>
+        {hero && (
+          <section className="blue-hero" key={heroId}>
+            <h1 className="blue-label">{hero.largo}</h1>
+            <p className="blue-venta">{hero.valor}</p>
+            {hero.compra && <p className="blue-compra">compra {hero.compra}</p>}
           </section>
+        )}
+
+        {hero && (
+          <button type="button" className="btn btn-ghost" onClick={() => setConvirtiendo(true)}>
+            ⇄ Convertir
+          </button>
         )}
 
         {cotizaciones && (
           <section className="secundarias">
-            {oficial && (
-              <div className="cotiz-card">
-                <span className="cotiz-nombre">Oficial</span>
-                <span className="cotiz-valor">{pesos.format(oficial.venta)}</span>
-              </div>
-            )}
-            {mep && (
-              <div className="cotiz-card">
-                <span className="cotiz-nombre">MEP</span>
-                <span className="cotiz-valor">{pesos.format(mep.venta)}</span>
-              </div>
-            )}
-            {usdtEnPesos != null ? (
-              <div className="cotiz-card">
-                <span className="cotiz-nombre">USDT</span>
-                <span className="cotiz-valor">{pesos.format(usdtEnPesos)}</span>
-              </div>
-            ) : (
-              cripto && (
-                <div className="cotiz-card">
-                  <span className="cotiz-nombre">Cripto</span>
-                  <span className="cotiz-valor">{pesos.format(cripto.venta)}</span>
-                </div>
-              )
-            )}
+            {DOLARES_AR.filter((id) => id !== heroId).map(cardTasa)}
           </section>
-        )}
-
-        {blue && (
-          <button type="button" className="btn btn-ghost" onClick={() => setConvirtiendo(true)}>
-            ⇄ Convertir
-          </button>
         )}
 
         <section className="tasas-block">
@@ -239,23 +294,13 @@ export default function Landing() {
                   </button>
                 )
               })}
-              <p className="tasas-limite">Hasta {MAX_TASAS} tasas.</p>
+              <p className="tasas-limite">Hasta {MAX_TASAS} tasas. Tocá una tarjeta para hacerla principal.</p>
             </div>
           )}
 
           {tasas.length > 0 && (
             <div className="secundarias">
-              {tasas.map((id) => {
-                const t = valorTasa(id)
-                return (
-                  t && (
-                    <div className="cotiz-card" key={id}>
-                      <span className="cotiz-nombre">{t.nombre}</span>
-                      <span className="cotiz-valor">{t.valor}</span>
-                    </div>
-                  )
-                )
-              })}
+              {tasas.filter((id) => id !== heroId).map(cardTasa)}
             </div>
           )}
 

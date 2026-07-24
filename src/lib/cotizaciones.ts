@@ -163,6 +163,17 @@ export function saveTasasElegidas(ids: string[]) {
   localStorage.setItem(TASAS_KEY, JSON.stringify(ids.slice(0, MAX_TASAS)))
 }
 
+// Tasa principal (el número grande de la landing), elegible por el usuario.
+const PRINCIPAL_KEY = 'dolar-crm:principal'
+
+export function getPrincipal(): string {
+  return localStorage.getItem(PRINCIPAL_KEY) ?? 'blue'
+}
+
+export function savePrincipal(id: string) {
+  localStorage.setItem(PRINCIPAL_KEY, id)
+}
+
 function useCached<S>(fetcher: () => Promise<S>) {
   const [state, setState] = useState<S | null>(null)
   const [error, setError] = useState<string | null>(null)

@@ -208,6 +208,16 @@ button {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.cotiz-card:hover {
+  border-color: #c7c7cc;
+}
+
+.cotiz-card:active {
+  transform: scale(0.97);
 }
 
 .cotiz-nombre {
