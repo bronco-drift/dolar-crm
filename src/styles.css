@@ -866,10 +866,20 @@ button {
   -webkit-user-select: none;
   touch-action: pan-y;
   transition: background-color 0.12s ease;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 1.5px rgb(0 0 0 / 0.04);
 }
 
 .cal-dia.cal-vacio {
   cursor: default;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.cal-dia[class*='cal-viaje-'] {
+  border-color: transparent;
 }
 
 .cal-dia:not(.cal-vacio):not(.cal-viaje):hover {
@@ -878,7 +888,8 @@ button {
 
 .cal-finde {
   color: var(--muted);
-  background-color: rgb(0 0 0 / 0.025);
+  background-color: var(--soft);
+  box-shadow: none;
 }
 
 .cal-feriado {
