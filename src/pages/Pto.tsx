@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import CalendarioMes, { CalendarioSemanas, type DiaRender } from '../components/CalendarioMes'
+import CalendarioMes, { type DiaRender } from '../components/CalendarioMes'
 import { PAISES_FERIADOS, useFeriados } from '../lib/feriados'
 import { type PtoState, getPto, savePto } from '../lib/storage'
 
@@ -71,6 +71,8 @@ export default function Pto() {
   const hoy = hoyStr()
   const [vista, setVista] = useState<'mes' | 'continuo'>('mes')
   const [mesVista, setMesVista] = useState(() => hoy.slice(0, 7))
+  const [contIni, setContIni] = useState(0)
+  const [contFin, setContFin] = useState(3)
   const [ajustes, setAjustes] = useState(false)
   const [toast, setToast] = useState('')
   const toastTimer = useRef<number | undefined>(undefined)
@@ -302,13 +304,36 @@ export default function Pto() {
           />
         </>
       ) : (
-        // La ventana sigue al viaje: una semana antes y una después.
-        // Al arrastrar el viaje hacia un borde, la ventana se extiende sola.
-        <CalendarioSemanas
-          desde={addDias(estado.viajeInicio, -7)}
-          hasta={addDias(estado.viajeFin, 7)}
-          {...propsCalendario}
-        />
+        // Scroll interno del calendario: la página queda quieta y el drag
+        // del viaje no pelea con el scroll.
+        <div className="pto-scroll">
+          <button
+            type="button"
+            className="btn btn-ghost pto-cargar"
+            onClick={() => setContIni((n) => n - 1)}
+          >
+            ↑ Cargar mes anterior
+          </button>
+          {Array.from({ length: contFin - contIni + 1 }, (_, i) =>
+            sumarMes(mesVista, contIni + i),
+          ).map((m) => (
+            <div key={m}>
+              <h3 className="pto-mes-titulo">{etiquetaMes(m)}</h3>
+              <CalendarioMes
+                año={Number(m.slice(0, 4))}
+                mes={Number(m.slice(5, 7)) - 1}
+                {...propsCalendario}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            className="btn btn-ghost pto-cargar"
+            onClick={() => setContFin((n) => n + 1)}
+          >
+            ↓ Cargar mes siguiente
+          </button>
+        </div>
       )}
 
       <p className="conv-nota">
