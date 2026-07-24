@@ -115,6 +115,30 @@ export default function Pto() {
     guardar({ ...estadoRef.current, remotos: [...remotos] })
   }
 
+  // Llevar el viaje entero a otra fecha (misma duración), para no tener
+  // que arrastrarlo a través de meses.
+  const moverViajeA = (f: string): PtoState => {
+    const e = estadoRef.current
+    const duracion = diffDias(e.viajeInicio, e.viajeFin)
+    let remotos = e.remotos
+    if (e.fijarRemotos) {
+      const corrimiento = diffDias(e.viajeInicio, f)
+      remotos = e.remotos
+        .map((r) => {
+          if (r >= e.viajeInicio && r <= e.viajeFin) {
+            const nr = addDias(r, corrimiento)
+            return esFinde(nr) || feriados.has(nr) ? null : nr
+          }
+          return r
+        })
+        .filter((x): x is string => x != null)
+    }
+    const next = { ...e, viajeInicio: f, viajeFin: addDias(f, duracion), remotos }
+    guardar(next)
+    avisar('Viaje movido — arrastralo para ajustar')
+    return next
+  }
+
   // ── Drag: mover el viaje o estirar sus bordes ──
   const empezarDrag = (f: string) => {
     const e = estadoRef.current
@@ -206,7 +230,29 @@ export default function Pto() {
     return { clases: clases.join(' '), titulo: feriados.has(f) ? 'Feriado' : undefined }
   }
 
+  // Mouse: dentro del viaje arrastra; fuera, lo muda ahí y sigue arrastrando.
+  const mouseDownDia = (f: string) => {
+    const e = estadoRef.current
+    if (f >= e.viajeInicio && f <= e.viajeFin) {
+      empezarDrag(f)
+      return
+    }
+    const n = moverViajeA(f)
+    drag.current = {
+      modo: 'mover',
+      offset: 0,
+      snapIni: n.viajeInicio,
+      snapFin: n.viajeFin,
+      snapRemotos: n.remotos,
+    }
+  }
+
+  // Touch: el tap corto fuera del viaje lo muda; la pulsación larga sigue
+  // siendo Home-Office, y tocar dentro del viaje arrastra.
+  const ultimoTouch = useRef<{ fecha: string; movido: boolean } | null>(null)
+
   const touchStartDia = (f: string) => {
+    ultimoTouch.current = { fecha: f, movido: false }
     clearTimeout(longPress.current)
     longPress.current = window.setTimeout(() => {
       toggleRemoto(f)
@@ -215,18 +261,32 @@ export default function Pto() {
     empezarDrag(f)
   }
 
+  const touchEndDia = () => {
+    const eraTap = longPress.current !== undefined
+    clearTimeout(longPress.current)
+    longPress.current = undefined
+    const t = ultimoTouch.current
+    ultimoTouch.current = null
+    if (eraTap && t && !t.movido) {
+      const e = estadoRef.current
+      if (t.fecha < e.viajeInicio || t.fecha > e.viajeFin) moverViajeA(t.fecha)
+    }
+  }
+
   const propsCalendario = {
     inicioSemana: estado.inicioSemana,
     dia: renderDia,
-    onDiaDown: empezarDrag,
+    onDiaDown: mouseDownDia,
     onDiaEnter: moverDrag,
     onDiaContext: toggleRemoto,
     onDiaTouchStart: touchStartDia,
     onDiaTouchMove: (f: string) => {
+      if (ultimoTouch.current) ultimoTouch.current.movido = true
       clearTimeout(longPress.current)
+      longPress.current = undefined
       moverDrag(f)
     },
-    onDiaTouchEnd: () => clearTimeout(longPress.current),
+    onDiaTouchEnd: touchEndDia,
   }
 
   return (
@@ -337,8 +397,8 @@ export default function Pto() {
       )}
 
       <p className="conv-nota">
-        Arrastrá el viaje para moverlo, tirá de los bordes para estirarlo. Mantené presionado (o
-        clic derecho) un día hábil para marcar Home-Office 💻.
+        Tocá un día para llevar el viaje ahí. Arrastralo para moverlo, tirá de los bordes para
+        estirarlo. Mantené presionado (o clic derecho) un día hábil para marcar Home-Office 💻.
       </p>
 
       <footer className="crm-footer">
