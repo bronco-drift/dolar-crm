@@ -215,7 +215,11 @@ export default function Pto() {
     if (esFinde(f)) clases.push('cal-finde')
     if (feriados.has(f)) clases.push('cal-feriado')
     if (f === hoy) clases.push('cal-hoy')
-    if (remotosSet.has(f)) clases.push('cal-remoto')
+    // Días hábiles: 🏢 oficina, 💻 remoto — y el viaje los "borra" (PTO).
+    if (!esLibre(f)) {
+      if (remotosSet.has(f)) clases.push('cal-remoto')
+      else if (!enViaje(f)) clases.push('cal-oficina')
+    }
     if (enViaje(f)) {
       clases.push('cal-viaje')
       const esIni = f === estado.viajeInicio
@@ -228,6 +232,12 @@ export default function Pto() {
       if (esLibre(f)) clases.push('cal-viaje-off')
     }
     return { clases: clases.join(' '), titulo: feriados.has(f) ? 'Feriado' : undefined }
+  }
+
+  const reiniciarViaje = () => {
+    if (!confirm('¿Reiniciar el viaje? Se borran también los Home-Office.')) return
+    guardar({ ...estadoRef.current, viajeInicio: hoy, viajeFin: hoy, remotos: [] })
+    avisar('Viaje reiniciado — tocá un día para empezar de nuevo')
   }
 
   // Mouse: dentro del viaje arrastra; fuera, lo muda ahí y sigue arrastrando.
@@ -356,6 +366,14 @@ export default function Pto() {
             >
               ›
             </button>
+            <button
+              type="button"
+              className="pto-reset"
+              title="Reiniciar viaje"
+              onClick={reiniciarViaje}
+            >
+              ↺
+            </button>
           </div>
           <CalendarioMes
             año={Number(mesVista.slice(0, 4))}
@@ -366,6 +384,17 @@ export default function Pto() {
       ) : (
         // Scroll interno del calendario: la página queda quieta y el drag
         // del viaje no pelea con el scroll.
+        <>
+        <div className="pto-reset-fila">
+          <button
+            type="button"
+            className="pto-reset"
+            title="Reiniciar viaje"
+            onClick={reiniciarViaje}
+          >
+            ↺
+          </button>
+        </div>
         <div className="pto-scroll">
           <button
             type="button"
@@ -394,6 +423,7 @@ export default function Pto() {
             ↓ Cargar mes siguiente
           </button>
         </div>
+        </>
       )}
 
       <p className="conv-nota">
