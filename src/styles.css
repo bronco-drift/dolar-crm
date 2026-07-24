@@ -654,18 +654,30 @@ button {
 /* ─── PTO Planner ────────────────────────────────────────────── */
 .pto-kpi-principal {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 16px 18px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px 12px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
+.pto-kpi-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pto-kpi-detalle {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .pto-consume {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
@@ -684,32 +696,6 @@ button {
 
 .pto-restan.is-negativo {
   color: #b0452f;
-}
-
-.pto-minis {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.pto-mini {
-  text-align: center;
-  padding: 10px 4px;
-  background: var(--soft);
-  border-radius: var(--radius);
-}
-
-.pto-mini strong {
-  display: block;
-  font-size: 18px;
-  font-variant-numeric: tabular-nums;
-}
-
-.pto-mini span {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .pto-scroll {

@@ -309,27 +309,17 @@ export default function Pto() {
       </header>
 
       <div className="pto-kpi-principal">
-        <div>
-          <span className="pto-consume">{consume}</span>
-          <span className="pto-unidad"> días de vacaciones</span>
+        <div className="pto-kpi-fila">
+          <div>
+            <span className="pto-consume">{consume}</span>
+            <span className="pto-unidad"> días de vacaciones</span>
+          </div>
+          <span className={`pto-restan ${restan < 0 ? 'is-negativo' : ''}`}>
+            te quedan {restan} de {estado.ptoDias}
+          </span>
         </div>
-        <span className={`pto-restan ${restan < 0 ? 'is-negativo' : ''}`}>
-          te quedan {restan} de {estado.ptoDias}
-        </span>
-      </div>
-
-      <div className="pto-minis">
-        <div className="pto-mini">
-          <strong>{totales}</strong>
-          <span>totales</span>
-        </div>
-        <div className="pto-mini">
-          <strong>{libres}</strong>
-          <span>libres</span>
-        </div>
-        <div className="pto-mini">
-          <strong>{remotosN}</strong>
-          <span>remotos 💻</span>
+        <div className="pto-kpi-detalle">
+          {totales} totales · {libres} libres · {remotosN} remoto{remotosN === 1 ? '' : 's'} 💻
         </div>
       </div>
 
