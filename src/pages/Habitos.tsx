@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import CalendarioMes, { CalendarioSemanas, type DiaRender } from '../components/CalendarioMes'
 import { type Habito, type TipoHabito, deleteHabito, getHabitos, saveHabito } from '../lib/storage'
+import { activarRecordatorio } from '../lib/push'
 
 const MESES = [
   'enero',
@@ -65,6 +66,7 @@ export default function Habitos() {
   const [semana, setSemana] = useState(() => lunesDe(hoy))
   const [diaSel, setDiaSel] = useState(hoy)
   const [texto, setTexto] = useState('')
+  const [suscripcion, setSuscripcion] = useState<string | null>(null)
 
   const porDia = new Map<string, { bien: number; mal: number }>()
   for (const h of habitos) {
@@ -212,7 +214,52 @@ export default function Habitos() {
         <span>
           {habitos.length} registro{habitos.length === 1 ? '' : 's'} · guardado en este navegador
         </span>
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={async () => {
+            try {
+              const json = await activarRecordatorio()
+              await navigator.clipboard.writeText(json).catch(() => {})
+              setSuscripcion(json)
+            } catch (e) {
+              setSuscripcion(`ERROR: ${(e as Error).message}`)
+            }
+          }}
+        >
+          Recordatorio diario
+        </button>
       </footer>
+
+      {suscripcion && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(e) => e.target === e.currentTarget && setSuscripcion(null)}
+        >
+          <div className="modal">
+            <h2>Recordatorio diario</h2>
+            {suscripcion.startsWith('ERROR:') ? (
+              <p className="conv-nota">{suscripcion.slice(7)}</p>
+            ) : (
+              <>
+                <p className="conv-nota">
+                  Listo, este dispositivo quedó suscripto (ya lo copié al portapapeles). Pegalo en
+                  Vercel → Settings → Environment Variables como <strong>PUSH_SUBSCRIPTION</strong>{' '}
+                  y volvé a deployar.
+                </p>
+                <textarea className="push-json" readOnly rows={5} value={suscripcion} />
+              </>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setSuscripcion(null)}
+            >
+              Listo
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }

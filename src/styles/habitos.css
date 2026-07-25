@@ -1,4 +1,17 @@
 /* ─── Hábitos ────────────────────────────────────────────────── */
+.push-json {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
 .hab-registro {
   display: flex;
   flex-direction: column;
