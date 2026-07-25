@@ -4,6 +4,7 @@ import Gastos from './Gastos'
 import Pto from './Pto'
 import Habitos from './Habitos'
 import Tareas from './Tareas'
+import AjustesGlobales from '../components/AjustesGlobales'
 
 const TOOLS = [
   { id: 'crm', label: 'CRM' },
@@ -30,18 +31,21 @@ export default function Herramientas() {
 
   return (
     <div className="crm">
-      <nav className="tools-tabs" aria-label="Herramientas">
-        {TOOLS.map((t) => (
-          <button
-            type="button"
-            key={t.id}
-            className={`tool-tab ${tool === t.id ? 'is-active' : ''}`}
-            onClick={() => elegir(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <div className="tools-barra">
+        <nav className="tools-tabs" aria-label="Herramientas">
+          {TOOLS.map((t) => (
+            <button
+              type="button"
+              key={t.id}
+              className={`tool-tab ${tool === t.id ? 'is-active' : ''}`}
+              onClick={() => elegir(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+        <AjustesGlobales />
+      </div>
 
       {tool === 'crm' && <Crm />}
       {tool === 'gastos' && <Gastos />}

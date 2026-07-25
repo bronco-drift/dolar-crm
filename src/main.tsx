@@ -5,6 +5,10 @@ import Landing from './pages/Landing'
 import Herramientas from './pages/Herramientas'
 import TabBar from './components/TabBar'
 import './styles.css'
+import { aplicarTema, temaInicial } from './lib/tema'
+
+// Antes del primer render, para que no haya destello del tema anterior.
+aplicarTema(temaInicial(), false)
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

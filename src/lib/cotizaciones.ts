@@ -280,6 +280,7 @@ export interface PaisEnvio {
 }
 
 export const PAISES_ENVIO: PaisEnvio[] = [
+  { id: 'ar', nombre: 'Argentina', bandera: '🇦🇷', prefijo: '$', fiat: 'ars' },
   { id: 've', nombre: 'Venezuela', bandera: '🇻🇪', prefijo: 'Bs', fiat: 'ves' },
   { id: 'co', nombre: 'Colombia', bandera: '🇨🇴', prefijo: 'COP', fiat: 'cop' },
   { id: 'br', nombre: 'Brasil', bandera: '🇧🇷', prefijo: 'R$', fiat: 'brl' },
@@ -291,7 +292,23 @@ export const PAISES_ENVIO: PaisEnvio[] = [
   { id: 'py', nombre: 'Paraguay', bandera: '🇵🇾', prefijo: '₲', fiat: 'pyg' },
   { id: 'ec', nombre: 'Ecuador', bandera: '🇪🇨', prefijo: 'US$', fiat: null },
   { id: 'pa', nombre: 'Panamá', bandera: '🇵🇦', prefijo: 'US$', fiat: null },
+  { id: 'us', nombre: 'Estados Unidos', bandera: '🇺🇸', prefijo: 'US$', fiat: null },
+  { id: 'es', nombre: 'España', bandera: '🇪🇸', prefijo: '€', fiat: 'eur' },
 ]
+
+// País del usuario: define qué cotizaciones son relevantes para él.
+const PAIS_USUARIO_KEY = 'dolar-crm:pais-usuario'
+
+export function getPaisUsuario(): string {
+  const guardado = localStorage.getItem(PAIS_USUARIO_KEY)
+  if (guardado) return guardado
+  const detectado = paisNavegador()
+  return PAISES_ENVIO.some((p) => p.id === detectado) ? (detectado as string) : 'ar'
+}
+
+export function savePaisUsuario(id: string) {
+  localStorage.setItem(PAIS_USUARIO_KEY, id)
+}
 
 const ENVIO_PAIS_KEY = 'dolar-crm:envio-pais'
 
@@ -303,12 +320,7 @@ export function paisNavegador(): string | null {
 }
 
 export function getPaisEnvio(): string {
-  const guardado = localStorage.getItem(ENVIO_PAIS_KEY)
-  if (guardado) return guardado
-  // Si el navegador es de un país del catálogo (y no Argentina, que es
-  // el origen), arrancar con ese destino.
-  const detectado = paisNavegador()
-  return PAISES_ENVIO.some((p) => p.id === detectado) ? (detectado as string) : 've'
+  return localStorage.getItem(ENVIO_PAIS_KEY) ?? 've'
 }
 
 export function savePaisEnvio(id: string) {
