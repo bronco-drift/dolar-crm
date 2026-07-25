@@ -293,14 +293,41 @@ button {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  cursor: pointer;
   text-align: left;
   transition: border-color 0.15s;
   animation: rise 0.5s 0.15s ease both;
 }
 
-.envio-block:hover {
+.envio-block.is-tap {
+  cursor: pointer;
+}
+
+.envio-block.is-tap:hover {
   border-color: #c7c7cc;
+}
+
+.envio-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.envio-select {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 8px;
+  max-width: 175px;
+}
+
+.envio-select:focus {
+  outline: none;
+  border-color: var(--ink);
 }
 
 .envio-titulo {

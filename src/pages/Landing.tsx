@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 import {
   MAX_TASAS,
+  PAISES_ENVIO,
   TASAS_DISPONIBLES,
+  getPaisEnvio,
   getPrincipal,
   getTasasElegidas,
   porCasa,
   porFuente,
   porMoneda,
+  savePaisEnvio,
   savePrincipal,
   saveTasasElegidas,
   useBolivares,
@@ -14,6 +17,7 @@ import {
   useMonedas,
   useUsdtArs,
   useUsdtEur,
+  useUsdtFiat,
   useUsdtVes,
   valorUsdt,
   valorVe,
@@ -69,6 +73,10 @@ export default function Landing() {
   const { usdtArs } = useUsdtArs()
   const { usdtVes } = useUsdtVes()
   const { usdtEur } = useUsdtEur()
+  const { usdtFiat: usdtCop } = useUsdtFiat('cop')
+  const [paisEnvioId, setPaisEnvioId] = useState(getPaisEnvio)
+  const paisEnvio = PAISES_ENVIO.find((p) => p.id === paisEnvioId) ?? PAISES_ENVIO[0]
+  const { usdtFiat: usdtDestino } = useUsdtFiat(paisEnvio.fiat ?? 'ves')
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
   const [principal, setPrincipal] = useState<string>(getPrincipal)
   const [editando, setEditando] = useState(false)
@@ -95,6 +103,9 @@ export default function Landing() {
   // Euro en Bs: cross vía USDT (Bs por USDT ÷ EUR por USDT)
   const eurPorUsdt = valorUsdt(usdtEur)
   const eurEnBs = usdtEnBs != null && eurPorUsdt ? usdtEnBs / eurPorUsdt : null
+  // Peso colombiano: USD→COP directo y cross COP→Bs
+  const usdEnCop = valorUsdt(usdtCop)
+  const copEnBs = usdtEnBs != null && usdEnCop ? usdtEnBs / usdEnCop : null
 
   // Enviar US$ 100 a Venezuela: costo en pesos y llegada en Bs, por canal
   const envio = {
@@ -107,6 +118,12 @@ export default function Landing() {
   if (blue && paralelo != null && usdtEnPesos != null && usdtEnBs != null) {
     conviene = paralelo / blue.venta >= usdtEnBs / usdtEnPesos ? 'dolar' : 'usdt'
   }
+
+  const esVe = paisEnvio.id === 've'
+  const usdtEnDestino = paisEnvio.fiat ? valorUsdt(usdtDestino) : null
+  const llegaUsdtDestino =
+    paisEnvio.fiat == null ? 100 : usdtEnDestino != null ? 100 * usdtEnDestino : null
+  const fmtMonto = (v: number) => (v >= 1000 ? num0.format(v) : num2.format(v))
 
   const rateInfo = (id: string): RateInfo | null => {
     switch (id) {
@@ -197,6 +214,24 @@ export default function Landing() {
           ? { corto: 'Real', largo: '🇦🇷 Real', par: '🇧🇷 → 🇦🇷', valor: pesos.format(c.venta) }
           : null
       }
+      case 'usd-cop':
+        return usdEnCop != null
+          ? {
+              corto: 'Dólar',
+              largo: '🇨🇴 Dólar',
+              par: '🇺🇸 → 🇨🇴',
+              valor: `≈ COP ${num0.format(usdEnCop)}`,
+            }
+          : null
+      case 'cop-ves':
+        return copEnBs != null
+          ? {
+              corto: 'Peso col.',
+              largo: '🇨🇴 Peso en Bs',
+              par: '🇨🇴 → 🇻🇪',
+              valor: `≈ Bs ${num2.format(copEnBs)}`,
+            }
+          : null
       default:
         return null
     }
@@ -309,28 +344,49 @@ export default function Landing() {
           </button>
         )}
 
-        {envio.costoDolar != null && envio.llegaDolar != null && (
+        {envio.costoDolar != null && (
           <section
-            className="envio-block"
-            role="button"
-            title="Abrir el conversor"
+            className={`envio-block ${esVe ? 'is-tap' : ''}`}
+            role={esVe ? 'button' : undefined}
+            title={esVe ? 'Abrir el conversor' : undefined}
             onClick={() => {
+              if (!esVe) return
               setMonto('100')
               setMoneda('usd')
               setDestino('ves')
               setConvirtiendo(true)
             }}
           >
-            <h2 className="envio-titulo">Enviar US$ 100 a 🇻🇪</h2>
-            <div className="envio-fila">
-              <span className="envio-via">
-                Vía dólar {conviene === 'dolar' && <span className="envio-badge">conviene</span>}
-              </span>
-              <span className="envio-datos">
-                pagás {pesos.format(envio.costoDolar)} · llegan Bs {num0.format(envio.llegaDolar)}
-              </span>
+            <div className="envio-head">
+              <h2 className="envio-titulo">Enviar US$ 100 a</h2>
+              <select
+                className="envio-select"
+                value={paisEnvio.id}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  setPaisEnvioId(e.target.value)
+                  savePaisEnvio(e.target.value)
+                }}
+              >
+                {PAISES_ENVIO.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.bandera} {p.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
-            {envio.costoUsdt != null && envio.llegaUsdt != null && (
+
+            {esVe && envio.llegaDolar != null && (
+              <div className="envio-fila">
+                <span className="envio-via">
+                  Vía dólar {conviene === 'dolar' && <span className="envio-badge">conviene</span>}
+                </span>
+                <span className="envio-datos">
+                  pagás {pesos.format(envio.costoDolar)} · llegan Bs {num0.format(envio.llegaDolar)}
+                </span>
+              </div>
+            )}
+            {esVe && envio.costoUsdt != null && envio.llegaUsdt != null && (
               <div className="envio-fila">
                 <span className="envio-via">
                   Vía USDT {conviene === 'usdt' && <span className="envio-badge">conviene</span>}
@@ -340,12 +396,22 @@ export default function Landing() {
                 </span>
               </div>
             )}
+            {!esVe && (
+              <div className="envio-fila">
+                <span className="envio-via">Vía USDT</span>
+                <span className="envio-datos">
+                  {envio.costoUsdt != null && llegaUsdtDestino != null
+                    ? `pagás ${pesos.format(envio.costoUsdt)} · llegan ${paisEnvio.prefijo} ${fmtMonto(llegaUsdtDestino)}`
+                    : 'sin datos por ahora'}
+                </span>
+              </div>
+            )}
           </section>
         )}
 
         {cotizaciones && (
           <section className="pizarra">
-            {[...new Set([...DOLARES_AR, 'ars-eur', 've-eur', ...tasas])]
+            {[...new Set([...DOLARES_AR, 'ars-eur', 've-eur', 'usd-cop', 'cop-ves', ...tasas])]
               .filter((id) => id !== heroId)
               .map(filaTasa)}
           </section>

@@ -103,6 +103,16 @@ export const getUsdtArs = () => fetchCached<UsdtData>(USDT_ARS_URL, USDT_ARS_KEY
 export const getUsdtVes = () => fetchCached<UsdtData>(USDT_VES_URL, USDT_VES_KEY)
 export const getUsdtEur = () => fetchCached<UsdtData>(USDT_EUR_URL, USDT_EUR_KEY)
 
+// USDT contra cualquier fiat de CriptoYa. Los fetchers se memoizan por
+// moneda para que los hooks tengan identidad estable.
+const fetchersUsdt: Record<string, () => Promise<RawCache<UsdtData>>> = {}
+
+export function getUsdtFiat(fiat: string) {
+  fetchersUsdt[fiat] ??= () =>
+    fetchCached<UsdtData>(`https://criptoya.com/api/usdt/${fiat}/1`, `dolar-crm:usdt-${fiat}`)
+  return fetchersUsdt[fiat]
+}
+
 // Precio de referencia USDT: Binance P2P si está, si no la mediana de asks.
 export function valorUsdt(state: UsdtState | null): number | null {
   if (!state) return null
@@ -236,4 +246,42 @@ export function useUsdtVes() {
 export function useUsdtEur() {
   const { state } = useCached(getUsdtEur)
   return { usdtEur: state }
+}
+
+export function useUsdtFiat(fiat: string) {
+  const { state } = useCached(getUsdtFiat(fiat))
+  return { usdtFiat: state }
+}
+
+// ── Envíos: países LATAM de destino ──
+export interface PaisEnvio {
+  id: string
+  nombre: string
+  bandera: string
+  prefijo: string // símbolo de la moneda local
+  fiat: string | null // código CriptoYa; null = el país usa USD
+}
+
+export const PAISES_ENVIO: PaisEnvio[] = [
+  { id: 've', nombre: 'Venezuela', bandera: '🇻🇪', prefijo: 'Bs', fiat: 'ves' },
+  { id: 'co', nombre: 'Colombia', bandera: '🇨🇴', prefijo: 'COP', fiat: 'cop' },
+  { id: 'br', nombre: 'Brasil', bandera: '🇧🇷', prefijo: 'R$', fiat: 'brl' },
+  { id: 'cl', nombre: 'Chile', bandera: '🇨🇱', prefijo: 'CLP', fiat: 'clp' },
+  { id: 'pe', nombre: 'Perú', bandera: '🇵🇪', prefijo: 'S/', fiat: 'pen' },
+  { id: 'mx', nombre: 'México', bandera: '🇲🇽', prefijo: 'MX$', fiat: 'mxn' },
+  { id: 'uy', nombre: 'Uruguay', bandera: '🇺🇾', prefijo: '$U', fiat: 'uyu' },
+  { id: 'bo', nombre: 'Bolivia', bandera: '🇧🇴', prefijo: 'Bs.', fiat: 'bob' },
+  { id: 'py', nombre: 'Paraguay', bandera: '🇵🇾', prefijo: '₲', fiat: 'pyg' },
+  { id: 'ec', nombre: 'Ecuador', bandera: '🇪🇨', prefijo: 'US$', fiat: null },
+  { id: 'pa', nombre: 'Panamá', bandera: '🇵🇦', prefijo: 'US$', fiat: null },
+]
+
+const ENVIO_PAIS_KEY = 'dolar-crm:envio-pais'
+
+export function getPaisEnvio(): string {
+  return localStorage.getItem(ENVIO_PAIS_KEY) ?? 've'
+}
+
+export function savePaisEnvio(id: string) {
+  localStorage.setItem(ENVIO_PAIS_KEY, id)
 }
