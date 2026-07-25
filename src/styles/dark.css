@@ -1,0 +1,145 @@
+/* ─── Modo oscuro (por ahora solo la landing del dólar) ──────── */
+.landing {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ─── Modo oscuro (documento completo: landing + herramientas) ── */
+:root[data-tema='oscuro'] {
+  --bg: #000000;
+  --surface: #141416;
+  --ink: #f2f2f4;
+  --muted: #98989e;
+  --line: #2a2a2e;
+  --soft: #1f1f22;
+  --sobre-ink: #000000;
+}
+
+/* Texto sobre superficies de tinta (botón primario, píldoras activas…) */
+[data-tema='oscuro'] .btn-primary,
+[data-tema='oscuro'] .tab.is-active,
+[data-tema='oscuro'] .filtro.is-active,
+[data-tema='oscuro'] .pill-cerrado,
+[data-tema='oscuro'] .pto-toast {
+  color: var(--sobre-ink);
+}
+
+[data-tema='oscuro'] .tabbar {
+  background: rgb(20 20 22 / 0.85);
+}
+
+[data-tema='oscuro'] .segment.is-active {
+  background: #2c2c2e;
+  box-shadow: none;
+}
+
+[data-tema='oscuro'] .envio-block.is-tap:hover,
+[data-tema='oscuro'] .cotiz-card:hover,
+[data-tema='oscuro'] .kb-card:hover {
+  border-color: #3a3a3f;
+}
+
+[data-tema='oscuro'] .envio-badge {
+  background: #1f3b2d;
+  color: #a8e6cf;
+}
+
+[data-tema='oscuro'] .conv-lista-menor .conv-moneda,
+[data-tema='oscuro'] .conv-lista-menor .conv-valor {
+  color: #6e6e73;
+}
+
+[data-tema='oscuro'] .modal-backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+[data-tema='oscuro'] .cal-dia:not(.cal-vacio):not(.cal-viaje):hover,
+[data-tema='oscuro'] .kb-mover button:hover:not(:disabled) {
+  background-color: rgb(255 255 255 / 0.07);
+}
+
+[data-tema='oscuro'] .dot-cerrado {
+  background: var(--sobre-ink);
+  border-color: var(--sobre-ink);
+}
+
+/* Tarjetas del kanban: mismos matices, versión nocturna */
+[data-tema='oscuro'] .kb-t0 {
+  background: #16324d;
+  color: #cfe3f7;
+}
+
+[data-tema='oscuro'] .kb-t1 {
+  background: #4a3612;
+  color: #fbe3bb;
+}
+
+[data-tema='oscuro'] .kb-t2 {
+  background: #17402f;
+  color: #c6ecd9;
+}
+
+[data-tema='oscuro'] .kb-t3 {
+  background: #2c2c2e;
+  color: #d6d6da;
+}
+
+/* Botones de ajustes globales (tema y país) */
+.tema-btn {
+  height: 34px;
+  min-width: 34px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--muted);
+  transition: color 0.15s, background 0.15s;
+}
+
+.tema-btn:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.ajustes-globales {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+}
+
+.pais-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  animation: rise 0.15s ease both;
+}
+
+.pais-opcion {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pais-opcion:hover {
+  background: var(--soft);
+}
+
+.pais-opcion.is-current {
+  font-weight: 600;
+}

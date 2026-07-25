@@ -1,0 +1,27 @@
+/* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .fila {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    row-gap: 8px;
+  }
+
+  .fila-monto {
+    flex-direction: row;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .btn-base {
+    opacity: 1;
+  }
+
+  .field-row {
+    flex-direction: column;
+  }
+
+  /* El par De/A del conversor se mantiene en una sola línea */
+  .field-row.conv-par {
+    flex-direction: row;
+  }
+}

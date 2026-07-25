@@ -4,7 +4,17 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Herramientas from './pages/Herramientas'
 import TabBar from './components/TabBar'
-import './styles.css'
+// El orden importa: define la cascada. Sistema de diseño primero,
+// después cada vista, lo compartido, y al final tema oscuro y responsive.
+import './styles/base.css'
+import './styles/landing.css'
+import './styles/crm.css'
+import './styles/pto.css'
+import './styles/tareas.css'
+import './styles/habitos.css'
+import './styles/compartido.css'
+import './styles/dark.css'
+import './styles/responsive.css'
 import { aplicarTema, temaInicial } from './lib/tema'
 
 // Antes del primer render, para que no haya destello del tema anterior.
