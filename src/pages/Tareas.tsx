@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { type KanbanState, type Tarea, getKanban, saveKanban } from '../lib/storage'
 
 function TareaForm({
@@ -88,10 +88,58 @@ export default function Tareas() {
   const [editando, setEditando] = useState<Tarea | null>(null)
   const [configurando, setConfigurando] = useState(false)
   const [nuevaCol, setNuevaCol] = useState('')
+  // Drag de tarjetas: pointer events (mouse y touch por igual)
+  const dragRef = useRef<{ id: string; x: number; y: number; moved: boolean } | null>(null)
+  const colHoverRef = useRef<string | null>(null)
+  const [dragId, setDragId] = useState<string | null>(null)
+  const [colHover, setColHover] = useState<string | null>(null)
 
   const guardar = (next: KanbanState) => {
     setEstado(next)
     saveKanban(next)
+  }
+
+  const cardPointerDown = (t: Tarea, e: React.PointerEvent) => {
+    // Las flechas siguen siendo botones: no inician drag
+    if ((e.target as HTMLElement).closest('button')) return
+    dragRef.current = { id: t.id, x: e.clientX, y: e.clientY, moved: false }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }
+
+  const cardPointerMove = (e: React.PointerEvent) => {
+    const d = dragRef.current
+    if (!d) return
+    if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) {
+      d.moved = true
+      setDragId(d.id)
+    }
+    if (d.moved) {
+      const el = document.elementFromPoint(e.clientX, e.clientY)
+      const col = el?.closest('[data-col]') as HTMLElement | null
+      colHoverRef.current = col?.dataset.col ?? null
+      setColHover(colHoverRef.current)
+    }
+  }
+
+  const cardPointerUp = (t: Tarea) => {
+    const d = dragRef.current
+    dragRef.current = null
+    setDragId(null)
+    const destino = colHoverRef.current
+    colHoverRef.current = null
+    setColHover(null)
+    if (!d) return
+    if (d.moved) {
+      if (destino && destino !== t.columnaId) {
+        guardar({
+          ...estado,
+          tareas: estado.tareas.map((x) => (x.id === t.id ? { ...x, columnaId: destino } : x)),
+        })
+      }
+    } else {
+      // Tap sin movimiento: abrir para editar
+      setEditando(t)
+    }
   }
 
   const esNueva = editando != null && !estado.tareas.some((t) => t.id === editando.id)
@@ -166,7 +214,11 @@ export default function Tareas() {
         {estado.columnas.map((c, i) => {
           const tareasCol = estado.tareas.filter((t) => t.columnaId === c.id)
           return (
-            <div key={c.id} className="kb-col">
+            <div
+              key={c.id}
+              data-col={c.id}
+              className={`kb-col ${dragId && colHover === c.id ? 'is-destino' : ''}`}
+            >
               <div className="kb-col-head">
                 <span className="kb-col-nombre">{c.nombre}</span>
                 <span className="kb-count">{tareasCol.length}</span>
@@ -175,9 +227,11 @@ export default function Tareas() {
                 {tareasCol.map((t) => (
                   <div
                     key={t.id}
-                    className={`kb-card kb-t${i % 4}`}
-                    onClick={() => setEditando(t)}
+                    className={`kb-card kb-t${i % 4} ${dragId === t.id ? 'is-drag' : ''}`}
                     role="button"
+                    onPointerDown={(e) => cardPointerDown(t, e)}
+                    onPointerMove={cardPointerMove}
+                    onPointerUp={() => cardPointerUp(t)}
                   >
                     <span className="kb-titulo">{t.titulo}</span>
                     {t.nota && <span className="kb-nota">{t.nota}</span>}

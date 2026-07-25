@@ -822,43 +822,51 @@ button {
   overflow-y: auto;
 }
 
-/* Tarjetas tipo evento de calendario: tinte pastel + barrita de color */
+/* Tarjetas tipo evento de calendario: tinte sólido, sin adornos */
 .kb-card {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border-radius: 7px;
-  border-left: 3px solid;
-  padding: 6px 7px;
-  cursor: pointer;
-  transition: filter 0.15s;
+  border-radius: 8px;
+  padding: 7px 9px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: filter 0.15s, transform 0.12s ease, opacity 0.12s ease;
 }
 
 .kb-card:hover {
   filter: brightness(0.96);
 }
 
+.kb-card.is-drag {
+  opacity: 0.55;
+  transform: scale(1.05);
+  cursor: grabbing;
+}
+
+.kb-col.is-destino {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
 .kb-t0 {
   background: #dae9f7;
-  border-color: #4a90d9;
   color: #1e3a5f;
 }
 
 .kb-t1 {
   background: #fdeed3;
-  border-color: #d9962e;
   color: #6b4a10;
 }
 
 .kb-t2 {
   background: #d9f0e3;
-  border-color: #4cbc93;
   color: #1b4332;
 }
 
 .kb-t3 {
   background: #ececf0;
-  border-color: #8e8e93;
   color: #3a3a3c;
 }
 
