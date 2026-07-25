@@ -31,21 +31,22 @@ export default function Herramientas() {
 
   return (
     <div className="crm">
-      <div className="tools-barra">
-        <nav className="tools-tabs" aria-label="Herramientas">
-          {TOOLS.map((t) => (
-            <button
-              type="button"
-              key={t.id}
-              className={`tool-tab ${tool === t.id ? 'is-active' : ''}`}
-              onClick={() => elegir(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
+      <div className="tools-top">
         <AjustesGlobales />
       </div>
+
+      <nav className="tools-tabs" aria-label="Herramientas">
+        {TOOLS.map((t) => (
+          <button
+            type="button"
+            key={t.id}
+            className={`tool-tab ${tool === t.id ? 'is-active' : ''}`}
+            onClick={() => elegir(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
 
       {tool === 'crm' && <Crm />}
       {tool === 'gastos' && <Gastos />}
