@@ -145,12 +145,21 @@ button {
   flex-direction: column;
 }
 
-.landing-header {
+/* Cabecera común a todas las vistas: misma altura y posición siempre */
+.app-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: calc(24px + var(--safe-top)) calc(32px + var(--safe-right)) 24px
-    calc(32px + var(--safe-left));
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  padding-top: calc(22px + var(--safe-top));
+  padding-bottom: 18px;
+}
+
+/* En la landing aporta su propio margen lateral; dentro de .crm lo hereda */
+.landing > .app-header {
+  padding-left: calc(24px + var(--safe-left));
+  padding-right: calc(24px + var(--safe-right));
 }
 
 .wordmark {
@@ -674,8 +683,8 @@ button {
 .crm {
   max-width: 860px;
   margin: 0 auto;
-  padding: calc(28px + var(--safe-top)) calc(24px + var(--safe-right))
-    calc(104px + var(--safe-bottom)) calc(24px + var(--safe-left));
+  padding: 0 calc(24px + var(--safe-right)) calc(104px + var(--safe-bottom))
+    calc(24px + var(--safe-left));
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -695,13 +704,6 @@ button {
   font-size: 30px;
   font-weight: 600;
   letter-spacing: -0.02em;
-}
-
-/* Barra de ajustes: fila propia, para no robarle espacio a las tabs */
-.tools-top {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: -8px;
 }
 
 /* Tabs de herramientas: ancho completo, scroll horizontal cómodo */

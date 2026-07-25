@@ -4,7 +4,7 @@ import Gastos from './Gastos'
 import Pto from './Pto'
 import Habitos from './Habitos'
 import Tareas from './Tareas'
-import AjustesGlobales from '../components/AjustesGlobales'
+import AppHeader from '../components/AppHeader'
 
 const TOOLS = [
   { id: 'crm', label: 'CRM' },
@@ -31,9 +31,7 @@ export default function Herramientas() {
 
   return (
     <div className="crm">
-      <div className="tools-top">
-        <AjustesGlobales />
-      </div>
+      <AppHeader titulo="Herramientas" />
 
       <nav className="tools-tabs" aria-label="Herramientas">
         {TOOLS.map((t) => (

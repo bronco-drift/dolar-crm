@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import AjustesGlobales from '../components/AjustesGlobales'
+import AppHeader from '../components/AppHeader'
 import {
   MAX_TASAS,
   PAISES_ENVIO,
@@ -374,10 +374,7 @@ export default function Landing() {
 
   return (
     <div className="landing">
-      <header className="landing-header">
-        <span className="wordmark">Dólar hoy</span>
-        <AjustesGlobales />
-      </header>
+      <AppHeader titulo="Dólar hoy" />
 
       <main className="landing-main">
         {error && !hero && <p className="landing-error">{error}</p>}
