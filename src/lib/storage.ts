@@ -238,6 +238,7 @@ export interface PtoState {
   fijarRemotos: boolean
   pais: string // país para feriados (ver lib/feriados.ts)
   remotos: string[] // días home-office, YYYY-MM-DD
+  accesoLimitado?: boolean // avisar en el mensaje de ausencia
 }
 
 const K_PTO = 'dolar-crm:pto'

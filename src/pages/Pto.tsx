@@ -223,7 +223,10 @@ export default function Pto() {
 
   const mensajeOoo =
     `Dear sender, I'll be out of office from ${enFecha(estado.viajeInicio)} ` +
-    `to ${enFecha(estado.viajeFin)}, and I'll be back on ${enFecha(regreso)}.`
+    `to ${enFecha(estado.viajeFin)}, and I'll be back on ${enFecha(regreso)}.` +
+    (estado.accesoLimitado
+      ? ` I'll have limited access to email, so please expect a delay in my response.`
+      : '')
 
   const copiarOoo = async () => {
     try {
@@ -450,6 +453,14 @@ export default function Pto() {
         <p className="ooo-texto" onClick={copiarOoo}>
           {mensajeOoo}
         </p>
+        <label className="ajuste-check ooo-check">
+          <input
+            type="checkbox"
+            checked={estado.accesoLimitado ?? false}
+            onChange={(e) => guardar({ ...estado, accesoLimitado: e.target.checked })}
+          />
+          Limited access to email
+        </label>
       </section>
 
       <p className="conv-nota">

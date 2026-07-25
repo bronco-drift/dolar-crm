@@ -1349,6 +1349,15 @@ button {
   font-size: 13px;
 }
 
+.ooo-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+}
+
 .ooo-texto {
   margin: 0;
   font-size: 13.5px;
