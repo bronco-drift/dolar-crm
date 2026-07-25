@@ -41,6 +41,10 @@ interface Estado {
 const VEL_BALA = 620
 const COOLDOWN = 0.22
 const MARGEN_CANON = 54
+// A los 30 segundos se desata el modo madness: todo más rápido.
+const MADNESS_SEG = 30
+const MADNESS_ENEMIGOS = 1.7
+const MADNESS_BALAS = 1.5
 
 function nuevoEstado(): Estado {
   return {
@@ -65,12 +69,18 @@ export default function Juego1() {
   const [terminado, setTerminado] = useState(false)
   const [record, setRecord] = useState(getRecord)
   const [jugando, setJugando] = useState(false)
+  const [cuenta, setCuenta] = useState(MADNESS_SEG)
+  const [madness, setMadness] = useState(false)
+  const [flash, setFlash] = useState(false)
 
   const reiniciar = () => {
     estadoRef.current = nuevoEstado()
     setScore(0)
     setVidas(3)
     setTerminado(false)
+    setCuenta(MADNESS_SEG)
+    setMadness(false)
+    setFlash(false)
     setJugando(true)
   }
 
@@ -91,6 +101,7 @@ export default function Juego1() {
 
     let ancho = 0
     let alto = 0
+    let ultimoSeg = -1
     const medir = () => {
       const dpr = window.devicePixelRatio || 1
       ancho = canvas.clientWidth
@@ -116,11 +127,12 @@ export default function Juego1() {
       const e = estadoRef.current
       if (e.terminado || e.cooldown > 0) return
       e.cooldown = COOLDOWN
+      const vel = e.reloj >= MADNESS_SEG ? VEL_BALA * MADNESS_BALAS : VEL_BALA
       e.balas.push({
         x: canonX() + Math.cos(e.angulo) * 34,
         y: canonY() + Math.sin(e.angulo) * 34,
-        vx: Math.cos(e.angulo) * VEL_BALA,
-        vy: Math.sin(e.angulo) * VEL_BALA,
+        vx: Math.cos(e.angulo) * vel,
+        vy: Math.sin(e.angulo) * vel,
       })
     }
 
@@ -153,6 +165,20 @@ export default function Juego1() {
       e.reloj += dt
       e.cooldown = Math.max(0, e.cooldown - dt)
 
+      // Cuenta regresiva desde 30; al cruzar el cero empieza el madness
+      // y el número sigue bajando en negativo.
+      const seg = Math.floor(e.reloj)
+      if (seg !== ultimoSeg) {
+        ultimoSeg = seg
+        setCuenta(MADNESS_SEG - seg)
+        if (seg === MADNESS_SEG) {
+          setMadness(true)
+          setFlash(true)
+          window.setTimeout(() => setFlash(false), 1600)
+        }
+      }
+      const furia = e.reloj >= MADNESS_SEG ? MADNESS_ENEMIGOS : 1
+
       // Aparición de enemigos: más seguido a medida que avanza la partida.
       e.proximo -= dt
       if (e.proximo <= 0) {
@@ -183,8 +209,8 @@ export default function Juego1() {
       e.chispas = e.chispas.filter((c) => c.vida > 0)
 
       for (const en of e.enemigos) {
-        en.y += en.vel * dt
-        en.giro += dt * 0.7
+        en.y += en.vel * furia * dt
+        en.giro += dt * 0.7 * furia
       }
 
       // Impactos
@@ -310,13 +336,16 @@ export default function Juego1() {
       <header className="crm-header">
         <h1>Juego 1</h1>
         <div className="juego-marcador">
+          <span className={`juego-tiempo ${madness ? 'is-madness' : ''}`}>{cuenta}</span>
           <span className="juego-score">{score}</span>
           <span className="juego-vidas">{'●'.repeat(vidas)}</span>
         </div>
       </header>
 
-      <div className="juego-wrap">
+      <div className={`juego-wrap ${madness ? 'is-madness' : ''}`}>
         <canvas ref={canvasRef} className="juego-canvas" />
+
+        {flash && <div className="juego-flash">MADNESS</div>}
 
         {!jugando && !terminado && (
           <div className="juego-overlay">
