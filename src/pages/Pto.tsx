@@ -240,21 +240,18 @@ export default function Pto() {
     cerrar(regreso)
   }
 
-  const fraseTramo = (t: { desde: string; hasta: string; regreso: string }, i: number) => {
-    const cuando =
-      t.desde === t.hasta
-        ? `on ${enFecha(t.desde)}`
-        : `from ${enFecha(t.desde)} to ${enFecha(t.hasta)}`
-    const apertura = i === 0 ? "Dear sender, I'll be out of office" : "I'll be out of office again"
-    return `${apertura} ${cuando}, returning on ${enFecha(t.regreso)}.`
-  }
+  // Un solo período: hasta el primer día que se vuelve a trabajar, sea
+  // presencial o home-office.
+  const periodo = tramos[0]
+  const cuando = periodo
+    ? periodo.desde === periodo.hasta
+      ? `on ${enFecha(periodo.desde)}`
+      : `from ${enFecha(periodo.desde)} to ${enFecha(periodo.hasta)}`
+    : `from ${enFecha(estado.viajeInicio)} to ${enFecha(estado.viajeFin)}`
 
   const mensajeOoo =
-    (tramos.length
-      ? tramos.map(fraseTramo).join(' ')
-      : `Dear sender, I'll be out of office from ${enFecha(estado.viajeInicio)} to ${enFecha(
-          estado.viajeFin,
-        )}, returning on ${enFecha(regreso)}.`) +
+    `Dear sender, I'll be out of office ${cuando}, ` +
+    `returning on ${enFecha(periodo?.regreso ?? regreso)}.` +
     (estado.accesoLimitado
       ? ` I'll have limited access to email, so please expect a delay in my response.`
       : '')
