@@ -168,14 +168,14 @@ export default function Tareas() {
           return (
             <div key={c.id} className="kb-col">
               <div className="kb-col-head">
-                <span>{c.nombre}</span>
+                <span className="kb-col-nombre">{c.nombre}</span>
                 <span className="kb-count">{tareasCol.length}</span>
               </div>
               <div className="kb-cards">
                 {tareasCol.map((t) => (
                   <div
                     key={t.id}
-                    className="kb-card"
+                    className={`kb-card kb-t${i % 4}`}
                     onClick={() => setEditando(t)}
                     role="button"
                   >
