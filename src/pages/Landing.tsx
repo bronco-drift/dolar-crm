@@ -3,12 +3,14 @@ import {
   MAX_TASAS,
   PAISES_ENVIO,
   TASAS_DISPONIBLES,
+  getOrdenPizarra,
   getPaisEnvio,
   getPrincipal,
   getTasasElegidas,
   porCasa,
   porFuente,
   porMoneda,
+  saveOrdenPizarra,
   savePaisEnvio,
   savePrincipal,
   saveTasasElegidas,
@@ -58,6 +60,9 @@ const MONEDAS_CONV: { id: MonedaConv; nombre: string; corto: string }[] = [
 // Los cuatro dólares argentinos de la fila principal.
 const DOLARES_AR = ['blue', 'oficial', 'mep', 'usdt'] as const
 
+// Filas siempre presentes en la pizarra (las extra se eligen en "Editar").
+const FILAS_FIJAS = [...DOLARES_AR, 'ars-eur', 've-eur', 'usd-cop', 'cop-ves']
+
 interface RateInfo {
   corto: string
   largo: string
@@ -78,6 +83,7 @@ export default function Landing() {
   const paisEnvio = PAISES_ENVIO.find((p) => p.id === paisEnvioId) ?? PAISES_ENVIO[0]
   const { usdtFiat: usdtDestino } = useUsdtFiat(paisEnvio.fiat ?? 'ves')
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
+  const [orden, setOrden] = useState<string[]>(getOrdenPizarra)
   const [principal, setPrincipal] = useState<string>(getPrincipal)
   const [editando, setEditando] = useState(false)
   const [convirtiendo, setConvirtiendo] = useState(false)
@@ -246,6 +252,22 @@ export default function Landing() {
   const heroId = rateInfo(principal)?.valor != null ? principal : 'blue'
   const hero = rateInfo(heroId)
 
+  // Filas visibles de la pizarra, en el orden del usuario (las nuevas van al final).
+  const visibles = [...new Set([...FILAS_FIJAS, ...tasas])]
+  const filasOrdenadas = [
+    ...orden.filter((id) => visibles.includes(id)),
+    ...visibles.filter((id) => !orden.includes(id)),
+  ]
+
+  const moverFila = (i: number, dir: -1 | 1) => {
+    const j = i + dir
+    if (j < 0 || j >= filasOrdenadas.length) return
+    const arr = [...filasOrdenadas]
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    setOrden(arr)
+    saveOrdenPizarra(arr)
+  }
+
   const toggleTasa = (id: string) => {
     setTasas((prev) => {
       const next = prev.includes(id)
@@ -411,9 +433,7 @@ export default function Landing() {
 
         {cotizaciones && (
           <section className="pizarra">
-            {[...new Set([...DOLARES_AR, 'ars-eur', 've-eur', 'usd-cop', 'cop-ves', ...tasas])]
-              .filter((id) => id !== heroId)
-              .map(filaTasa)}
+            {filasOrdenadas.filter((id) => id !== heroId).map(filaTasa)}
           </section>
         )}
 
@@ -427,6 +447,36 @@ export default function Landing() {
 
           {editando && (
             <div className="tasas-picker">
+              <p className="tasas-sub">Orden</p>
+              {filasOrdenadas.map((id, i) => {
+                const info = rateInfo(id)
+                return (
+                  <div key={id} className="orden-fila">
+                    <span className="orden-nombre">
+                      {info ? `${info.par} ${info.corto}` : id}
+                    </span>
+                    <button
+                      type="button"
+                      className="kbc-btn"
+                      title="Subir"
+                      disabled={i === 0}
+                      onClick={() => moverFila(i, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="kbc-btn"
+                      title="Bajar"
+                      disabled={i === filasOrdenadas.length - 1}
+                      onClick={() => moverFila(i, 1)}
+                    >
+                      ↓
+                    </button>
+                  </div>
+                )
+              })}
+              <p className="tasas-sub">Tasas extra</p>
               {TASAS_DISPONIBLES.map((t) => {
                 const on = tasas.includes(t.id)
                 const bloqueada = !on && tasas.length >= MAX_TASAS

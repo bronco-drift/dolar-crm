@@ -179,6 +179,23 @@ export function saveTasasElegidas(ids: string[]) {
   localStorage.setItem(TASAS_KEY, JSON.stringify(ids.slice(0, MAX_TASAS)))
 }
 
+// Orden de las filas de la pizarra, definido por el usuario.
+const ORDEN_KEY = 'dolar-crm:pizarra-orden'
+
+export function getOrdenPizarra(): string[] {
+  try {
+    const raw = localStorage.getItem(ORDEN_KEY)
+    if (raw) return JSON.parse(raw) as string[]
+  } catch {
+    /* sin orden guardado */
+  }
+  return []
+}
+
+export function saveOrdenPizarra(ids: string[]) {
+  localStorage.setItem(ORDEN_KEY, JSON.stringify(ids))
+}
+
 // Tasa principal (el número grande de la landing), elegible por el usuario.
 const PRINCIPAL_KEY = 'dolar-crm:principal'
 
