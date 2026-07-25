@@ -55,6 +55,8 @@ export default function AjustesGlobales() {
               onClick={() => {
                 setPais(p.id)
                 savePaisUsuario(p.id)
+                // Avisar a las vistas que dependen del país (landing).
+                window.dispatchEvent(new Event('pais-usuario'))
                 setAbierto(false)
               }}
             >

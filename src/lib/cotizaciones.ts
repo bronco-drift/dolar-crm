@@ -199,8 +199,9 @@ export function saveOrdenPizarra(ids: string[]) {
 // Tasa principal (el número grande de la landing), elegible por el usuario.
 const PRINCIPAL_KEY = 'dolar-crm:principal'
 
-export function getPrincipal(): string {
-  return localStorage.getItem(PRINCIPAL_KEY) ?? 'blue'
+// null = el usuario no eligió; manda la sugerencia según su país.
+export function getPrincipal(): string | null {
+  return localStorage.getItem(PRINCIPAL_KEY)
 }
 
 export function savePrincipal(id: string) {
@@ -308,6 +309,27 @@ export function getPaisUsuario(): string {
 
 export function savePaisUsuario(id: string) {
   localStorage.setItem(PAIS_USUARIO_KEY, id)
+}
+
+// Qué cotización es "la" relevante para cada país: su moneda contra el
+// dólar. Los países con filas propias reusan esas; el resto usa la fila
+// genérica 'local' (USD → moneda del país, vía USDT).
+export function heroSugerido(pais: string): string {
+  switch (pais) {
+    case 'ar':
+      return 'blue'
+    case 've':
+      return 've-paralelo'
+    case 'co':
+      return 'usd-cop'
+    // Dolarizados: no hay cambio local contra el dólar.
+    case 'us':
+    case 'ec':
+    case 'pa':
+      return 'blue'
+    default:
+      return 'local'
+  }
 }
 
 const ENVIO_PAIS_KEY = 'dolar-crm:envio-pais'

@@ -6,8 +6,10 @@ import {
   TASAS_DISPONIBLES,
   getOrdenPizarra,
   getPaisEnvio,
+  getPaisUsuario,
   getPrincipal,
   getTasasElegidas,
+  heroSugerido,
   porCasa,
   porFuente,
   porMoneda,
@@ -80,12 +82,23 @@ export default function Landing() {
   const { usdtVes } = useUsdtVes()
   const { usdtEur } = useUsdtEur()
   const { usdtFiat: usdtCop } = useUsdtFiat('cop')
+  // País del usuario: define cuál es "su" cotización relevante.
+  const [paisUsuarioId, setPaisUsuarioId] = useState(getPaisUsuario)
+  useEffect(() => {
+    const onCambio = () => setPaisUsuarioId(getPaisUsuario())
+    window.addEventListener('pais-usuario', onCambio)
+    return () => window.removeEventListener('pais-usuario', onCambio)
+  }, [])
+  const paisUsuario = PAISES_ENVIO.find((p) => p.id === paisUsuarioId) ?? PAISES_ENVIO[0]
+  const { usdtFiat: usdtLocal } = useUsdtFiat(paisUsuario.fiat ?? 'ars')
+  const usdEnLocal = paisUsuario.fiat ? valorUsdt(usdtLocal) : null
+
   const [paisEnvioId, setPaisEnvioId] = useState(getPaisEnvio)
   const paisEnvio = PAISES_ENVIO.find((p) => p.id === paisEnvioId) ?? PAISES_ENVIO[0]
   const { usdtFiat: usdtDestino } = useUsdtFiat(paisEnvio.fiat ?? 'ves')
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
   const [orden, setOrden] = useState<string[]>(getOrdenPizarra)
-  const [principal, setPrincipal] = useState<string>(getPrincipal)
+  const [principal, setPrincipal] = useState<string | null>(getPrincipal)
   const [editando, setEditando] = useState(false)
   const [convirtiendo, setConvirtiendo] = useState(false)
   const [mostrandoInfo, setMostrandoInfo] = useState(false)
@@ -221,6 +234,18 @@ export default function Landing() {
           ? { corto: 'Real', largo: '🇦🇷 Real', par: '🇧🇷 → 🇦🇷', valor: pesos.format(c.venta) }
           : null
       }
+      // Fila genérica: el dólar en la moneda del país del usuario.
+      case 'local':
+        return usdEnLocal != null
+          ? {
+              corto: 'Dólar',
+              largo: `${paisUsuario.bandera} Dólar`,
+              par: `🇺🇸 → ${paisUsuario.bandera}`,
+              valor: `≈ ${paisUsuario.prefijo} ${
+                usdEnLocal >= 1000 ? num0.format(usdEnLocal) : num2.format(usdEnLocal)
+              }`,
+            }
+          : null
       case 'usd-cop':
         return usdEnCop != null
           ? {
@@ -249,12 +274,15 @@ export default function Landing() {
     savePrincipal(id)
   }
 
-  // Si la elegida todavía no tiene datos, el hero cae al blue.
-  const heroId = rateInfo(principal)?.valor != null ? principal : 'blue'
+  // Sin elección explícita manda el país; si esa tasa no tiene datos, blue.
+  const candidato = principal ?? heroSugerido(paisUsuarioId)
+  const heroId = rateInfo(candidato)?.valor != null ? candidato : 'blue'
   const hero = rateInfo(heroId)
 
-  // Filas visibles de la pizarra, en el orden del usuario (las nuevas van al final).
-  const visibles = [...new Set([...FILAS_FIJAS, ...tasas])]
+  // Filas visibles: primero la del país del usuario, después el resto.
+  const visibles = [
+    ...new Set([heroSugerido(paisUsuarioId), ...FILAS_FIJAS, ...tasas]),
+  ].filter((id) => id !== 'local' || usdEnLocal != null)
   const filasOrdenadas = [
     ...orden.filter((id) => visibles.includes(id)),
     ...visibles.filter((id) => !orden.includes(id)),
