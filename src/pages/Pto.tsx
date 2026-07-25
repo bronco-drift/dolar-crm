@@ -210,6 +210,34 @@ export default function Pto() {
   }
   const restan = estado.ptoDias - consume
 
+  // Mensaje de fuera-de-oficina, siempre en sintonía con el viaje.
+  // El regreso es el primer día hábil después del último día del viaje.
+  const fmtEn = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  })
+  const enFecha = (f: string) => fmtEn.format(parseF(f))
+  let regreso = addDias(estado.viajeFin, 1)
+  for (let i = 0; i < 30 && esLibre(regreso); i++) regreso = addDias(regreso, 1)
+  const habiles = consume + remotosN
+  const mensajeOoo =
+    `Dear sender, I'll be out of office for ${habiles} business day${habiles === 1 ? '' : 's'}, ` +
+    `from ${enFecha(estado.viajeInicio)} to ${enFecha(estado.viajeFin)}. ` +
+    `I'll be back on ${enFecha(regreso)}.` +
+    (remotosN > 0
+      ? ` I'll be working remotely on ${remotosN} of those day${remotosN === 1 ? '' : 's'}.`
+      : '')
+
+  const copiarOoo = async () => {
+    try {
+      await navigator.clipboard.writeText(mensajeOoo)
+      avisar('Mensaje copiado')
+    } catch {
+      avisar('No se pudo copiar')
+    }
+  }
+
   const renderDia = (f: string): DiaRender => {
     const clases: string[] = []
     if (esFinde(f)) clases.push('cal-finde')
@@ -415,6 +443,18 @@ export default function Pto() {
         </div>
         </>
       )}
+
+      <section className="ooo-block">
+        <div className="ooo-head">
+          <h3 className="ooo-titulo">Mensaje de ausencia</h3>
+          <button type="button" className="btn btn-ghost ooo-copiar" onClick={copiarOoo}>
+            Copiar
+          </button>
+        </div>
+        <p className="ooo-texto" onClick={copiarOoo}>
+          {mensajeOoo}
+        </p>
+      </section>
 
       <p className="conv-nota">
         Tocá un día para llevar el viaje ahí. Arrastralo para moverlo, tirá de los bordes para

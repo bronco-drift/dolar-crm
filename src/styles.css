@@ -1318,6 +1318,45 @@ button {
   margin-bottom: -10px;
 }
 
+/* Mensaje de fuera de oficina */
+.ooo-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.ooo-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.ooo-titulo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ooo-copiar {
+  height: 30px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.ooo-texto {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  cursor: copy;
+}
+
 .pto-toast {
   position: fixed;
   bottom: calc(84px + var(--safe-bottom));
