@@ -237,6 +237,52 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* Pizarra estilo casa de cambio */
+.pizarra {
+  width: min(100%, 440px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: rise 0.5s 0.2s ease both;
+}
+
+.pz-fila {
+  display: grid;
+  grid-template-columns: 82px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.pz-fila + .pz-fila {
+  border-top: 1px solid var(--line);
+}
+
+.pz-fila:hover {
+  background: var(--soft);
+}
+
+.pz-par {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.pz-nombre {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pz-valor {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Enviar a Venezuela */
 .envio-block {
   width: min(100%, 440px);

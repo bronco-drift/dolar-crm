@@ -57,6 +57,7 @@ const DOLARES_AR = ['blue', 'oficial', 'mep', 'usdt'] as const
 interface RateInfo {
   corto: string
   largo: string
+  par: string // par de cambio explícito, estilo casa de cambio
   valor: string | null
   compra?: string | null
 }
@@ -114,6 +115,7 @@ export default function Landing() {
           ? {
               corto: 'Blue',
               largo: '🇦🇷 Dólar blue',
+              par: '🇺🇸 → 🇦🇷',
               valor: pesos.format(blue.venta),
               compra: pesos.format(blue.compra),
             }
@@ -123,6 +125,7 @@ export default function Landing() {
           ? {
               corto: 'Oficial',
               largo: '🇦🇷 Dólar oficial',
+              par: '🇺🇸 → 🇦🇷',
               valor: pesos.format(oficial.venta),
               compra: pesos.format(oficial.compra),
             }
@@ -132,43 +135,67 @@ export default function Landing() {
           ? {
               corto: 'MEP',
               largo: '🇦🇷 Dólar MEP',
+              par: '🇺🇸 → 🇦🇷',
               valor: pesos.format(mep.venta),
               compra: pesos.format(mep.compra),
             }
           : null
       case 'usdt':
         return usdtEnPesos != null
-          ? { corto: 'USDT', largo: '🇦🇷 USDT', valor: pesos.format(usdtEnPesos) }
+          ? {
+              corto: 'USDT',
+              largo: '🇦🇷 USDT',
+              par: '₮ → 🇦🇷',
+              valor: pesos.format(usdtEnPesos),
+            }
           : null
       case 've-bcv': {
         const v = valorVe(porFuente(ve, 'oficial'))
         return v != null
-          ? { corto: '🇻🇪 BCV', largo: '🇻🇪 BCV', valor: `Bs ${num2.format(v)}` }
+          ? { corto: 'BCV', largo: '🇻🇪 BCV', par: '🇺🇸 → 🇻🇪', valor: `Bs ${num2.format(v)}` }
           : null
       }
       case 've-paralelo':
         return paralelo != null
           ? {
-              corto: '🇻🇪 Dólar paralelo',
+              corto: 'Paralelo',
               largo: '🇻🇪 Dólar paralelo',
+              par: '🇺🇸 → 🇻🇪',
               valor: `Bs ${num2.format(paralelo)}`,
             }
           : null
       case 've-usdt':
         return usdtEnBs != null
-          ? { corto: '🇻🇪 USDT', largo: '🇻🇪 USDT', valor: `Bs ${num2.format(usdtEnBs)}` }
+          ? {
+              corto: 'USDT',
+              largo: '🇻🇪 USDT',
+              par: '₮ → 🇻🇪',
+              valor: `Bs ${num2.format(usdtEnBs)}`,
+            }
           : null
       case 'ars-eur':
         return eurArs
-          ? { corto: '🇦🇷 Euro', largo: '🇦🇷 Euro', valor: pesos.format(eurArs.venta) }
+          ? {
+              corto: 'Euro',
+              largo: '🇦🇷 Euro',
+              par: '🇪🇺 → 🇦🇷',
+              valor: pesos.format(eurArs.venta),
+            }
           : null
       case 've-eur':
         return eurEnBs != null
-          ? { corto: '🇻🇪 Euro', largo: '🇻🇪 Euro', valor: `≈ Bs ${num2.format(eurEnBs)}` }
+          ? {
+              corto: 'Euro',
+              largo: '🇻🇪 Euro',
+              par: '🇪🇺 → 🇻🇪',
+              valor: `≈ Bs ${num2.format(eurEnBs)}`,
+            }
           : null
       case 'ars-brl': {
         const c = porMoneda(monedas, 'BRL')
-        return c ? { corto: '🇦🇷 Real', largo: '🇦🇷 Real', valor: pesos.format(c.venta) } : null
+        return c
+          ? { corto: 'Real', largo: '🇦🇷 Real', par: '🇧🇷 → 🇦🇷', valor: pesos.format(c.venta) }
+          : null
       }
       default:
         return null
@@ -239,19 +266,21 @@ export default function Landing() {
     }
   }
 
-  const cardTasa = (id: string) => {
+  // Fila estilo pizarra de casa de cambio: par explícito, nombre y valor.
+  const filaTasa = (id: string) => {
     const t = rateInfo(id)
     return (
       t && (
         <button
           type="button"
-          className="cotiz-card"
+          className="pz-fila"
           key={id}
           title="Fijar como principal"
           onClick={() => elegirPrincipal(id)}
         >
-          <span className="cotiz-nombre">{t.corto}</span>
-          <span className="cotiz-valor">{t.valor}</span>
+          <span className="pz-par">{t.par}</span>
+          <span className="pz-nombre">{t.corto}</span>
+          <span className="pz-valor">{t.valor}</span>
         </button>
       )
     )
@@ -315,14 +344,10 @@ export default function Landing() {
         )}
 
         {cotizaciones && (
-          <section className="secundarias">
-            {DOLARES_AR.filter((id) => id !== heroId).map(cardTasa)}
-          </section>
-        )}
-
-        {(eurArs || eurEnBs != null) && (
-          <section className="secundarias">
-            {['ars-eur', 've-eur'].filter((id) => id !== heroId).map(cardTasa)}
+          <section className="pizarra">
+            {[...new Set([...DOLARES_AR, 'ars-eur', 've-eur', ...tasas])]
+              .filter((id) => id !== heroId)
+              .map(filaTasa)}
           </section>
         )}
 
@@ -357,13 +382,9 @@ export default function Landing() {
                   </button>
                 )
               })}
-              <p className="tasas-limite">Hasta {MAX_TASAS} tasas. Tocá una tarjeta para hacerla principal.</p>
-            </div>
-          )}
-
-          {tasas.length > 0 && (
-            <div className="secundarias">
-              {tasas.filter((id) => id !== heroId).map(cardTasa)}
+              <p className="tasas-limite">
+                Hasta {MAX_TASAS} tasas extra en la pizarra. Tocá una fila para hacerla principal.
+              </p>
             </div>
           )}
 
