@@ -13,6 +13,7 @@ import {
   useCotizaciones,
   useMonedas,
   useUsdtArs,
+  useUsdtEur,
   useUsdtVes,
   valorUsdt,
   valorVe,
@@ -28,6 +29,8 @@ const num2 = new Intl.NumberFormat('es-AR', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 })
+
+const num0 = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 })
 
 function haceCuanto(iso: string): string {
   const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
@@ -64,6 +67,7 @@ export default function Landing() {
   const { monedas } = useMonedas()
   const { usdtArs } = useUsdtArs()
   const { usdtVes } = useUsdtVes()
+  const { usdtEur } = useUsdtEur()
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
   const [principal, setPrincipal] = useState<string>(getPrincipal)
   const [editando, setEditando] = useState(false)
@@ -87,6 +91,21 @@ export default function Landing() {
   const paralelo = valorVe(porFuente(ve, 'paralelo'))
   const usdtEnPesos = valorUsdt(usdtArs) ?? cripto?.venta ?? null
   const usdtEnBs = valorUsdt(usdtVes)
+  // Euro en Bs: cross vía USDT (Bs por USDT ÷ EUR por USDT)
+  const eurPorUsdt = valorUsdt(usdtEur)
+  const eurEnBs = usdtEnBs != null && eurPorUsdt ? usdtEnBs / eurPorUsdt : null
+
+  // Enviar US$ 100 a Venezuela: costo en pesos y llegada en Bs, por canal
+  const envio = {
+    costoDolar: blue ? 100 * blue.venta : null,
+    llegaDolar: paralelo != null ? 100 * paralelo : null,
+    costoUsdt: usdtEnPesos != null ? 100 * usdtEnPesos : null,
+    llegaUsdt: usdtEnBs != null ? 100 * usdtEnBs : null,
+  }
+  let conviene: 'dolar' | 'usdt' | null = null
+  if (blue && paralelo != null && usdtEnPesos != null && usdtEnBs != null) {
+    conviene = paralelo / blue.venta >= usdtEnBs / usdtEnPesos ? 'dolar' : 'usdt'
+  }
 
   const rateInfo = (id: string): RateInfo | null => {
     switch (id) {
@@ -142,6 +161,10 @@ export default function Landing() {
       case 'ars-eur':
         return eurArs
           ? { corto: '🇦🇷 Euro', largo: '🇦🇷 Euro', valor: pesos.format(eurArs.venta) }
+          : null
+      case 've-eur':
+        return eurEnBs != null
+          ? { corto: '🇻🇪 Euro', largo: '🇻🇪 Euro', valor: `≈ Bs ${num2.format(eurEnBs)}` }
           : null
       case 'ars-brl': {
         const c = porMoneda(monedas, 'BRL')
@@ -257,9 +280,49 @@ export default function Landing() {
           </button>
         )}
 
+        {envio.costoDolar != null && envio.llegaDolar != null && (
+          <section
+            className="envio-block"
+            role="button"
+            title="Abrir el conversor"
+            onClick={() => {
+              setMonto('100')
+              setMoneda('usd')
+              setDestino('ves')
+              setConvirtiendo(true)
+            }}
+          >
+            <h2 className="envio-titulo">Enviar US$ 100 a 🇻🇪</h2>
+            <div className="envio-fila">
+              <span className="envio-via">
+                Vía dólar {conviene === 'dolar' && <span className="envio-badge">conviene</span>}
+              </span>
+              <span className="envio-datos">
+                pagás {pesos.format(envio.costoDolar)} · llegan Bs {num0.format(envio.llegaDolar)}
+              </span>
+            </div>
+            {envio.costoUsdt != null && envio.llegaUsdt != null && (
+              <div className="envio-fila">
+                <span className="envio-via">
+                  Vía USDT {conviene === 'usdt' && <span className="envio-badge">conviene</span>}
+                </span>
+                <span className="envio-datos">
+                  pagás {pesos.format(envio.costoUsdt)} · llegan Bs {num0.format(envio.llegaUsdt)}
+                </span>
+              </div>
+            )}
+          </section>
+        )}
+
         {cotizaciones && (
           <section className="secundarias">
             {DOLARES_AR.filter((id) => id !== heroId).map(cardTasa)}
+          </section>
+        )}
+
+        {(eurArs || eurEnBs != null) && (
+          <section className="secundarias">
+            {['ars-eur', 've-eur'].filter((id) => id !== heroId).map(cardTasa)}
           </section>
         )}
 

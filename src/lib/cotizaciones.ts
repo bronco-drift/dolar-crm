@@ -60,11 +60,13 @@ const VE_URL = 'https://ve.dolarapi.com/v1/dolares'
 const MON_URL = 'https://dolarapi.com/v1/cotizaciones'
 const USDT_ARS_URL = 'https://criptoya.com/api/usdt/ars/1'
 const USDT_VES_URL = 'https://criptoya.com/api/usdt/ves/1'
+const USDT_EUR_URL = 'https://criptoya.com/api/usdt/eur/1'
 const AR_KEY = 'dolar-crm:cotizaciones'
 const VE_KEY = 'dolar-crm:bolivares'
 const MON_KEY = 'dolar-crm:monedas'
 const USDT_ARS_KEY = 'dolar-crm:usdt-ars'
 const USDT_VES_KEY = 'dolar-crm:usdt-ves'
+const USDT_EUR_KEY = 'dolar-crm:usdt-eur'
 
 function readCache<D>(key: string): { data: D; fetchedAt: number } | null {
   try {
@@ -99,6 +101,7 @@ export const getBolivares = () => fetchCached<CotizacionVe[]>(VE_URL, VE_KEY)
 export const getMonedas = () => fetchCached<CotizacionMoneda[]>(MON_URL, MON_KEY)
 export const getUsdtArs = () => fetchCached<UsdtData>(USDT_ARS_URL, USDT_ARS_KEY)
 export const getUsdtVes = () => fetchCached<UsdtData>(USDT_VES_URL, USDT_VES_KEY)
+export const getUsdtEur = () => fetchCached<UsdtData>(USDT_EUR_URL, USDT_EUR_KEY)
 
 // Precio de referencia USDT: Binance P2P si está, si no la mediana de asks.
 export function valorUsdt(state: UsdtState | null): number | null {
@@ -136,10 +139,10 @@ export interface TasaDef {
   descripcion: string
 }
 
+// El euro (AR y VE) ahora tiene fila fija en la landing, por eso no está acá.
 export const TASAS_DISPONIBLES: TasaDef[] = [
   { id: 've-paralelo', nombre: '🇻🇪 Dólar paralelo', descripcion: 'bolívares por dólar, paralelo' },
   { id: 've-bcv', nombre: '🇻🇪 BCV', descripcion: 'bolívares por dólar, oficial' },
-  { id: 'ars-eur', nombre: '🇦🇷 Euro', descripcion: 'pesos argentinos por euro' },
   { id: 'ars-brl', nombre: '🇦🇷 Real', descripcion: 'pesos argentinos por real' },
   { id: 've-usdt', nombre: '🇻🇪 USDT', descripcion: 'bolívares por USDT, Binance P2P' },
 ]
@@ -152,7 +155,10 @@ const TASAS_DEFAULT = ['ve-paralelo', 'ars-eur']
 export function getTasasElegidas(): string[] {
   try {
     const raw = localStorage.getItem(TASAS_KEY)
-    if (raw) return (JSON.parse(raw) as string[]).slice(0, MAX_TASAS)
+    if (raw) {
+      // 'ars-eur' migró a la fila fija de euros
+      return (JSON.parse(raw) as string[]).filter((t) => t !== 'ars-eur').slice(0, MAX_TASAS)
+    }
   } catch {
     /* usar default */
   }
@@ -225,4 +231,9 @@ export function useUsdtArs() {
 export function useUsdtVes() {
   const { state } = useCached(getUsdtVes)
   return { usdtVes: state }
+}
+
+export function useUsdtEur() {
+  const { state } = useCached(getUsdtEur)
+  return { usdtEur: state }
 }

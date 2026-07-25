@@ -237,6 +237,67 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* Enviar a Venezuela */
+.envio-block {
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+  animation: rise 0.5s 0.15s ease both;
+}
+
+.envio-block:hover {
+  border-color: #c7c7cc;
+}
+
+.envio-titulo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.envio-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.envio-via {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.envio-datos {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.envio-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: #d9f0e3;
+  color: #1b4332;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: 1px;
+}
+
 .tasas-block {
   display: flex;
   flex-direction: column;
