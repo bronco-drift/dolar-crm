@@ -1,0 +1,65 @@
+/* ─── Juego 1 ────────────────────────────────────────────────── */
+.juego-marcador {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.juego-score {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.juego-vidas {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  min-width: 34px;
+}
+
+.juego-wrap {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.juego-canvas {
+  display: block;
+  width: 100%;
+  height: 58dvh;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.juego-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  background: var(--velo);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.juego-titulo {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.juego-ayuda {
+  margin: 0 0 6px;
+  max-width: 280px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
