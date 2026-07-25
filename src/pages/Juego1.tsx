@@ -36,15 +36,26 @@ interface Estado {
   proximo: number
   cooldown: number
   terminado: boolean
+  flash: number
+  flashTexto: string
 }
 
 const VEL_BALA = 620
 const COOLDOWN = 0.22
 const MARGEN_CANON = 54
-// A los 30 segundos se desata el modo madness: todo más rápido.
-const MADNESS_SEG = 30
+// Ciclo del easter egg: 30 s normales y 10 s de madness, en loop.
+const TRAMO_NORMAL = 30
+const TRAMO_MADNESS = 10
+const CICLO = TRAMO_NORMAL + TRAMO_MADNESS
 const MADNESS_ENEMIGOS = 1.7
 const MADNESS_BALAS = 1.5
+
+const esMadness = (reloj: number) => reloj % CICLO >= TRAMO_NORMAL
+
+const cronometro = (reloj: number) => {
+  const s = Math.floor(reloj)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
 
 function nuevoEstado(): Estado {
   return {
@@ -58,29 +69,24 @@ function nuevoEstado(): Estado {
     proximo: 0.8,
     cooldown: 0,
     terminado: false,
+    flash: 0,
+    flashTexto: '',
   }
 }
 
 export default function Juego1() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const estadoRef = useRef<Estado>(nuevoEstado())
+  // Solo lo que la UI necesita: el marcador vive dentro del canvas.
   const [score, setScore] = useState(0)
-  const [vidas, setVidas] = useState(3)
   const [terminado, setTerminado] = useState(false)
   const [record, setRecord] = useState(getRecord)
   const [jugando, setJugando] = useState(false)
-  const [cuenta, setCuenta] = useState(MADNESS_SEG)
-  const [madness, setMadness] = useState(false)
-  const [flash, setFlash] = useState(false)
 
   const reiniciar = () => {
     estadoRef.current = nuevoEstado()
     setScore(0)
-    setVidas(3)
     setTerminado(false)
-    setCuenta(MADNESS_SEG)
-    setMadness(false)
-    setFlash(false)
     setJugando(true)
   }
 
@@ -98,10 +104,11 @@ export default function Juego1() {
     const linea = color('--line', '#e8e8e8')
     const tenue = color('--muted', '#6e6e73')
     const acento = '#4cbc93'
+    const rojo = '#c0452f'
 
     let ancho = 0
     let alto = 0
-    let ultimoSeg = -1
+    let eraMadness = false
     const medir = () => {
       const dpr = window.devicePixelRatio || 1
       ancho = canvas.clientWidth
@@ -127,7 +134,7 @@ export default function Juego1() {
       const e = estadoRef.current
       if (e.terminado || e.cooldown > 0) return
       e.cooldown = COOLDOWN
-      const vel = e.reloj >= MADNESS_SEG ? VEL_BALA * MADNESS_BALAS : VEL_BALA
+      const vel = esMadness(e.reloj) ? VEL_BALA * MADNESS_BALAS : VEL_BALA
       e.balas.push({
         x: canonX() + Math.cos(e.angulo) * 34,
         y: canonY() + Math.sin(e.angulo) * 34,
@@ -165,19 +172,15 @@ export default function Juego1() {
       e.reloj += dt
       e.cooldown = Math.max(0, e.cooldown - dt)
 
-      // Cuenta regresiva desde 30; al cruzar el cero empieza el madness
-      // y el número sigue bajando en negativo.
-      const seg = Math.floor(e.reloj)
-      if (seg !== ultimoSeg) {
-        ultimoSeg = seg
-        setCuenta(MADNESS_SEG - seg)
-        if (seg === MADNESS_SEG) {
-          setMadness(true)
-          setFlash(true)
-          window.setTimeout(() => setFlash(false), 1600)
-        }
+      // Cada vez que entra o sale del madness, un cartel breve.
+      const ahoraMadness = esMadness(e.reloj)
+      if (ahoraMadness !== eraMadness) {
+        eraMadness = ahoraMadness
+        e.flash = 1.4
+        e.flashTexto = ahoraMadness ? 'MADNESS' : 'CALMA'
       }
-      const furia = e.reloj >= MADNESS_SEG ? MADNESS_ENEMIGOS : 1
+      e.flash = Math.max(0, e.flash - dt)
+      const furia = ahoraMadness ? MADNESS_ENEMIGOS : 1
 
       // Aparición de enemigos: más seguido a medida que avanza la partida.
       e.proximo -= dt
@@ -239,7 +242,6 @@ export default function Juego1() {
         for (const en of llegaron) explotar(en.x, en.y)
         e.enemigos = e.enemigos.filter((en) => en.y + en.lado / 2 < linea)
         e.vidas -= llegaron.length
-        setVidas(Math.max(0, e.vidas))
         if (e.vidas <= 0) {
           e.terminado = true
           setTerminado(true)
@@ -310,6 +312,44 @@ export default function Juego1() {
       ctx.lineTo(cx, cy - 16)
       ctx.closePath()
       ctx.fill()
+
+      // ── Marcador dentro del tablero ──
+      const loco = esMadness(e.reloj)
+      if (loco) {
+        ctx.strokeStyle = rojo
+        ctx.lineWidth = 2
+        ctx.strokeRect(1, 1, ancho - 2, alto - 2)
+      }
+
+      ctx.font = '600 13px system-ui, sans-serif'
+      ctx.textBaseline = 'top'
+      ctx.textAlign = 'left'
+      ctx.fillStyle = loco ? rojo : tenue
+      ctx.fillText(cronometro(e.reloj), 12, 12)
+
+      ctx.textAlign = 'right'
+      ctx.font = '700 20px system-ui, sans-serif'
+      ctx.fillStyle = tinta
+      ctx.fillText(String(e.score), ancho - 12, 10)
+
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath()
+        ctx.arc(ancho - 16 - i * 12, 40, 4, 0, Math.PI * 2)
+        ctx.fillStyle = i < e.vidas ? tinta : linea
+        ctx.fill()
+      }
+
+      // Cartel de cambio de modo
+      if (e.flash > 0) {
+        ctx.globalAlpha = Math.min(1, e.flash * 1.6)
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.font = '600 32px Georgia, serif'
+        ctx.fillStyle = e.flashTexto === 'MADNESS' ? rojo : tenue
+        ctx.fillText(e.flashTexto, ancho / 2, alto / 2)
+        ctx.globalAlpha = 1
+        ctx.textBaseline = 'top'
+      }
     }
 
     let raf = 0
@@ -335,17 +375,10 @@ export default function Juego1() {
     <>
       <header className="crm-header">
         <h1>Juego 1</h1>
-        <div className="juego-marcador">
-          <span className={`juego-tiempo ${madness ? 'is-madness' : ''}`}>{cuenta}</span>
-          <span className="juego-score">{score}</span>
-          <span className="juego-vidas">{'●'.repeat(vidas)}</span>
-        </div>
       </header>
 
-      <div className={`juego-wrap ${madness ? 'is-madness' : ''}`}>
+      <div className="juego-wrap">
         <canvas ref={canvasRef} className="juego-canvas" />
-
-        {flash && <div className="juego-flash">MADNESS</div>}
 
         {!jugando && !terminado && (
           <div className="juego-overlay">
