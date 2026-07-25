@@ -220,14 +220,35 @@ export default function Pto() {
   const enFecha = (f: string) => fmtEn.format(parseF(f))
   let regreso = addDias(estado.viajeFin, 1)
   for (let i = 0; i < 30 && esLibre(regreso); i++) regreso = addDias(regreso, 1)
-  const habiles = consume + remotosN
+
+  // Días de home-office agrupados en tramos: los findes y feriados que
+  // caen en el medio no cortan el tramo (no son días de trabajo).
+  const tramosRemotos: [string, string][] = []
+  for (const f of [...remotosSet].filter(enViaje).sort()) {
+    const ultimo = tramosRemotos[tramosRemotos.length - 1]
+    let sigue = false
+    if (ultimo) {
+      sigue = true
+      for (let d = addDias(ultimo[1], 1); d < f; d = addDias(d, 1)) {
+        if (!esLibre(d)) sigue = false
+      }
+    }
+    if (sigue && ultimo) ultimo[1] = f
+    else tramosRemotos.push([f, f])
+  }
+
+  const enTramo = ([a, b]: [string, string]) =>
+    a === b ? `on ${enFecha(a)}` : `from ${enFecha(a)} to ${enFecha(b)}`
+  const listaTramos = tramosRemotos.map(enTramo)
+  const tramosTexto =
+    listaTramos.length > 1
+      ? `${listaTramos.slice(0, -1).join(', ')} and ${listaTramos[listaTramos.length - 1]}`
+      : listaTramos[0]
+
   const mensajeOoo =
-    `Dear sender, I'll be out of office for ${habiles} business day${habiles === 1 ? '' : 's'}, ` +
-    `from ${enFecha(estado.viajeInicio)} to ${enFecha(estado.viajeFin)}. ` +
-    `I'll be back on ${enFecha(regreso)}.` +
-    (remotosN > 0
-      ? ` I'll be working remotely on ${remotosN} of those day${remotosN === 1 ? '' : 's'}.`
-      : '')
+    `Dear sender, I'll be out of office from ${enFecha(estado.viajeInicio)} ` +
+    `to ${enFecha(estado.viajeFin)}, and I'll be back on ${enFecha(regreso)}.` +
+    (tramosTexto ? ` I'll be working remotely ${tramosTexto}.` : '')
 
   const copiarOoo = async () => {
     try {
