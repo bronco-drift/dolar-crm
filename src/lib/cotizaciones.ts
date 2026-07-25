@@ -295,8 +295,20 @@ export const PAISES_ENVIO: PaisEnvio[] = [
 
 const ENVIO_PAIS_KEY = 'dolar-crm:envio-pais'
 
+// País del navegador (p. ej. 'es-AR' → 'ar'). Base para defaults
+// inteligentes: destino de envío hoy, origen y "cambio relevante" después.
+export function paisNavegador(): string | null {
+  const region = navigator.language?.split('-')[1]
+  return region ? region.toLowerCase() : null
+}
+
 export function getPaisEnvio(): string {
-  return localStorage.getItem(ENVIO_PAIS_KEY) ?? 've'
+  const guardado = localStorage.getItem(ENVIO_PAIS_KEY)
+  if (guardado) return guardado
+  // Si el navegador es de un país del catálogo (y no Argentina, que es
+  // el origen), arrancar con ese destino.
+  const detectado = paisNavegador()
+  return PAISES_ENVIO.some((p) => p.id === detectado) ? (detectado as string) : 've'
 }
 
 export function savePaisEnvio(id: string) {

@@ -1902,57 +1902,68 @@ button {
   color: var(--ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  .landing {
-    --bg: #000000;
-    --surface: #141416;
-    --ink: #f2f2f4;
-    --muted: #98989e;
-    --line: #2a2a2e;
-    --soft: #1f1f22;
-  }
+.landing.tema-oscuro {
+  --bg: #000000;
+  --surface: #141416;
+  --ink: #f2f2f4;
+  --muted: #98989e;
+  --line: #2a2a2e;
+  --soft: #1f1f22;
+}
 
-  .landing .btn-primary {
-    color: #000;
-  }
+.landing.tema-oscuro .btn-primary {
+  color: #000;
+}
 
-  .landing .envio-block.is-tap:hover,
-  .landing .pz-fila:hover {
-    border-color: #3a3a3f;
-  }
+.landing.tema-oscuro .envio-block.is-tap:hover {
+  border-color: #3a3a3f;
+}
 
-  .landing .envio-badge {
-    background: #1f3b2d;
-    color: #a8e6cf;
-  }
+.landing.tema-oscuro .envio-badge {
+  background: #1f3b2d;
+  color: #a8e6cf;
+}
 
-  .landing .conv-lista-menor .conv-moneda,
-  .landing .conv-lista-menor .conv-valor {
-    color: #6e6e73;
-  }
+.landing.tema-oscuro .conv-lista-menor .conv-moneda,
+.landing.tema-oscuro .conv-lista-menor .conv-valor {
+  color: #6e6e73;
+}
 
-  .landing .modal-backdrop {
-    background: rgb(0 0 0 / 0.6);
-  }
+.landing.tema-oscuro .modal-backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
 
-  /* La tab bar se oscurece solo cuando flota sobre la landing */
-  body:has(.landing) .tabbar {
-    background: rgb(20 20 22 / 0.85);
-    border-color: #2a2a2e;
-  }
+.tema-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 17px;
+  color: var(--muted);
+  transition: color 0.15s, background 0.15s;
+}
 
-  body:has(.landing) .tab {
-    color: #98989e;
-  }
+.tema-btn:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
 
-  body:has(.landing) .tab:hover {
-    color: #f2f2f4;
-  }
+/* La tab bar se oscurece solo cuando flota sobre la landing oscura */
+body:has(.tema-oscuro) .tabbar {
+  background: rgb(20 20 22 / 0.85);
+  border-color: #2a2a2e;
+}
 
-  body:has(.landing) .tab.is-active {
-    background: #f2f2f4;
-    color: #000;
-  }
+body:has(.tema-oscuro) .tab {
+  color: #98989e;
+}
+
+body:has(.tema-oscuro) .tab:hover {
+  color: #f2f2f4;
+}
+
+body:has(.tema-oscuro) .tab.is-active {
+  background: #f2f2f4;
+  color: #000;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────── */

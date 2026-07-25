@@ -84,6 +84,12 @@ export default function Landing() {
   const { usdtFiat: usdtDestino } = useUsdtFiat(paisEnvio.fiat ?? 'ves')
   const [tasas, setTasas] = useState<string[]>(getTasasElegidas)
   const [orden, setOrden] = useState<string[]>(getOrdenPizarra)
+  // Tema: arranca siguiendo al sistema; si el usuario elige, manda su elección.
+  const [oscuro, setOscuro] = useState(() => {
+    const guardado = localStorage.getItem('dolar-crm:tema')
+    if (guardado) return guardado === 'oscuro'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
   const [principal, setPrincipal] = useState<string>(getPrincipal)
   const [editando, setEditando] = useState(false)
   const [convirtiendo, setConvirtiendo] = useState(false)
@@ -344,9 +350,22 @@ export default function Landing() {
   }
 
   return (
-    <div className="landing">
+    <div className={`landing ${oscuro ? 'tema-oscuro' : ''}`}>
       <header className="landing-header">
         <span className="wordmark">Dólar hoy</span>
+        <button
+          type="button"
+          className="tema-btn"
+          title={oscuro ? 'Tema claro' : 'Tema oscuro'}
+          onClick={() => {
+            setOscuro((o) => {
+              localStorage.setItem('dolar-crm:tema', o ? 'claro' : 'oscuro')
+              return !o
+            })
+          }}
+        >
+          {oscuro ? '☀' : '☾'}
+        </button>
       </header>
 
       <main className="landing-main">
