@@ -221,9 +221,40 @@ export default function Pto() {
   let regreso = addDias(estado.viajeFin, 1)
   for (let i = 0; i < 30 && esLibre(regreso); i++) regreso = addDias(regreso, 1)
 
+  // Tramos de ausencia real: los días de home-office no son PTO, así que
+  // parten el viaje en varios períodos, cada uno con su propio regreso.
+  // Findes y feriados no cortan un tramo, pero tampoco lo abren ni cierran.
+  const tramos: { desde: string; hasta: string; regreso: string }[] = []
+  {
+    let habiles: string[] = []
+    const cerrar = (vuelta: string) => {
+      if (habiles.length) {
+        tramos.push({ desde: habiles[0], hasta: habiles[habiles.length - 1], regreso: vuelta })
+      }
+      habiles = []
+    }
+    for (let f = estado.viajeInicio; f <= estado.viajeFin; f = addDias(f, 1)) {
+      if (remotosSet.has(f)) cerrar(f) // ese día vuelve a trabajar
+      else if (!esLibre(f)) habiles.push(f)
+    }
+    cerrar(regreso)
+  }
+
+  const fraseTramo = (t: { desde: string; hasta: string; regreso: string }, i: number) => {
+    const cuando =
+      t.desde === t.hasta
+        ? `on ${enFecha(t.desde)}`
+        : `from ${enFecha(t.desde)} to ${enFecha(t.hasta)}`
+    const apertura = i === 0 ? "Dear sender, I'll be out of office" : "I'll be out of office again"
+    return `${apertura} ${cuando}, returning on ${enFecha(t.regreso)}.`
+  }
+
   const mensajeOoo =
-    `Dear sender, I'll be out of office from ${enFecha(estado.viajeInicio)} ` +
-    `to ${enFecha(estado.viajeFin)}, and I'll be back on ${enFecha(regreso)}.` +
+    (tramos.length
+      ? tramos.map(fraseTramo).join(' ')
+      : `Dear sender, I'll be out of office from ${enFecha(estado.viajeInicio)} to ${enFecha(
+          estado.viajeFin,
+        )}, returning on ${enFecha(regreso)}.`) +
     (estado.accesoLimitado
       ? ` I'll have limited access to email, so please expect a delay in my response.`
       : '')
