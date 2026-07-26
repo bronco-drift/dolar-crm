@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { type Jugador, getJugadores, saveJugadores } from '../lib/storage'
 
-type Vista = 'menu' | 'garabato' | 'memoria' | 'describir' | 'simultaneo'
+type Vista = 'menu' | 'garabato' | 'memoria' | 'describir' | 'simultaneo' | 'emojis'
+
+// Emojis dibujables: nada de caras sutiles ni banderas.
+const EMOJIS = [
+  '🐙','🦒','🐢','🦔','🐧','🦩','🐘','🦕','🦋','🐌','🦑','🐝','🦉','🐳','🦖','🐊',
+  '🌵','🍄','🌻','🍕','🍔','🍦','🥑','🍉','🥨','🧁','🌮','🍩','☕','🍺',
+  '🚲','🚀','⛵','🚁','🛵','🎸','🎺','🥁','📷','⏰','🔑','☂️','👑','🕶️','🧦','👟',
+  '🏰','⛺','🗼','🚦','🪑','🛋️','🪜','🧸','🎈','🎁','🧩','⚽','🏀','🪁',
+  '🌈','⚡','🔥','❄️','🌙','⭐','🌊','🗻',
+]
 
 // Generador con semilla: el mismo número reproduce el mismo dibujo,
 // así se puede repetir una figura más adelante y comparar.
@@ -385,6 +394,39 @@ export default function Juego2() {
   const [consignas, setConsignas] = useState<string[]>([])
   const [revelado, setRevelado] = useState<number[]>([])
 
+  // Modo emojis: cuenta regresiva → 3 segundos a la vista → a dibujar
+  const [faseE, setFaseE] = useState<'espera' | 'cuenta' | 'mostrando' | 'dibujando'>('espera')
+  const [cuentaE, setCuentaE] = useState(3)
+  const [emojis, setEmojis] = useState<string[]>([])
+  const [repaso, setRepaso] = useState(false)
+
+  useEffect(() => {
+    if (faseE === 'cuenta') {
+      if (cuentaE <= 0) {
+        setFaseE('mostrando')
+        return
+      }
+      const t = setTimeout(() => setCuentaE((c) => c - 1), 850)
+      return () => clearTimeout(t)
+    }
+    if (faseE === 'mostrando') {
+      const t = setTimeout(() => setFaseE('dibujando'), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [faseE, cuentaE])
+
+  const rondaEmojis = () => {
+    const elegidos: string[] = []
+    while (elegidos.length < 3) {
+      const e = EMOJIS[Math.floor(Math.random() * EMOJIS.length)]
+      if (!elegidos.includes(e)) elegidos.push(e)
+    }
+    setEmojis(elegidos)
+    setRepaso(false)
+    setCuentaE(3)
+    setFaseE('cuenta')
+  }
+
   const nuevaRonda = () => {
     const nuevas: string[] = []
     while (nuevas.length < jugadores.length) {
@@ -480,6 +522,20 @@ export default function Juego2() {
             <span className="jp-card-txt">
               Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan
               qué dibujó el otro.
+            </span>
+          </button>
+          <button
+            type="button"
+            className="jp-card"
+            onClick={() => {
+              setFaseE('espera')
+              setVista('emojis')
+            }}
+          >
+            <span className="jp-num">05</span>
+            <span className="jp-card-titulo">Dibujá los emojis</span>
+            <span className="jp-card-txt">
+              Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.
             </span>
           </button>
         </div>
@@ -750,6 +806,61 @@ export default function Juego2() {
             </>
           )}
 
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
+      )}
+
+      {vista === 'emojis' && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">Dibujá los emojis</h2>
+          <p className="jp-sub">
+            {faseE === 'espera' && 'Tres emojis, tres segundos. Después los dibujan de memoria.'}
+            {faseE === 'cuenta' && 'Ojos en la pantalla…'}
+            {faseE === 'mostrando' && '¡Miralos bien!'}
+            {faseE === 'dibujando' && 'Se fueron. A dibujar los tres, en orden.'}
+          </p>
+
+          <div className="jp-lienzo jp-emojis">
+            {faseE === 'espera' && <span className="jp-emoji-espera">👀</span>}
+            {faseE === 'cuenta' && <span className="jp-cuenta">{cuentaE}</span>}
+            {(faseE === 'mostrando' || repaso) && (
+              <div className="jp-emoji-fila">
+                {emojis.map((e, i) => (
+                  <span key={i}>{e}</span>
+                ))}
+              </div>
+            )}
+            {faseE === 'dibujando' && !repaso && <span className="jp-emoji-espera">✏️</span>}
+            {faseE === 'mostrando' && <div className="jp-barra jp-barra-expo" />}
+          </div>
+
+          <div className="jp-acciones">
+            {faseE === 'dibujando' ? (
+              <>
+                <button type="button" className="btn btn-primary" onClick={rondaEmojis}>
+                  Otra ronda
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setRepaso((r) => !r)}
+                >
+                  {repaso ? 'Ocultar' : 'Ver cuáles eran'}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={faseE !== 'espera'}
+                onClick={rondaEmojis}
+              >
+                {faseE === 'espera' ? 'Mostrar emojis' : 'Atenti…'}
+              </button>
+            )}
+          </div>
+
+          <Cronometro total={120} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}

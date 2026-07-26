@@ -168,6 +168,94 @@
   line-height: 1.25;
 }
 
+/* Modo emojis */
+.jp-emojis {
+  position: relative;
+  min-height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jp-emoji-fila {
+  display: flex;
+  gap: 18px;
+  animation: jp-aparecer 0.25s ease both;
+}
+
+.jp-emoji-fila span {
+  font-size: clamp(44px, 14vw, 68px);
+  line-height: 1.1;
+}
+
+.jp-emoji-espera {
+  font-size: 44px;
+  opacity: 0.35;
+}
+
+.jp-cuenta {
+  font-family: var(--font-display);
+  font-size: 76px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  animation: jp-latir 0.85s ease-out;
+}
+
+/* Barra que se vacía en los 3 segundos de exposición */
+.jp-barra-expo {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  height: 4px;
+  background: var(--line);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.jp-barra-expo::after {
+  content: '';
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: 99px;
+  animation: jp-vaciar 3s linear forwards;
+}
+
+@keyframes jp-vaciar {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+@keyframes jp-latir {
+  0% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes jp-aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Modo simultáneo */
 .jp-secreto {
   min-height: 128px;
