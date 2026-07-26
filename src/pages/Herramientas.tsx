@@ -5,6 +5,7 @@ import Pto from './Pto'
 import Habitos from './Habitos'
 import Tareas from './Tareas'
 import Juego1 from './Juego1'
+import Juego2 from './Juego2'
 import AppHeader from '../components/AppHeader'
 
 const TOOLS = [
@@ -14,6 +15,7 @@ const TOOLS = [
   { id: 'habitos', label: 'Hábitos' },
   { id: 'tareas', label: 'Mis tareas' },
   { id: 'juego1', label: 'Juego 1' },
+  { id: 'juego2', label: 'Juego 2' },
 ] as const
 
 type ToolId = (typeof TOOLS)[number]['id']
@@ -54,6 +56,7 @@ export default function Herramientas() {
       {tool === 'habitos' && <Habitos />}
       {tool === 'tareas' && <Tareas />}
       {tool === 'juego1' && <Juego1 />}
+      {tool === 'juego2' && <Juego2 />}
     </div>
   )
 }
