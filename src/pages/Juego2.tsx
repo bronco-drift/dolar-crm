@@ -10,6 +10,7 @@ type Vista =
   | 'emojis'
   | 'tematico'
   | 'futbol'
+  | 'cosas101'
 
 // Emojis dibujables: nada de caras sutiles ni banderas.
 const EMOJIS = [
@@ -18,6 +19,70 @@ const EMOJIS = [
   '🚲','🚀','⛵','🚁','🛵','🎸','🎺','🥁','📷','⏰','🔑','☂️','👑','🕶️','🧦','👟',
   '🏰','⛺','🗼','🚦','🪑','🛋️','🪜','🧸','🎈','🎁','🧩','⚽','🏀','🪁',
   '🌈','⚡','🔥','❄️','🌙','⭐','🌊','🗻',
+]
+
+// Cosas 101: lo más simple del mundo, para entrar en calor.
+const COSAS_101 = [
+  'Una casa',
+  'Un sol',
+  'Un gato',
+  'Un árbol',
+  'Un auto',
+  'Un pez',
+  'Una flor',
+  'Una taza',
+  'Una pelota',
+  'Una estrella',
+  'Un corazón',
+  'Una llave',
+  'Un zapato',
+  'Un sombrero',
+  'Un libro',
+  'Un reloj',
+  'Una silla',
+  'Un pájaro',
+  'Un barco',
+  'Un globo',
+  'Un paraguas',
+  'La luna',
+  'Una nube',
+  'Una escalera',
+  'Un lápiz',
+  'Una tijera',
+  'Un teléfono',
+  'Una cama',
+  'Una puerta',
+  'Una ventana',
+  'Un martillo',
+  'Una botella',
+  'Una cuchara',
+  'Un hongo',
+  'Un cactus',
+  'Un dado',
+  'Una campana',
+  'Una lámpara',
+  'Una guitarra',
+  'Una bicicleta',
+  'Un cohete',
+  'Una corona',
+  'Una mariposa',
+  'Un huevo frito',
+  'Una banana',
+  'Una manzana',
+  'Un helado',
+  'Una vela encendida',
+  'Un perro',
+  'Una montaña',
+  'Un ojo',
+  'Una mano',
+  'Un fantasma',
+  'Un caracol',
+  'Una pizza',
+  'Un regalo',
+  'Una nota musical',
+  'Un semáforo',
+  'Un ancla',
+  'Un rayo',
 ]
 
 // Fútbol emoji: tres pistas y a adivinar de quién se trata.
@@ -139,59 +204,123 @@ function prng(semilla: number) {
 }
 const nuevaSemilla = () => Math.floor(Math.random() * 9000) + 1000
 
+// ── Luz de borde: alerta que entra por los cantos de la pantalla ──
+function LuzBorde({ tipo }: { tipo: 'verde' | 'rojo' | null }) {
+  if (!tipo) return null
+  return (
+    <div className={`luz-borde luz-${tipo}`} aria-hidden="true">
+      <span className="luz-lado luz-izq" />
+      <span className="luz-lado luz-der" />
+      <span className="luz-marco" />
+    </div>
+  )
+}
+
 // ── Cronómetro ──
-function Cronometro({ total }: { total: number }) {
-  const [quedan, setQuedan] = useState(total)
+const PASO = 30
+const AVISO = 10
+
+function Cronometro({ total: inicial = PASO }: { total?: number }) {
+  const [total, setTotal] = useState(inicial)
+  const [quedan, setQuedan] = useState(inicial)
   const [andando, setAndando] = useState(false)
+  const [luz, setLuz] = useState<'verde' | 'rojo' | null>(null)
   const timer = useRef<number | undefined>(undefined)
+  const verdeTimer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     if (!andando) return
     timer.current = window.setInterval(() => {
       setQuedan((q) => {
-        if (q <= 1) {
+        const siguiente = q - 1
+        if (siguiente <= 0) {
           setAndando(false)
+          setLuz(null)
           pitido()
           return 0
         }
-        return q - 1
+        if (siguiente <= AVISO) setLuz('rojo')
+        return siguiente
       })
     }, 1000)
     return () => clearInterval(timer.current)
   }, [andando])
 
+  useEffect(() => () => clearTimeout(verdeTimer.current), [])
+
+  const arrancar = () => {
+    if (andando) {
+      setAndando(false)
+      setLuz(null)
+      return
+    }
+    const desde = quedan <= 0 ? total : quedan
+    setQuedan(desde)
+    setAndando(true)
+    // Verde: un pulso de arranque que se va solo.
+    setLuz(desde <= AVISO ? 'rojo' : 'verde')
+    clearTimeout(verdeTimer.current)
+    verdeTimer.current = window.setTimeout(
+      () => setLuz((l) => (l === 'verde' ? null : l)),
+      1700,
+    )
+  }
+
+  const ajustar = (delta: number) => {
+    const nuevo = Math.max(PASO, Math.min(30 * 60, total + delta))
+    setTotal(nuevo)
+    if (!andando) {
+      setQuedan(nuevo)
+      setLuz(null)
+    }
+  }
+
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-  const poco = quedan <= 15 && quedan > 0
+  const poco = quedan <= AVISO && quedan > 0
 
   return (
-    <div className="jp-reloj">
-      <div className="jp-reloj-fila">
-        <span className={`jp-digitos ${poco ? 'is-poco' : ''}`}>{fmt(quedan)}</span>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => {
-            if (quedan <= 0) setQuedan(total)
-            setAndando((a) => !a)
-          }}
-        >
-          {andando ? 'Pausar' : quedan === total || quedan === 0 ? 'Arrancar' : 'Seguir'}
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={() => {
-            setAndando(false)
-            setQuedan(total)
-          }}
-        >
-          Reiniciar
-        </button>
+    <>
+      <LuzBorde tipo={luz} />
+      <div className="jp-reloj">
+        <div className="jp-reloj-fila">
+          <button
+            type="button"
+            className="jp-mini"
+            aria-label="Restar 30 segundos"
+            disabled={total <= PASO}
+            onClick={() => ajustar(-PASO)}
+          >
+            −
+          </button>
+          <span className={`jp-digitos ${poco ? 'is-poco' : ''}`}>{fmt(quedan)}</span>
+          <button
+            type="button"
+            className="jp-mini"
+            aria-label="Sumar 30 segundos"
+            onClick={() => ajustar(PASO)}
+          >
+            +
+          </button>
+          <button type="button" className="btn btn-primary" onClick={arrancar}>
+            {andando ? 'Pausar' : quedan === total || quedan === 0 ? 'Arrancar' : 'Seguir'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => {
+              setAndando(false)
+              setQuedan(total)
+              setLuz(null)
+            }}
+          >
+            Reiniciar
+          </button>
+        </div>
+        <div className="jp-barra">
+          <i className={poco ? 'is-poco' : ''} style={{ width: `${(quedan / total) * 100}%` }} />
+        </div>
       </div>
-      <div className="jp-barra">
-        <i className={poco ? 'is-poco' : ''} style={{ width: `${(quedan / total) * 100}%` }} />
-      </div>
-    </div>
+    </>
   )
 }
 
@@ -296,7 +425,6 @@ function JuegoConsignas({
   sub,
   banco,
   nombres,
-  segundos,
   jugadores,
   guardar,
 }: {
@@ -304,7 +432,6 @@ function JuegoConsignas({
   sub: string
   banco: Record<string, string[]>
   nombres: Record<string, string>
-  segundos: number
   jugadores: Jugador[]
   guardar: (js: Jugador[]) => void
 }) {
@@ -365,7 +492,7 @@ function JuegoConsignas({
         </button>
       </div>
 
-      <Cronometro total={segundos} />
+      <Cronometro />
       <Marcador jugadores={jugadores} guardar={guardar} />
     </section>
   )
@@ -577,7 +704,7 @@ interface Tematico {
 
 const TEMATICOS: Record<string, Tematico> = {
   venezuela: {
-    num: '06',
+    num: '08',
     titulo: '🇻🇪 Venezuela',
     resumen: 'Arepas, tepuyes, gaita y todo lo que un venezolano dibuja con los ojos cerrados.',
     sub: 'Si alguien de afuera está jugando, que sufra un rato.',
@@ -643,7 +770,7 @@ const TEMATICOS: Record<string, Tematico> = {
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
   },
   argentina: {
-    num: '07',
+    num: '09',
     titulo: '🇦🇷 Argentina',
     resumen: 'Mate, asado, Maradona y todo lo que se dibuja con acento porteño.',
     sub: 'Prohibido quejarse de que no sale la vaca.',
@@ -701,7 +828,7 @@ const TEMATICOS: Record<string, Tematico> = {
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
   },
   peliculas: {
-    num: '08',
+    num: '10',
     titulo: '🎬 Películas',
     resumen: 'Escenas, personajes y objetos que todos vimos mil veces en el cine.',
     sub: 'Sin decir el título, obvio.',
@@ -894,6 +1021,41 @@ export default function Juego2() {
   // Modo temático activo (Venezuela, Argentina, Películas)
   const [tema, setTema] = useState<string | null>(null)
 
+  // Cosas 101: ráfaga con auto-avance
+  const [luzCosas, setLuzCosas] = useState<'verde' | null>(null)
+  const [cosa, setCosa] = useState<string | null>(null)
+  const [segCosa, setSegCosa] = useState(10)
+  const [restaCosa, setRestaCosa] = useState(10)
+  const [corriendo, setCorriendo] = useState(false)
+  const [rondaCosas, setRondaCosas] = useState(0)
+  const usadasCosas = useRef<string[]>([])
+
+  const siguienteCosa = () => {
+    let libres = COSAS_101.filter((c) => !usadasCosas.current.includes(c))
+    if (!libres.length) {
+      usadasCosas.current = []
+      libres = COSAS_101
+    }
+    const el = libres[Math.floor(Math.random() * libres.length)]
+    usadasCosas.current.push(el)
+    setCosa(el)
+    setRestaCosa(segCosa)
+    setRondaCosas((r) => r + 1)
+  }
+
+  // Un tick por segundo; al llegar a cero, cambia sola de consigna.
+  useEffect(() => {
+    if (!corriendo) return
+    if (restaCosa <= 0) {
+      pitido()
+      siguienteCosa()
+      return
+    }
+    const t = setTimeout(() => setRestaCosa((r) => r - 1), 1000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [corriendo, restaCosa])
+
   // Fútbol emoji: pistas primero, nombre después
   const [futbolista, setFutbolista] = useState<{ e: string; n: string } | null>(null)
   const [nombreVisible, setNombreVisible] = useState(false)
@@ -930,8 +1092,26 @@ export default function Juego2() {
         </p>
 
         <div className="jp-menu">
-          <button type="button" className="jp-card" onClick={() => setVista('garabato')}>
+          <button
+            type="button"
+            className="jp-card"
+            onClick={() => {
+              setCorriendo(false)
+              setCosa(null)
+              setRondaCosas(0)
+              setRestaCosa(segCosa)
+              setVista('cosas101')
+            }}
+          >
             <span className="jp-num">01</span>
+            <span className="jp-card-titulo">Cosas 101</span>
+            <span className="jp-card-txt">
+              Para entrar en calor: cosas simples, diez segundos cada una y la pantalla pasa sola a
+              la siguiente.
+            </span>
+          </button>
+          <button type="button" className="jp-card" onClick={() => setVista('garabato')}>
+            <span className="jp-num">02</span>
             <span className="jp-card-titulo">Garabato</span>
             <span className="jp-card-txt">
               Todos copian el mismo trazo y lo convierten en un dibujo. Gana la idea más
@@ -939,7 +1119,7 @@ export default function Juego2() {
             </span>
           </button>
           <button type="button" className="jp-card" onClick={() => setVista('memoria')}>
-            <span className="jp-num">02</span>
+            <span className="jp-num">03</span>
             <span className="jp-card-titulo">De memoria</span>
             <span className="jp-card-txt">
               Dibujar de memoria algo que viste mil veces. Spoiler: nadie sabe dónde va la cadena
@@ -947,7 +1127,7 @@ export default function Juego2() {
             </span>
           </button>
           <button type="button" className="jp-card" onClick={() => setVista('describir')}>
-            <span className="jp-num">03</span>
+            <span className="jp-num">04</span>
             <span className="jp-card-titulo">Describí y dibujá</span>
             <span className="jp-card-txt">
               Uno ve una figura y la describe sin nombrarla. El resto dibuja a ciegas.
@@ -961,7 +1141,7 @@ export default function Juego2() {
               setVista('simultaneo')
             }}
           >
-            <span className="jp-num">04</span>
+            <span className="jp-num">05</span>
             <span className="jp-card-titulo">Todos a la vez</span>
             <span className="jp-card-txt">
               Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan
@@ -976,7 +1156,7 @@ export default function Juego2() {
               setVista('emojis')
             }}
           >
-            <span className="jp-num">05</span>
+            <span className="jp-num">06</span>
             <span className="jp-card-titulo">Dibujá los emojis</span>
             <span className="jp-card-txt">
               Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.
@@ -991,7 +1171,7 @@ export default function Juego2() {
               setVista('futbol')
             }}
           >
-            <span className="jp-num">09</span>
+            <span className="jp-num">07</span>
             <span className="jp-card-titulo">⚽ Fútbol emoji</span>
             <span className="jp-card-txt">
               Tres emojis, un futbolista. El primero que lo grite se lleva el punto.
@@ -1074,7 +1254,7 @@ export default function Juego2() {
             </button>
           </div>
 
-          <Cronometro total={180} />
+          <Cronometro />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -1085,10 +1265,95 @@ export default function Juego2() {
           sub="Sin mirar nada ni a nadie. Después comparan y se ríen."
           banco={BANCO}
           nombres={NOMBRE_CAT}
-          segundos={120}
           jugadores={jugadores}
           guardar={guardarJugadores}
         />
+      )}
+
+      {vista === 'cosas101' && (
+        <section className="jp-hoja">
+          <LuzBorde tipo={luzCosas} />
+          <h2 className="jp-titulo">Cosas 101</h2>
+          <p className="jp-sub">
+            Cosas fáciles, una atrás de otra. Cuando se acaba el tiempo cambia sola: no hay
+            tiempo para pensarla.
+          </p>
+
+          <div className="jp-consigna jp-rafaga">
+            <div className="jp-consigna-cat">
+              {rondaCosas ? `dibujo ${rondaCosas}` : 'listos'}
+            </div>
+            <div className="jp-consigna-txt">{cosa ?? 'Tocá empezar'}</div>
+            <div className={`jp-rafaga-seg ${restaCosa <= 3 && corriendo ? 'is-poco' : ''}`}>
+              {corriendo || cosa ? restaCosa : segCosa}s
+            </div>
+          </div>
+
+          <div className="jp-barra">
+            <i
+              className={restaCosa <= 3 && corriendo ? 'is-poco' : ''}
+              style={{ width: `${(restaCosa / segCosa) * 100}%` }}
+            />
+          </div>
+
+          <div className="jp-reloj">
+            <div className="jp-reloj-fila">
+              <button
+                type="button"
+                className="jp-mini"
+                aria-label="Menos tiempo"
+                disabled={segCosa <= 5 || corriendo}
+                onClick={() => {
+                  const n = Math.max(5, segCosa - 5)
+                  setSegCosa(n)
+                  setRestaCosa(n)
+                }}
+              >
+                −
+              </button>
+              <span className="jp-digitos">{segCosa}s</span>
+              <button
+                type="button"
+                className="jp-mini"
+                aria-label="Más tiempo"
+                disabled={corriendo}
+                onClick={() => {
+                  const n = Math.min(120, segCosa + 5)
+                  setSegCosa(n)
+                  setRestaCosa(n)
+                }}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  if (!corriendo) {
+                    if (!cosa) siguienteCosa()
+                    setLuzCosas('verde')
+                    setTimeout(() => setLuzCosas(null), 1700)
+                  }
+                  setCorriendo((c) => !c)
+                }}
+              >
+                {corriendo ? 'Pausar' : cosa ? 'Seguir' : 'Empezar'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  pitido()
+                  siguienteCosa()
+                }}
+              >
+                Saltar
+              </button>
+            </div>
+          </div>
+
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
       )}
 
       {vista === 'futbol' && (
@@ -1136,6 +1401,7 @@ export default function Juego2() {
             </button>
           </div>
 
+          <Cronometro />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -1147,7 +1413,6 @@ export default function Juego2() {
           sub={TEMATICOS[tema].sub}
           banco={TEMATICOS[tema].banco}
           nombres={TEMATICOS[tema].nombres}
-          segundos={TEMATICOS[tema].segundos}
           jugadores={jugadores}
           guardar={guardarJugadores}
         />
@@ -1210,7 +1475,7 @@ export default function Juego2() {
             )}
           </div>
 
-          <Cronometro total={240} />
+          <Cronometro />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -1269,7 +1534,7 @@ export default function Juego2() {
               <p className="jp-sub">
                 Todos dibujan al mismo tiempo, cada uno lo suyo. Sin espiar, sin hablar.
               </p>
-              <Cronometro total={180} />
+              <Cronometro />
               <div className="jp-acciones">
                 <button
                   type="button"
@@ -1368,7 +1633,7 @@ export default function Juego2() {
             )}
           </div>
 
-          <Cronometro total={120} />
+          <Cronometro />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}

@@ -256,6 +256,30 @@
   }
 }
 
+/* Cosas 101 (ráfaga) */
+.jp-rafaga {
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 26px 18px;
+}
+
+.jp-rafaga .jp-consigna-txt {
+  font-size: 26px;
+}
+
+.jp-rafaga-seg {
+  font-size: 34px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  transition: color 0.2s;
+}
+
+.jp-rafaga-seg.is-poco {
+  color: #c0452f;
+}
+
 /* Fútbol emoji */
 .jp-futbol-emojis span {
   font-size: clamp(38px, 12vw, 56px);
@@ -316,6 +340,132 @@
   text-align: right;
 }
 
+/* ── Luz de borde: alerta que entra por los cantos de la pantalla ──
+   Tres capas: el núcleo pegado al canto, la caída difusa hacia el centro
+   y un halo interior que envuelve toda la pantalla. */
+.luz-borde {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  overflow: hidden;
+  will-change: opacity;
+}
+
+.luz-lado {
+  position: absolute;
+  top: -8%;
+  bottom: -8%;
+  width: min(22%, 120px);
+  filter: blur(12px);
+  will-change: opacity, transform;
+}
+
+.luz-izq {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--luz-nucleo) 0%,
+    var(--luz-medio) 22%,
+    var(--luz-tenue) 52%,
+    transparent 88%
+  );
+}
+
+.luz-der {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--luz-nucleo) 0%,
+    var(--luz-medio) 22%,
+    var(--luz-tenue) 52%,
+    transparent 88%
+  );
+}
+
+/* Halo fino que cierra el marco por arriba y abajo */
+.luz-marco {
+  position: absolute;
+  inset: 0;
+  box-shadow:
+    inset 0 0 3px 0 var(--luz-nucleo),
+    inset 0 0 26px 1px var(--luz-medio),
+    inset 0 0 70px 8px var(--luz-tenue);
+}
+
+.luz-verde {
+  --luz-nucleo: rgb(52 199 89 / 0.75);
+  --luz-medio: rgb(52 199 89 / 0.2);
+  --luz-tenue: rgb(52 199 89 / 0.06);
+}
+
+.luz-rojo {
+  --luz-nucleo: rgb(255 59 48 / 0.8);
+  --luz-medio: rgb(255 59 48 / 0.22);
+  --luz-tenue: rgb(255 59 48 / 0.07);
+}
+
+/* Verde: entra desde los cantos, sostiene y se va */
+.luz-verde .luz-lado,
+.luz-verde .luz-marco {
+  animation: luz-entrar 1.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.luz-verde .luz-izq {
+  --desde: -28px;
+}
+
+.luz-verde .luz-der {
+  --desde: 28px;
+}
+
+/* Rojo: latido sostenido, un pulso por segundo */
+.luz-rojo .luz-lado,
+.luz-rojo .luz-marco {
+  animation: luz-latir 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.luz-rojo .luz-marco {
+  animation-delay: 0.06s;
+}
+
+@keyframes luz-entrar {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--desde, 0));
+  }
+  16% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  55% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes luz-latir {
+  0%,
+  100% {
+    opacity: 0.38;
+  }
+  42% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luz-verde .luz-lado,
+  .luz-verde .luz-marco,
+  .luz-rojo .luz-lado,
+  .luz-rojo .luz-marco {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
 /* Cronómetro */
 .jp-reloj {
   display: flex;
@@ -329,11 +479,23 @@
 .jp-reloj-fila {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.jp-reloj-fila .btn {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13.5px;
+}
+
+.jp-reloj-fila .btn-primary {
+  margin-left: auto;
 }
 
 .jp-digitos {
-  flex: 1;
+  min-width: 58px;
+  text-align: center;
   font-size: 26px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
