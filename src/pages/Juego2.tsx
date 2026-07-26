@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { type Jugador, getJugadores, saveJugadores } from '../lib/storage'
 
-type Vista = 'menu' | 'garabato' | 'memoria' | 'describir' | 'simultaneo' | 'emojis'
+type Vista = 'menu' | 'garabato' | 'memoria' | 'describir' | 'simultaneo' | 'emojis' | 'tematico'
 
 // Emojis dibujables: nada de caras sutiles ni banderas.
 const EMOJIS = [
@@ -177,6 +177,87 @@ function Marcador({
   )
 }
 
+// ── Motor de consignas: lo usan "De memoria" y los modos temáticos ──
+function JuegoConsignas({
+  titulo,
+  sub,
+  banco,
+  nombres,
+  segundos,
+  jugadores,
+  guardar,
+}: {
+  titulo: string
+  sub: string
+  banco: Record<string, string[]>
+  nombres: Record<string, string>
+  segundos: number
+  jugadores: Jugador[]
+  guardar: (js: Jugador[]) => void
+}) {
+  const [cat, setCat] = useState('todas')
+  const [ronda, setRonda] = useState(0)
+  const [consigna, setConsigna] = useState<{ cat: string; txt: string } | null>(null)
+  const usadas = useRef<string[]>([])
+
+  const sacar = () => {
+    const pool =
+      cat === 'todas'
+        ? Object.entries(banco).flatMap(([k, v]) => v.map((txt) => ({ cat: k, txt })))
+        : banco[cat].map((txt) => ({ cat, txt }))
+    let libres = pool.filter((p) => !usadas.current.includes(p.txt))
+    if (!libres.length) {
+      usadas.current = []
+      libres = pool
+    }
+    const el = libres[Math.floor(Math.random() * libres.length)]
+    usadas.current.push(el.txt)
+    setConsigna(el)
+    setRonda((r) => r + 1)
+  }
+
+  return (
+    <section className="jp-hoja">
+      <h2 className="jp-titulo">{titulo}</h2>
+      <p className="jp-sub">{sub}</p>
+
+      <div className="jp-etiqueta">De dónde sale la consigna</div>
+      <div className="filtros">
+        {['todas', ...Object.keys(banco)].map((c) => (
+          <button
+            type="button"
+            key={c}
+            className={`filtro ${cat === c ? 'is-active' : ''}`}
+            onClick={() => {
+              setCat(c)
+              usadas.current = []
+            }}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+
+      <div className="jp-consigna">
+        <div className="jp-consigna-cat">
+          {consigna ? (nombres[consigna.cat] ?? consigna.cat) : 'esperando'}
+        </div>
+        <div className="jp-consigna-txt">{consigna?.txt ?? 'Sacá una consigna'}</div>
+      </div>
+      <div className="jp-codigo">ronda {consigna ? ronda : '—'}</div>
+
+      <div className="jp-acciones">
+        <button type="button" className="btn btn-primary" onClick={sacar}>
+          {consigna ? 'Otra consigna' : 'Sacar consigna'}
+        </button>
+      </div>
+
+      <Cronometro total={segundos} />
+      <Marcador jugadores={jugadores} guardar={guardar} />
+    </section>
+  )
+}
+
 // ── 01 · Garabato ──
 function trazoGarabato(semilla: number, dificultad: number) {
   const r = prng(semilla)
@@ -272,6 +353,16 @@ const BANCO: Record<string, string[]> = {
     'Un teclado completo con todas sus letras',
     'Un billete con su cara y sus números',
     'Un sacapuntas',
+    'Un budare con una arepa encima',
+    'Un cuatro venezolano con sus clavijas',
+    'Unas maracas',
+    'Una licuadora',
+    'Un termo de agua caliente',
+    'Un abanico de mano abierto',
+    'Una plancha de ropa',
+    'Un molinillo de café',
+    'Una máquina de coser',
+    'Un botellón de agua en su dispensador',
   ],
   marcas: [
     'El logo de Nike',
@@ -288,6 +379,18 @@ const BANCO: Record<string, string[]> = {
     'El símbolo de Bluetooth',
     'El logo de Michelin',
     'El logo de Volkswagen',
+    'El logo de Harina P.A.N.',
+    'El logo de Savoy',
+    'El osito de Toronto',
+    'El logo de Maltín Polar',
+    'El logo de Pepsi',
+    'El logo de Zara',
+    'El logo del Real Madrid',
+    'El escudo del Barcelona',
+    'El logo de Netflix',
+    'El logo de WhatsApp',
+    'El logo de Quilmes',
+    'El logo de Movistar',
   ],
   mapas: [
     'El mapa de Argentina',
@@ -302,6 +405,18 @@ const BANCO: Record<string, string[]> = {
     'Esta casa vista desde arriba',
     'La bandera de Brasil',
     'La bandera de Uruguay',
+    'El Salto Ángel',
+    'El Ávila visto desde Caracas',
+    'La bandera de Venezuela con sus estrellas',
+    'El tepuy Roraima',
+    'La Sagrada Familia',
+    'El Coliseo romano',
+    'La Estatua de la Libertad',
+    'El mapa de México',
+    'La bandera de España con su escudo',
+    'El Cristo Redentor',
+    'Las Cataratas del Iguazú',
+    'La Torre de Pisa',
   ],
   bichos: [
     'La cara del de al lado, sin mirarlo',
@@ -316,6 +431,16 @@ const BANCO: Record<string, string[]> = {
     'Un pingüino',
     'Un caracol',
     'Una hormiga con sus seis patas',
+    'Un turpial',
+    'Una orquídea',
+    'Un araguaney florecido',
+    'Un oso frontino',
+    'Un tucán',
+    'Una guacamaya',
+    'Un hornero con su nido',
+    'Un toro bravo',
+    'Un flamenco parado en una pata',
+    'Un perezoso colgado',
   ],
 }
 
@@ -324,6 +449,190 @@ const NOMBRE_CAT: Record<string, string> = {
   marcas: 'marca conocida',
   mapas: 'mapa o lugar',
   bichos: 'ser vivo',
+}
+
+// Modos temáticos: mismo motor de consignas, distinto banco.
+interface Tematico {
+  num: string
+  titulo: string
+  resumen: string
+  sub: string
+  segundos: number
+  banco: Record<string, string[]>
+  nombres: Record<string, string>
+}
+
+const TEMATICOS: Record<string, Tematico> = {
+  venezuela: {
+    num: '06',
+    titulo: '🇻🇪 Venezuela',
+    resumen: 'Arepas, tepuyes, gaita y todo lo que un venezolano dibuja con los ojos cerrados.',
+    sub: 'Si alguien de afuera está jugando, que sufra un rato.',
+    segundos: 120,
+    banco: {
+      comida: [
+        'Una arepa rellena, abierta al medio',
+        'Una cachapa con queso de mano',
+        'Tres tequeños en un plato',
+        'Una hallaca con su hoja de plátano',
+        'Un pabellón criollo completo',
+        'Un tostón con guasacaca',
+        'Un pastelito de queso',
+        'Un papelón con limón',
+        'Una empanada de cazón',
+        'Una Toronto',
+        'Un tequeyoyo',
+        'Un golfeado con queso',
+        'Una polar bien fría',
+        'Un pan de jamón cortado',
+        'Un dulce de lechosa',
+        'Un cocuy con su botella',
+      ],
+      lugares: [
+        'El Salto Ángel',
+        'El Ávila con el teleférico',
+        'Los Roques desde arriba',
+        'El tepuy Roraima',
+        'Los Médanos de Coro',
+        'El Puente sobre el Lago de Maracaibo',
+        'El relámpago del Catatumbo',
+        'La Vinotinto celebrando',
+        'El Teleférico de Mérida',
+        'Un pueblo de la Colonia Tovar',
+        'La Cota Mil un domingo',
+        'Choroní con sus palmeras',
+      ],
+      cosas: [
+        'Un cuatro venezolano',
+        'Unas maracas de capacho',
+        'Un budare con la arepa encima',
+        'Un paquete de Harina P.A.N.',
+        'Una lata de Diablitos',
+        'Un botellón de agua',
+        'Una planta eléctrica',
+        'Un billete de un millón de bolívares',
+        'Una gorra de la Vinotinto',
+        'Un mango verde con sal',
+      ],
+      cultura: [
+        'Simón Bolívar a caballo',
+        'Un turpial cantando',
+        'Un araguaney florecido',
+        'Una orquídea',
+        'Un gaitero con su furro',
+        'Un bailarín de joropo',
+        'Los Diablos Danzantes de Yare',
+        'Una Miss Venezuela con su corona',
+        'Un niño de El Sistema con su violín',
+        'La bandera con sus ocho estrellas',
+      ],
+    },
+    nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
+  },
+  argentina: {
+    num: '07',
+    titulo: '🇦🇷 Argentina',
+    resumen: 'Mate, asado, Maradona y todo lo que se dibuja con acento porteño.',
+    sub: 'Prohibido quejarse de que no sale la vaca.',
+    segundos: 120,
+    banco: {
+      comida: [
+        'Un asado completo en la parrilla',
+        'Un mate con termo bajo el brazo',
+        'Una empanada tucumana con su repulgue',
+        'Un alfajor mordido',
+        'Un choripán con chimichurri',
+        'Una milanesa napolitana',
+        'Un fernet con coca',
+        'Media docena de facturas',
+        'Un pote de dulce de leche',
+        'Una picada completa',
+        'Un locro humeante',
+        'Una porción de fugazzeta',
+      ],
+      lugares: [
+        'El Obelisco',
+        'La Casa Rosada',
+        'Caminito con sus casas de colores',
+        'La Bombonera llena',
+        'El Perito Moreno',
+        'Las Cataratas del Iguazú',
+        'El fin del mundo en Ushuaia',
+        'El Aconcagua',
+        'El Congreso',
+        'Un colectivo porteño',
+        'El Cabildo',
+        'La Quebrada de Humahuaca',
+      ],
+      cosas: [
+        'Un bandoneón abierto',
+        'Una pelota de fútbol clásica',
+        'Un subte con su cartel',
+        'Una SUBE',
+        'Un billete de mil pesos',
+        'Un matambre a la pizza',
+        'Un guardapolvo blanco',
+        'Un sifón de soda',
+      ],
+      cultura: [
+        'Maradona con la 10',
+        'Messi levantando la copa',
+        'Carlos Gardel con su sonrisa',
+        'Mafalda con su flequillo',
+        'Una pareja bailando tango',
+        'San Martín cruzando los Andes',
+        'El sol de la bandera',
+        'Un hincha con la camiseta puesta',
+      ],
+    },
+    nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
+  },
+  peliculas: {
+    num: '08',
+    titulo: '🎬 Películas',
+    resumen: 'Escenas, personajes y objetos que todos vimos mil veces en el cine.',
+    sub: 'Sin decir el título, obvio.',
+    segundos: 120,
+    banco: {
+      escenas: [
+        'La proa del Titanic con los brazos abiertos',
+        'La aleta del tiburón acercándose',
+        'La bicicleta cruzando la luna',
+        'El auto volando con las puertas hacia arriba',
+        'La lluvia de meteoritos sobre un dinosaurio',
+        'Un cartel de Hollywood en la colina',
+        'Una casa volando con globos',
+        'Un tipo bailando bajo la lluvia con paraguas',
+        'Una pareja corriendo por la playa',
+        'Un ring de boxeo con las escaleras del museo',
+      ],
+      personajes: [
+        'Un vaquero del lejano oeste',
+        'Un mago con anteojos redondos y cicatriz',
+        'Un ogro verde con orejas de trompeta',
+        'Un extraterrestre con el dedo brillante',
+        'Un vagabundo con bastón y bigotito',
+        'Un espía de smoking con pistola',
+        'Un arqueólogo con sombrero y látigo',
+        'Un payaso asomándose a una alcantarilla',
+        'Una princesa con dos rodetes',
+        'Un robot amarillo que junta basura',
+      ],
+      objetos: [
+        'Un sable de luz encendido',
+        'Un anillo dorado con inscripción',
+        'Una varita mágica',
+        'Un DeLorean con las puertas abiertas',
+        'Una máscara blanca de porcelana',
+        'Un carrito de pochoclo',
+        'Una claqueta de cine',
+        'Un rollo de película desenrollado',
+        'Una estatuilla dorada de premio',
+        'Un tridente de rey del mar',
+      ],
+    },
+    nombres: { escenas: 'escena', personajes: 'personaje', objetos: 'objeto' },
+  },
 }
 
 // Consignas del modo simultáneo: sujeto + situación, combinables.
@@ -349,6 +658,18 @@ const SUJETOS = [
   'Un yeti',
   'Un mago',
   'Un caracol',
+  'Un turpial',
+  'Una guacamaya',
+  'Un llanero',
+  'Un gaitero zuliano',
+  'Un bachaquero',
+  'Un motorizado',
+  'Un torero',
+  'Un flamenco',
+  'Un gaucho',
+  'Un vendedor de empanadas',
+  'Un árbitro',
+  'Un cura',
 ]
 
 const SITUACIONES = [
@@ -372,6 +693,18 @@ const SITUACIONES = [
   'corriendo una maratón',
   'mudándose de casa',
   'aprendiendo a andar en bici',
+  'haciendo arepas',
+  'bailando joropo',
+  'en la cola de la panadería',
+  'cargando un botellón de agua',
+  'subiendo el Ávila',
+  'esperando que vuelva la luz',
+  'tocando el cuatro',
+  'haciendo una hallaca',
+  'bailando flamenco',
+  'en una verbena',
+  'jugando al dominó',
+  'cambiando dólares en la calle',
 ]
 
 const consignaAlAzar = () =>
@@ -445,27 +778,8 @@ export default function Juego2() {
   const [semillaG, setSemillaG] = useState(nuevaSemilla)
   const garabato = trazoGarabato(semillaG, dif)
 
-  // Memoria
-  const [cat, setCat] = useState('todas')
-  const [ronda, setRonda] = useState(1)
-  const [consigna, setConsigna] = useState<{ cat: string; txt: string } | null>(null)
-  const usadas = useRef<string[]>([])
-
-  const sacarConsigna = () => {
-    const pool =
-      cat === 'todas'
-        ? Object.entries(BANCO).flatMap(([k, v]) => v.map((txt) => ({ cat: k, txt })))
-        : BANCO[cat].map((txt) => ({ cat, txt }))
-    let libres = pool.filter((p) => !usadas.current.includes(p.txt))
-    if (!libres.length) {
-      usadas.current = []
-      libres = pool
-    }
-    const el = libres[Math.floor(Math.random() * libres.length)]
-    usadas.current.push(el.txt)
-    setConsigna(el)
-    setRonda((r) => r + 1)
-  }
+  // Modo temático activo (Venezuela, Argentina, Películas)
+  const [tema, setTema] = useState<string | null>(null)
 
   // Describir
   const [formas, setFormas] = useState(3)
@@ -481,7 +795,7 @@ export default function Juego2() {
           <h1>Juegos de papel</h1>
         </header>
         <p className="conv-nota jp-bajada">
-          Tres juegos para una mesa con hojas y lápices. La pantalla solo reparte consignas y
+          Juegos para una mesa con hojas y lápices. La pantalla solo reparte consignas y
           controla el tiempo.
         </p>
 
@@ -538,6 +852,22 @@ export default function Juego2() {
               Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.
             </span>
           </button>
+
+          {Object.entries(TEMATICOS).map(([id, t]) => (
+            <button
+              type="button"
+              className="jp-card"
+              key={id}
+              onClick={() => {
+                setTema(id)
+                setVista('tematico')
+              }}
+            >
+              <span className="jp-num">{t.num}</span>
+              <span className="jp-card-titulo">{t.titulo}</span>
+              <span className="jp-card-txt">{t.resumen}</span>
+            </button>
+          ))}
         </div>
 
         <Marcador jugadores={jugadores} guardar={guardarJugadores} />
@@ -549,7 +879,7 @@ export default function Juego2() {
     <>
       <header className="crm-header">
         <button type="button" className="btn-ghost jp-volver" onClick={() => setVista('menu')}>
-          ← Los tres juegos
+          ← Todos los juegos
         </button>
       </header>
 
@@ -605,44 +935,28 @@ export default function Juego2() {
       )}
 
       {vista === 'memoria' && (
-        <section className="jp-hoja">
-          <h2 className="jp-titulo">De memoria</h2>
-          <p className="jp-sub">Sin mirar nada ni a nadie. Después comparan y se ríen.</p>
+        <JuegoConsignas
+          titulo="De memoria"
+          sub="Sin mirar nada ni a nadie. Después comparan y se ríen."
+          banco={BANCO}
+          nombres={NOMBRE_CAT}
+          segundos={120}
+          jugadores={jugadores}
+          guardar={guardarJugadores}
+        />
+      )}
 
-          <div className="jp-etiqueta">De dónde sale la consigna</div>
-          <div className="filtros">
-            {['todas', ...Object.keys(BANCO)].map((c) => (
-              <button
-                type="button"
-                key={c}
-                className={chip(cat === c)}
-                onClick={() => {
-                  setCat(c)
-                  usadas.current = []
-                }}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-
-          <div className="jp-consigna">
-            <div className="jp-consigna-cat">
-              {consigna ? NOMBRE_CAT[consigna.cat] : 'esperando'}
-            </div>
-            <div className="jp-consigna-txt">{consigna?.txt ?? 'Sacá una consigna'}</div>
-          </div>
-          <div className="jp-codigo">ronda {consigna ? ronda - 1 : '—'}</div>
-
-          <div className="jp-acciones">
-            <button type="button" className="btn btn-primary" onClick={sacarConsigna}>
-              {consigna ? 'Otra consigna' : 'Sacar consigna'}
-            </button>
-          </div>
-
-          <Cronometro total={120} />
-          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
-        </section>
+      {vista === 'tematico' && tema && (
+        <JuegoConsignas
+          key={tema}
+          titulo={TEMATICOS[tema].titulo}
+          sub={TEMATICOS[tema].sub}
+          banco={TEMATICOS[tema].banco}
+          nombres={TEMATICOS[tema].nombres}
+          segundos={TEMATICOS[tema].segundos}
+          jugadores={jugadores}
+          guardar={guardarJugadores}
+        />
       )}
 
       {vista === 'describir' && (
