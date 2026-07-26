@@ -168,6 +168,51 @@
   line-height: 1.25;
 }
 
+/* Modo simultáneo */
+.jp-secreto {
+  min-height: 128px;
+  justify-content: center;
+  text-align: center;
+}
+
+.jp-aviso {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.jp-revelar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.jp-revelar-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.jp-revelar-fila + .jp-revelar-fila {
+  border-top: 1px solid var(--line);
+}
+
+.jp-revelar-nombre {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.jp-revelar-txt {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: right;
+}
+
 /* Cronómetro */
 .jp-reloj {
   display: flex;

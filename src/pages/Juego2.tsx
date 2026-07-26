@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { type Jugador, getJugadores, saveJugadores } from '../lib/storage'
 
-type Vista = 'menu' | 'garabato' | 'memoria' | 'describir'
+type Vista = 'menu' | 'garabato' | 'memoria' | 'describir' | 'simultaneo'
 
 // Generador con semilla: el mismo número reproduce el mismo dibujo,
 // así se puede repetir una figura más adelante y comparar.
@@ -98,12 +98,13 @@ function pitido() {
 }
 
 // ── Marcador de jugadores ──
-function Marcador() {
-  const [jugadores, setJugadores] = useState<Jugador[]>(getJugadores)
-  const guardar = (js: Jugador[]) => {
-    setJugadores(js)
-    saveJugadores(js)
-  }
+function Marcador({
+  jugadores,
+  guardar,
+}: {
+  jugadores: Jugador[]
+  guardar: (js: Jugador[]) => void
+}) {
   const cambiar = (i: number, cambio: Partial<Jugador>) =>
     guardar(jugadores.map((j, k) => (k === i ? { ...j, ...cambio } : j)))
 
@@ -316,8 +317,86 @@ const NOMBRE_CAT: Record<string, string> = {
   bichos: 'ser vivo',
 }
 
+// Consignas del modo simultáneo: sujeto + situación, combinables.
+// Poco contenido, muchísimas combinaciones y siempre absurdas.
+const SUJETOS = [
+  'Un pingüino',
+  'Un pulpo',
+  'Una jirafa',
+  'Un cocodrilo',
+  'Un astronauta',
+  'Una abuela',
+  'Un vampiro',
+  'Un robot',
+  'Un chef',
+  'Un dinosaurio',
+  'Una sirena',
+  'Un fantasma',
+  'Un pirata',
+  'Un caballo',
+  'Un mimo',
+  'Un dentista',
+  'Una hormiga',
+  'Un yeti',
+  'Un mago',
+  'Un caracol',
+]
+
+const SITUACIONES = [
+  'tomando mate',
+  'andando en monopatín',
+  'cortándose el pelo',
+  'esperando el colectivo',
+  'haciendo yoga',
+  'lavando los platos',
+  'en una entrevista de trabajo',
+  'jugando al tenis',
+  'con dolor de muelas',
+  'sacándose una selfie',
+  'armando un mueble',
+  'perdido en el supermercado',
+  'bailando tango',
+  'pintando una pared',
+  'atendiendo el teléfono',
+  'en la playa con frío',
+  'cocinando un asado',
+  'corriendo una maratón',
+  'mudándose de casa',
+  'aprendiendo a andar en bici',
+]
+
+const consignaAlAzar = () =>
+  `${SUJETOS[Math.floor(Math.random() * SUJETOS.length)]} ${
+    SITUACIONES[Math.floor(Math.random() * SITUACIONES.length)]
+  }`
+
 export default function Juego2() {
   const [vista, setVista] = useState<Vista>('menu')
+  const [jugadores, setJugadores] = useState<Jugador[]>(getJugadores)
+  const guardarJugadores = (js: Jugador[]) => {
+    setJugadores(js)
+    saveJugadores(js)
+  }
+
+  // Modo simultáneo: reparto secreto → todos dibujan → adivinanza
+  const [fase, setFase] = useState<'reparto' | 'dibujo' | 'adivinar'>('reparto')
+  const [turno, setTurno] = useState(0)
+  const [verConsigna, setVerConsigna] = useState(false)
+  const [consignas, setConsignas] = useState<string[]>([])
+  const [revelado, setRevelado] = useState<number[]>([])
+
+  const nuevaRonda = () => {
+    const nuevas: string[] = []
+    while (nuevas.length < jugadores.length) {
+      const c = consignaAlAzar()
+      if (!nuevas.includes(c)) nuevas.push(c)
+    }
+    setConsignas(nuevas)
+    setFase('reparto')
+    setTurno(0)
+    setVerConsigna(false)
+    setRevelado([])
+  }
 
   // Garabato
   const [dif, setDif] = useState(2)
@@ -388,9 +467,24 @@ export default function Juego2() {
               Uno ve una figura y la describe sin nombrarla. El resto dibuja a ciegas.
             </span>
           </button>
+          <button
+            type="button"
+            className="jp-card"
+            onClick={() => {
+              nuevaRonda()
+              setVista('simultaneo')
+            }}
+          >
+            <span className="jp-num">04</span>
+            <span className="jp-card-titulo">Todos a la vez</span>
+            <span className="jp-card-txt">
+              Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan
+              qué dibujó el otro.
+            </span>
+          </button>
         </div>
 
-        <Marcador />
+        <Marcador jugadores={jugadores} guardar={guardarJugadores} />
       </>
     )
   }
@@ -450,7 +544,7 @@ export default function Juego2() {
           </div>
 
           <Cronometro total={180} />
-          <Marcador />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
 
@@ -491,7 +585,7 @@ export default function Juego2() {
           </div>
 
           <Cronometro total={120} />
-          <Marcador />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
 
@@ -553,7 +647,110 @@ export default function Juego2() {
           </div>
 
           <Cronometro total={240} />
-          <Marcador />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
+      )}
+
+      {vista === 'simultaneo' && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">Todos a la vez</h2>
+
+          {fase === 'reparto' && (
+            <>
+              <p className="jp-sub">
+                Pasá el teléfono. Cada uno mira su consigna sin que nadie más la vea.
+              </p>
+              <div className="jp-consigna jp-secreto">
+                <div className="jp-consigna-cat">
+                  {turno + 1} de {jugadores.length}
+                </div>
+                {verConsigna ? (
+                  <>
+                    <div className="jp-consigna-txt">{consignas[turno]}</div>
+                    <p className="jp-aviso">Memorizala y pasá el teléfono.</p>
+                  </>
+                ) : (
+                  <div className="jp-consigna-txt">Turno de {jugadores[turno]?.nombre}</div>
+                )}
+              </div>
+
+              <div className="jp-acciones">
+                {verConsigna ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setVerConsigna(false)
+                      if (turno + 1 < jugadores.length) setTurno(turno + 1)
+                      else setFase('dibujo')
+                    }}
+                  >
+                    {turno + 1 < jugadores.length ? 'Listo, siguiente' : 'Listo, a dibujar'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setVerConsigna(true)}
+                  >
+                    Ver mi consigna
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+
+          {fase === 'dibujo' && (
+            <>
+              <p className="jp-sub">
+                Todos dibujan al mismo tiempo, cada uno lo suyo. Sin espiar, sin hablar.
+              </p>
+              <Cronometro total={180} />
+              <div className="jp-acciones">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setFase('adivinar')}
+                >
+                  Terminamos, a adivinar
+                </button>
+              </div>
+            </>
+          )}
+
+          {fase === 'adivinar' && (
+            <>
+              <p className="jp-sub">
+                Uno muestra su dibujo, el resto tira. Después revelás y sumás punto al que acertó
+                (y al dibujante si alguien le acertó).
+              </p>
+              <ul className="jp-revelar">
+                {jugadores.map((j, i) => (
+                  <li key={i} className="jp-revelar-fila">
+                    <span className="jp-revelar-nombre">{j.nombre}</span>
+                    {revelado.includes(i) ? (
+                      <span className="jp-revelar-txt">{consignas[i]}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => setRevelado([...revelado, i])}
+                      >
+                        Revelar
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <div className="jp-acciones">
+                <button type="button" className="btn btn-primary" onClick={nuevaRonda}>
+                  Ronda nueva
+                </button>
+              </div>
+            </>
+          )}
+
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
     </>
