@@ -256,6 +256,21 @@
   }
 }
 
+/* Fútbol emoji */
+.jp-futbol-emojis span {
+  font-size: clamp(38px, 12vw, 56px);
+}
+
+.jp-futbol-nombre {
+  text-align: center;
+  min-height: 84px;
+  justify-content: center;
+}
+
+.jp-tapado {
+  color: var(--muted);
+}
+
 /* Modo simultáneo */
 .jp-secreto {
   min-height: 128px;

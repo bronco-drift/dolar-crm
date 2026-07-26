@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { type Jugador, getJugadores, saveJugadores } from '../lib/storage'
 
-type Vista = 'menu' | 'garabato' | 'memoria' | 'describir' | 'simultaneo' | 'emojis' | 'tematico'
+type Vista =
+  | 'menu'
+  | 'garabato'
+  | 'memoria'
+  | 'describir'
+  | 'simultaneo'
+  | 'emojis'
+  | 'tematico'
+  | 'futbol'
 
 // Emojis dibujables: nada de caras sutiles ni banderas.
 const EMOJIS = [
@@ -10,6 +18,111 @@ const EMOJIS = [
   '🚲','🚀','⛵','🚁','🛵','🎸','🎺','🥁','📷','⏰','🔑','☂️','👑','🕶️','🧦','👟',
   '🏰','⛺','🗼','🚦','🪑','🛋️','🪜','🧸','🎈','🎁','🧩','⚽','🏀','🪁',
   '🌈','⚡','🔥','❄️','🌙','⭐','🌊','🗻',
+]
+
+// Fútbol emoji: tres pistas y a adivinar de quién se trata.
+const FUTBOL: { e: string; n: string }[] = [
+  { e: '🐐 🇦🇷 🦩', n: 'Lionel Messi' },
+  { e: '🇵🇹 🇸🇦 🐪', n: 'Cristiano Ronaldo' },
+  { e: '🇫🇷 🐢 👑', n: 'Kylian Mbappé' },
+  { e: '🇳🇴 🤖 🧘', n: 'Erling Haaland' },
+  { e: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 👐 🎯', n: 'Jude Bellingham' },
+  { e: '🇧🇷 ⚡ 🕺', n: 'Vinícius Júnior' },
+  { e: '🇪🇸 👶 💎', n: 'Lamine Yamal' },
+  { e: '🇵🇱 🏹 🐯', n: 'Robert Lewandowski' },
+  { e: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 🇩🇪 🏹', n: 'Harry Kane' },
+  { e: '🇧🇪 🧠 🎯', n: 'Kevin De Bruyne' },
+  { e: '🇪🇬 👑 🏹', n: 'Mohamed Salah' },
+  { e: '🇺🇾 🦫 🧛', n: 'Luis Suárez' },
+  { e: '🇧🇷 🪄 🏥', n: 'Neymar Jr' },
+  { e: '🇫🇷 🧉 💇', n: 'Antoine Griezmann' },
+  { e: '🇭🇷 🪄 🧙', n: 'Luka Modrić' },
+  { e: '🇦🇷 🧤 🤪', n: 'Emiliano Martínez' },
+  { e: '🇦🇷 🐂 🐂', n: 'Lautaro Martínez' },
+  { e: '🇦🇷 🕷️ 🕸️', n: 'Julián Álvarez' },
+  { e: '🇦🇷 🛡️ 🧉', n: 'Rodrigo De Paul' },
+  { e: '🇦🇷 🏹 🫶', n: 'Ángel Di María' },
+  { e: '🇸🇪 🦁 🥋', n: 'Zlatan Ibrahimović' },
+  { e: '🇧🇷 🤙 🤙', n: 'Ronaldinho' },
+  { e: '🇧🇷 👑 👑', n: 'Pelé' },
+  { e: '🇦🇷 🔟 🌦️', n: 'Diego Maradona' },
+  { e: '🇫🇷 🪄 💇', n: 'Zinedine Zidane' },
+  { e: '🇧🇷 👑 💇', n: 'Ronaldo Nazário' },
+  { e: '🇫🇷 🇸🇦 🩹', n: 'Karim Benzema' },
+  { e: '🇰🇷 📸 🤍', n: 'Son Heung-min' },
+  { e: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 🌶️ 🌶️', n: 'Bukayo Saka' },
+  { e: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 🧯 🎯', n: 'Phil Foden' },
+  { e: '🇵🇹 🪄 🪵', n: 'Bernardo Silva' },
+  { e: '🇵🇹 🗣️ 🪄', n: 'Bruno Fernandes' },
+  { e: '🇨🇦 ⚡ 🚗', n: 'Alphonso Davies' },
+  { e: '🇪🇸 🥽 🪄', n: 'Pedri' },
+  { e: '🇪🇸 🥊 🪵', n: 'Gavi' },
+  { e: '🇺🇾 🦅 🚀', n: 'Federico Valverde' },
+  { e: '🇺🇾 🌪️ 🪵', n: 'Darwin Núñez' },
+  { e: '🇨🇴 ⚡ 🦈', n: 'Luis Díaz' },
+  { e: '🇨🇴 🏹 🪄', n: 'James Rodríguez' },
+  { e: '🇨🇱 🪄 🐕', n: 'Alexis Sánchez' },
+  { e: '🇨🇱 👑 💇', n: 'Arturo Vidal' },
+  { e: '🇸🇳 ⚡ 🇸🇦', n: 'Sadio Mané' },
+  { e: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 🧠 👉', n: 'Marcus Rashford' },
+  { e: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 🪵 🍾', n: 'Jack Grealish' },
+  { e: '🇧🇪 🦏 🪵', n: 'Romelu Lukaku' },
+  { e: '🇫🇷 🪵 🪵', n: 'Olivier Giroud' },
+  { e: '🇮🇹 🧤 🗼', n: 'Gianluigi Donnarumma' },
+  { e: '🇩🇪 🧤 🛡️', n: 'Manuel Neuer' },
+  { e: '🇧🇪 🧤 🦒', n: 'Thibaut Courtois' },
+  // ── Sumados ──
+  { e: '🇪🇸 🪄 🇯🇵', n: 'Andrés Iniesta' },
+  { e: '🇪🇸 🧠 🎼', n: 'Xavi Hernández' },
+  { e: '🇪🇸 🛡️ 🟥', n: 'Sergio Ramos' },
+  { e: '🇪🇸 🧤 😇', n: 'Iker Casillas' },
+  { e: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 🎯 💇', n: 'David Beckham' },
+  { e: '🇫🇷 🏹 🇬🇧', n: 'Thierry Henry' },
+  { e: '🇮🇹 🧠 🍷', n: 'Andrea Pirlo' },
+  { e: '🇮🇹 🐺 👑', n: 'Francesco Totti' },
+  { e: '🇮🇹 🛡️ 🔴', n: 'Paolo Maldini' },
+  { e: '🇳🇱 🔄 🚬', n: 'Johan Cruyff' },
+  { e: '🇳🇱 🧑‍🦲 ⬅️', n: 'Arjen Robben' },
+  { e: '🇳🇱 🛡️ 🗿', n: 'Virgil van Dijk' },
+  { e: '🇩🇪 🎯 📐', n: 'Toni Kroos' },
+  { e: '🇩🇪 🐭 😜', n: 'Thomas Müller' },
+  { e: '🇩🇪 🎯 🤸', n: 'Miroslav Klose' },
+  { e: '🇩🇪 👑 🧹', n: 'Franz Beckenbauer' },
+  { e: '🇨🇴 🐯 🎯', n: 'Radamel Falcao' },
+  { e: '🇦🇷 🎩 🐢', n: 'Juan Román Riquelme' },
+  { e: '🇦🇷 🦁 💥', n: 'Gabriel Batistuta' },
+  { e: '🇦🇷 🥷 🎮', n: 'Sergio Agüero' },
+  { e: '🇦🇷 🪖 💪', n: 'Carlos Tevez' },
+  { e: '🇦🇷 🛡️ 👨‍✈️', n: 'Javier Mascherano' },
+  { e: '🇦🇷 🎭 💎', n: 'Paulo Dybala' },
+  { e: '🇦🇷 🧠 🎯', n: 'Enzo Fernández' },
+  { e: '🇦🇷 🛡️ 😤', n: 'Cristian Romero' },
+  { e: '🇪🇸 👶 🏹', n: 'Fernando Torres' },
+  { e: '🇪🇸 🏹 ⚔️', n: 'David Villa' },
+  { e: '🇪🇸 🎯 🤫', n: 'Raúl González' },
+  { e: '🇪🇸 🧠 🎹', n: 'Rodri' },
+  { e: '🇧🇷 💥 🦵', n: 'Roberto Carlos' },
+  { e: '🇧🇷 🏃 ➡️', n: 'Cafú' },
+  { e: '🇧🇷 🙏 ⚡', n: 'Kaká' },
+  { e: '🇧🇷 🍌 ➡️', n: 'Dani Alves' },
+  { e: '🇧🇷 🛡️ 👑', n: 'Thiago Silva' },
+  { e: '🇧🇷 🧤 🧱', n: 'Alisson Becker' },
+  { e: '🇧🇷 🧤 🦶', n: 'Ederson' },
+  { e: '🇧🇷 🕊️ 🦵', n: 'Garrincha' },
+  { e: '🇧🇷 🎯 🎉', n: 'Romário' },
+  { e: '🇧🇷 🍼 🎯', n: 'Bebeto' },
+  { e: '🇫🇷 🐜 🔋', n: "N'Golo Kanté" },
+  { e: '🇫🇷 💇 🕺', n: 'Paul Pogba' },
+  { e: '🇫🇷 ⚡ 🤸', n: 'Ousmane Dembélé' },
+  { e: '🇲🇦 ⚡ ➡️', n: 'Achraf Hakimi' },
+  { e: '🇳🇬 🎭 ⚡', n: 'Victor Osimhen' },
+  { e: '🇬🇪 🪄 🍕', n: 'Khvicha Kvaratskhelia' },
+  { e: '🇳🇴 🧠 🎯', n: 'Martin Ødegaard' },
+  { e: '🇵🇹 ⚡ 🎧', n: 'Rafael Leão' },
+  { e: '🇩🇪 🕺 ⚡', n: 'Jamal Musiala' },
+  { e: '🇭🇺 🎖️ 🎯', n: 'Ferenc Puskás' },
+  { e: '🇵🇹 🐆 👑', n: 'Eusébio' },
+  { e: '🇷🇺 🧤 🕷️', n: 'Lev Yashin' },
 ]
 
 // Generador con semilla: el mismo número reproduce el mismo dibujo,
@@ -781,6 +894,23 @@ export default function Juego2() {
   // Modo temático activo (Venezuela, Argentina, Películas)
   const [tema, setTema] = useState<string | null>(null)
 
+  // Fútbol emoji: pistas primero, nombre después
+  const [futbolista, setFutbolista] = useState<{ e: string; n: string } | null>(null)
+  const [nombreVisible, setNombreVisible] = useState(false)
+  const usadosFutbol = useRef<string[]>([])
+
+  const otroFutbolista = () => {
+    let libres = FUTBOL.filter((f) => !usadosFutbol.current.includes(f.n))
+    if (!libres.length) {
+      usadosFutbol.current = []
+      libres = FUTBOL
+    }
+    const el = libres[Math.floor(Math.random() * libres.length)]
+    usadosFutbol.current.push(el.n)
+    setFutbolista(el)
+    setNombreVisible(false)
+  }
+
   // Describir
   const [formas, setFormas] = useState(3)
   const [semillaF, setSemillaF] = useState(nuevaSemilla)
@@ -850,6 +980,21 @@ export default function Juego2() {
             <span className="jp-card-titulo">Dibujá los emojis</span>
             <span className="jp-card-txt">
               Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="jp-card"
+            onClick={() => {
+              otroFutbolista()
+              setVista('futbol')
+            }}
+          >
+            <span className="jp-num">09</span>
+            <span className="jp-card-titulo">⚽ Fútbol emoji</span>
+            <span className="jp-card-txt">
+              Tres emojis, un futbolista. El primero que lo grite se lleva el punto.
             </span>
           </button>
 
@@ -944,6 +1089,55 @@ export default function Juego2() {
           jugadores={jugadores}
           guardar={guardarJugadores}
         />
+      )}
+
+      {vista === 'futbol' && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">⚽ Fútbol emoji</h2>
+          <p className="jp-sub">
+            Tres pistas por jugador: bandera, apodo, manías. El primero que acierta, punto.
+          </p>
+
+          <div className="jp-lienzo jp-emojis">
+            <div className="jp-emoji-fila jp-futbol-emojis">
+              {futbolista?.e.split(' ').map((e, i) => (
+                <span key={i}>{e}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="jp-consigna jp-futbol-nombre">
+            {nombreVisible ? (
+              <>
+                <div className="jp-consigna-cat">era</div>
+                <div className="jp-consigna-txt">{futbolista?.n}</div>
+              </>
+            ) : (
+              <div className="jp-consigna-txt jp-tapado">¿Quién es?</div>
+            )}
+          </div>
+
+          <div className="jp-acciones">
+            {nombreVisible ? (
+              <button type="button" className="btn btn-primary" onClick={otroFutbolista}>
+                Siguiente
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setNombreVisible(true)}
+              >
+                Revelar
+              </button>
+            )}
+            <button type="button" className="btn btn-ghost" onClick={otroFutbolista}>
+              Paso
+            </button>
+          </div>
+
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
       )}
 
       {vista === 'tematico' && tema && (
