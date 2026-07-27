@@ -143,6 +143,67 @@ const COSAS_101 = [
   'Un pincel',
 ]
 
+// Nivel difícil: escenas con varias partes y cosas que no tienen forma.
+const COSAS_DIFICILES = [
+  'Una bicicleta con su cadena',
+  'Un pulpo tocando el piano',
+  'Una jirafa con bufanda',
+  'Un despertador a cuerda',
+  'Un helicóptero',
+  'Una máquina de escribir',
+  'Un carrito de supermercado',
+  'Un tocadiscos',
+  'Una cafetera italiana',
+  'Un caballo galopando',
+  'Una escalera caracol',
+  'Un castillo con foso y puente',
+  'Una moto con sidecar',
+  'Un pavo real con la cola abierta',
+  'Un dragón echando fuego',
+  'Un tren cruzando un puente',
+  'Un astronauta flotando',
+  'Una mano haciendo el signo de ok',
+  'Un rostro de perfil',
+  'Un pulpo dentro de una pecera',
+  'Un ventilador de techo desde abajo',
+  'Una jaula con un pájaro adentro',
+  'Un pulpo con sombrero de copa',
+  'Una orquesta de tres músicos',
+  'Un mono colgado de una rama',
+  'Un cangrejo con anteojos',
+  'Una tortuga con caparazón de ciudad',
+  'Un molino con las aspas girando',
+  'Una máquina de coser',
+  'Un esqueleto de dinosaurio',
+  'Un pulpo haciendo malabares',
+  'Una cabina telefónica',
+  'Un semáforo con tres autos esperando',
+  'Un pingüino con corbata',
+  'Un barco dentro de una botella',
+  // Sin forma: hay que resolverlas con ideas
+  'La libertad',
+  'El silencio',
+  'La nostalgia',
+  'El tiempo',
+  'La suerte',
+  'El miedo',
+  'La velocidad',
+  'El equilibrio',
+  'La curiosidad',
+  'El caos',
+  'La paciencia',
+  'El futuro',
+  'La amistad',
+  'El aburrimiento',
+  'La memoria',
+]
+
+// Niveles del bloque: se agregan sumando entradas acá.
+const NIVELES_BLOQUE = [
+  { id: 'facil', nombre: 'Fácil', banco: COSAS_101 },
+  { id: 'dificil', nombre: 'Difícil', banco: COSAS_DIFICILES },
+]
+
 // Fútbol emoji: tres pistas y a adivinar de quién se trata.
 const FUTBOL: { e: string; n: string }[] = [
   { e: '🐐 🇦🇷 🦩', n: 'Lionel Messi' },
@@ -403,6 +464,36 @@ function Cronometro({
   )
 }
 
+// Sonido: preferencia compartida por todos los modos.
+const K_SONIDO = 'dolar-crm:papel-sonido'
+let sonidoOn = localStorage.getItem(K_SONIDO) !== 'off'
+
+export const sonidoActivo = () => sonidoOn
+
+function alternarSonido() {
+  sonidoOn = !sonidoOn
+  localStorage.setItem(K_SONIDO, sonidoOn ? 'on' : 'off')
+  return sonidoOn
+}
+
+function BotonSonido() {
+  const [on, setOn] = useState(sonidoOn)
+  return (
+    <button
+      type="button"
+      className="jp-sonido"
+      title={on ? 'Silenciar' : 'Activar sonido'}
+      aria-label={on ? 'Silenciar' : 'Activar sonido'}
+      onClick={(e) => {
+        e.stopPropagation()
+        setOn(alternarSonido())
+      }}
+    >
+      {on ? '🔊' : '🔇'}
+    </button>
+  )
+}
+
 // Un tono corto para los cambios de consigna.
 function tic() {
   tonos([0], 660)
@@ -414,6 +505,7 @@ function pitido() {
 }
 
 function tonos(tiempos: number[], hz: number) {
+  if (!sonidoOn) return
   try {
     const Ctx = window.AudioContext
     if (!Ctx) return
@@ -1161,10 +1253,13 @@ export default function Juego2() {
   const [restaBloque, setRestaBloque] = useState(10)
   const [corriendoBloque, setCorriendoBloque] = useState(false)
   const [terminadoBloque, setTerminadoBloque] = useState(false)
+  const [pausaBloque, setPausaBloque] = useState(false)
+  const [nivelBloque, setNivelBloque] = useState('facil')
   const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
 
   const empezarBloque = () => {
-    const pool = [...COSAS_101]
+    const nivel = NIVELES_BLOQUE.find((n) => n.id === nivelBloque) ?? NIVELES_BLOQUE[0]
+    const pool = [...nivel.banco]
     const elegidas: string[] = []
     while (elegidas.length < bloqueTam && pool.length) {
       elegidas.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
@@ -1173,13 +1268,14 @@ export default function Juego2() {
     setIdxBloque(0)
     setRestaBloque(segBloque)
     setTerminadoBloque(false)
+    setPausaBloque(false)
     setCorriendoBloque(true)
     setLuzBloque('verde')
     setTimeout(() => setLuzBloque(null), 1700)
   }
 
   useEffect(() => {
-    if (!corriendoBloque) return
+    if (!corriendoBloque || pausaBloque) return
     if (restaBloque <= 0) {
       if (idxBloque + 1 >= listaBloque.length) {
         setCorriendoBloque(false)
@@ -1195,7 +1291,7 @@ export default function Juego2() {
     const t = setTimeout(() => setRestaBloque((r) => r - 1), 1000)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [corriendoBloque, restaBloque])
+  }, [corriendoBloque, restaBloque, pausaBloque])
 
   // Fútbol emoji: pistas primero, nombre después
   const [futbolista, setFutbolista] = useState<{ e: string; n: string } | null>(null)
@@ -1445,6 +1541,20 @@ export default function Juego2() {
 
           {!corriendoBloque && !terminadoBloque && (
             <>
+              <div className="jp-etiqueta">Nivel</div>
+              <div className="filtros">
+                {NIVELES_BLOQUE.map((n) => (
+                  <button
+                    type="button"
+                    key={n.id}
+                    className={chip(nivelBloque === n.id)}
+                    onClick={() => setNivelBloque(n.id)}
+                  >
+                    {n.nombre}
+                  </button>
+                ))}
+              </div>
+
               <div className="jp-etiqueta">Cuántas cosas</div>
               <div className="filtros">
                 {[12, 24].map((n) => (
@@ -1491,6 +1601,7 @@ export default function Juego2() {
           {corriendoBloque && (
             <>
               <div className="jp-consigna jp-rafaga">
+                <BotonSonido />
                 <div className="jp-consigna-cat">
                   {idxBloque + 1} de {listaBloque.length}
                 </div>
@@ -1508,9 +1619,28 @@ export default function Juego2() {
               <div className="jp-acciones">
                 <button
                   type="button"
+                  className="btn btn-primary"
+                  onClick={() => setPausaBloque((p) => !p)}
+                >
+                  {pausaBloque ? 'Seguir' : 'Pausar'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setIdxBloque((i) => Math.min(listaBloque.length - 1, i + 1))
+                    setRestaBloque(segBloque)
+                    tic()
+                  }}
+                >
+                  Saltar
+                </button>
+                <button
+                  type="button"
                   className="btn btn-ghost"
                   onClick={() => {
                     setCorriendoBloque(false)
+                    setPausaBloque(false)
                     setTerminadoBloque(true)
                   }}
                 >
@@ -1563,6 +1693,7 @@ export default function Juego2() {
           </p>
 
           <div className="jp-consigna jp-rafaga">
+            <BotonSonido />
             <div className="jp-consigna-cat">
               {rondaCosas ? `dibujo ${rondaCosas}` : 'listos'}
             </div>
