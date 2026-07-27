@@ -1255,6 +1255,7 @@ export default function Juego2() {
   const [terminadoBloque, setTerminadoBloque] = useState(false)
   const [pausaBloque, setPausaBloque] = useState(false)
   const [nivelBloque, setNivelBloque] = useState('facil')
+  const [reveladasBloque, setReveladasBloque] = useState<number[]>([])
   const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
 
   const empezarBloque = () => {
@@ -1269,6 +1270,7 @@ export default function Juego2() {
     setRestaBloque(segBloque)
     setTerminadoBloque(false)
     setPausaBloque(false)
+    setReveladasBloque([])
     setCorriendoBloque(true)
     setLuzBloque('verde')
     setTimeout(() => setLuzBloque(null), 1700)
@@ -1652,16 +1654,40 @@ export default function Juego2() {
 
           {terminadoBloque && (
             <>
-              <div className="jp-etiqueta">Las {listaBloque.length} cosas del bloque</div>
+              <div className="jp-etiqueta">
+                {reveladasBloque.length === listaBloque.length
+                  ? `Las ${listaBloque.length} cosas del bloque`
+                  : `Tocá para ir descubriendo · ${reveladasBloque.length} de ${listaBloque.length}`}
+              </div>
               <ol className="jp-bloque-grid">
-                {listaBloque.map((c, i) => (
-                  <li className="jp-bloque-celda" key={i}>
-                    <span className="jp-bloque-num">{i + 1}</span>
-                    {c}
-                  </li>
-                ))}
+                {listaBloque.map((c, i) => {
+                  const abierta = reveladasBloque.includes(i)
+                  return (
+                    <li key={i}>
+                      <button
+                        type="button"
+                        className={`jp-bloque-celda ${abierta ? 'is-abierta' : ''}`}
+                        onClick={() =>
+                          setReveladasBloque((r) => (r.includes(i) ? r : [...r, i]))
+                        }
+                      >
+                        <span className="jp-bloque-num">{i + 1}</span>
+                        <span className="jp-bloque-txt">{c}</span>
+                      </button>
+                    </li>
+                  )
+                })}
               </ol>
               <div className="jp-acciones">
+                {reveladasBloque.length < listaBloque.length && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => setReveladasBloque(listaBloque.map((_, i) => i))}
+                  >
+                    Revelar todas
+                  </button>
+                )}
                 <button type="button" className="btn btn-primary" onClick={empezarBloque}>
                   Otro bloque
                 </button>
