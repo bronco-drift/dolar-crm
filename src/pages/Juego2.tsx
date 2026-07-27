@@ -2287,7 +2287,7 @@ export default function Juego2() {
             {faseE === 'dibujando' && 'Se fueron. A dibujarlos todos, en orden.'}
           </p>
 
-          {faseE === 'espera' && (
+          {(faseE === 'espera' || faseE === 'dibujando') && (
             <>
               <div className="jp-etiqueta">Cuántos a la vez</div>
               <div className="filtros">
