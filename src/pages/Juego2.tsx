@@ -11,6 +11,7 @@ type Vista =
   | 'tematico'
   | 'futbol'
   | 'cosas101'
+  | 'bloque'
 
 // Emojis dibujables: nada de caras sutiles ni banderas.
 const EMOJIS = [
@@ -83,6 +84,63 @@ const COSAS_101 = [
   'Un semáforo',
   'Un ancla',
   'Un rayo',
+  'Un avión',
+  'Un tren',
+  'Un robot',
+  'Un castillo',
+  'Un dinosaurio',
+  'Unos anteojos',
+  'Una mochila',
+  'Una raqueta',
+  'Un tambor',
+  'Una trompeta',
+  'Una sartén',
+  'Un tenedor',
+  'Un plato',
+  'Una torta',
+  'Una dona',
+  'Una taza de café',
+  'Una cámara de fotos',
+  'Una computadora',
+  'Un celular',
+  'Un sobre',
+  'Una brújula',
+  'Un faro',
+  'Una carpa',
+  'Una hoja de árbol',
+  'Una piña',
+  'Un racimo de uvas',
+  'Una zanahoria',
+  'Un queso',
+  'Un pan',
+  'Una hamburguesa',
+  'Un pingüino',
+  'Un elefante',
+  'Una tortuga',
+  'Una araña',
+  'Un cangrejo',
+  'Una ballena',
+  'Un cerdo',
+  'Una vaca',
+  'Un pulpo',
+  'Un sombrero de copa',
+  'Una corbata',
+  'Un reloj de arena',
+  'Una lupa',
+  'Un candado',
+  'Un timón',
+  'Una maceta',
+  'Un ventilador',
+  'Un termómetro',
+  'Una jaula',
+  'Un balde',
+  'Una carretilla',
+  'Un puente',
+  'Un iglú',
+  'Un molino',
+  'Una fogata',
+  'Un trineo',
+  'Un pincel',
 ]
 
 // Fútbol emoji: tres pistas y a adivinar de quién se trata.
@@ -220,7 +278,14 @@ function LuzBorde({ tipo }: { tipo: 'verde' | 'rojo' | null }) {
 const PASO = 30
 const AVISO = 10
 
-function Cronometro({ total: inicial = PASO }: { total?: number }) {
+function Cronometro({
+  total: inicial = PASO,
+  disparo = 0,
+}: {
+  total?: number
+  // Cada vez que cambia, el cronómetro arranca solo (al revelar la consigna).
+  disparo?: number
+}) {
   const [total, setTotal] = useState(inicial)
   const [quedan, setQuedan] = useState(inicial)
   const [andando, setAndando] = useState(false)
@@ -265,6 +330,20 @@ function Cronometro({ total: inicial = PASO }: { total?: number }) {
       1700,
     )
   }
+
+  // Arranque automático desde afuera: reinicia y larga.
+  useEffect(() => {
+    if (!disparo) return
+    setQuedan(total)
+    setAndando(true)
+    setLuz(total <= AVISO ? 'rojo' : 'verde')
+    clearTimeout(verdeTimer.current)
+    verdeTimer.current = window.setTimeout(
+      () => setLuz((l) => (l === 'verde' ? null : l)),
+      1700,
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disparo])
 
   const ajustar = (delta: number) => {
     const nuevo = Math.max(PASO, Math.min(30 * 60, total + delta))
@@ -324,16 +403,26 @@ function Cronometro({ total: inicial = PASO }: { total?: number }) {
   )
 }
 
+// Un tono corto para los cambios de consigna.
+function tic() {
+  tonos([0], 660)
+}
+
+// Tres tonos: se acabó el tiempo.
 function pitido() {
+  tonos([0, 0.28, 0.56], 880)
+}
+
+function tonos(tiempos: number[], hz: number) {
   try {
     const Ctx = window.AudioContext
     if (!Ctx) return
     const ctx = new Ctx()
-    for (const t of [0, 0.28, 0.56]) {
+    for (const t of tiempos) {
       const osc = ctx.createOscillator()
       const gan = ctx.createGain()
       osc.type = 'sine'
-      osc.frequency.value = 880
+      osc.frequency.value = hz
       gan.gain.setValueAtTime(0.0001, ctx.currentTime + t)
       gan.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + t + 0.02)
       gan.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.22)
@@ -439,6 +528,7 @@ function JuegoConsignas({
   const [ronda, setRonda] = useState(0)
   const [consigna, setConsigna] = useState<{ cat: string; txt: string } | null>(null)
   const usadas = useRef<string[]>([])
+  const [disparo, setDisparo] = useState(0)
 
   const sacar = () => {
     const pool =
@@ -454,6 +544,7 @@ function JuegoConsignas({
     usadas.current.push(el.txt)
     setConsigna(el)
     setRonda((r) => r + 1)
+    setDisparo((d) => d + 1) // el reloj arranca con la consigna
   }
 
   return (
@@ -492,7 +583,7 @@ function JuegoConsignas({
         </button>
       </div>
 
-      <Cronometro />
+      <Cronometro disparo={disparo} />
       <Marcador jugadores={jugadores} guardar={guardar} />
     </section>
   )
@@ -704,7 +795,7 @@ interface Tematico {
 
 const TEMATICOS: Record<string, Tematico> = {
   venezuela: {
-    num: '08',
+    num: '09',
     titulo: '🇻🇪 Venezuela',
     resumen: 'Arepas, tepuyes, gaita y todo lo que un venezolano dibuja con los ojos cerrados.',
     sub: 'Si alguien de afuera está jugando, que sufra un rato.',
@@ -770,7 +861,7 @@ const TEMATICOS: Record<string, Tematico> = {
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
   },
   argentina: {
-    num: '09',
+    num: '10',
     titulo: '🇦🇷 Argentina',
     resumen: 'Mate, asado, Maradona y todo lo que se dibuja con acento porteño.',
     sub: 'Prohibido quejarse de que no sale la vaca.',
@@ -828,7 +919,7 @@ const TEMATICOS: Record<string, Tematico> = {
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
   },
   peliculas: {
-    num: '10',
+    num: '11',
     titulo: '🎬 Películas',
     resumen: 'Escenas, personajes y objetos que todos vimos mil veces en el cine.',
     sub: 'Sin decir el título, obvio.',
@@ -966,12 +1057,14 @@ export default function Juego2() {
   const [verConsigna, setVerConsigna] = useState(false)
   const [consignas, setConsignas] = useState<string[]>([])
   const [revelado, setRevelado] = useState<number[]>([])
+  const [dispS, setDispS] = useState(0)
 
   // Modo emojis: cuenta regresiva → 3 segundos a la vista → a dibujar
   const [faseE, setFaseE] = useState<'espera' | 'cuenta' | 'mostrando' | 'dibujando'>('espera')
   const [cuentaE, setCuentaE] = useState(3)
   const [emojis, setEmojis] = useState<string[]>([])
   const [repaso, setRepaso] = useState(false)
+  const [dispE, setDispE] = useState(0)
 
   useEffect(() => {
     if (faseE === 'cuenta') {
@@ -983,7 +1076,10 @@ export default function Juego2() {
       return () => clearTimeout(t)
     }
     if (faseE === 'mostrando') {
-      const t = setTimeout(() => setFaseE('dibujando'), 3000)
+      const t = setTimeout(() => {
+        setFaseE('dibujando')
+        setDispE((d) => d + 1)
+      }, 3000)
       return () => clearTimeout(t)
     }
   }, [faseE, cuentaE])
@@ -1016,6 +1112,7 @@ export default function Juego2() {
   // Garabato
   const [dif, setDif] = useState(2)
   const [semillaG, setSemillaG] = useState(nuevaSemilla)
+  const [dispG, setDispG] = useState(0)
   const garabato = trazoGarabato(semillaG, dif)
 
   // Modo temático activo (Venezuela, Argentina, Películas)
@@ -1047,7 +1144,7 @@ export default function Juego2() {
   useEffect(() => {
     if (!corriendo) return
     if (restaCosa <= 0) {
-      pitido()
+      tic()
       siguienteCosa()
       return
     }
@@ -1056,10 +1153,55 @@ export default function Juego2() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [corriendo, restaCosa])
 
+  // Bloque de cosas: una tanda cerrada de 12 o 24, y al final la lista
+  const [bloqueTam, setBloqueTam] = useState(12)
+  const [segBloque, setSegBloque] = useState(10)
+  const [listaBloque, setListaBloque] = useState<string[]>([])
+  const [idxBloque, setIdxBloque] = useState(0)
+  const [restaBloque, setRestaBloque] = useState(10)
+  const [corriendoBloque, setCorriendoBloque] = useState(false)
+  const [terminadoBloque, setTerminadoBloque] = useState(false)
+  const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
+
+  const empezarBloque = () => {
+    const pool = [...COSAS_101]
+    const elegidas: string[] = []
+    while (elegidas.length < bloqueTam && pool.length) {
+      elegidas.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
+    }
+    setListaBloque(elegidas)
+    setIdxBloque(0)
+    setRestaBloque(segBloque)
+    setTerminadoBloque(false)
+    setCorriendoBloque(true)
+    setLuzBloque('verde')
+    setTimeout(() => setLuzBloque(null), 1700)
+  }
+
+  useEffect(() => {
+    if (!corriendoBloque) return
+    if (restaBloque <= 0) {
+      if (idxBloque + 1 >= listaBloque.length) {
+        setCorriendoBloque(false)
+        setTerminadoBloque(true)
+        pitido()
+      } else {
+        setIdxBloque((i) => i + 1)
+        setRestaBloque(segBloque)
+        tic()
+      }
+      return
+    }
+    const t = setTimeout(() => setRestaBloque((r) => r - 1), 1000)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [corriendoBloque, restaBloque])
+
   // Fútbol emoji: pistas primero, nombre después
   const [futbolista, setFutbolista] = useState<{ e: string; n: string } | null>(null)
   const [nombreVisible, setNombreVisible] = useState(false)
   const usadosFutbol = useRef<string[]>([])
+  const [dispFut, setDispFut] = useState(0)
 
   const otroFutbolista = () => {
     let libres = FUTBOL.filter((f) => !usadosFutbol.current.includes(f.n))
@@ -1071,12 +1213,14 @@ export default function Juego2() {
     usadosFutbol.current.push(el.n)
     setFutbolista(el)
     setNombreVisible(false)
+    setDispFut((d) => d + 1)
   }
 
   // Describir
   const [formas, setFormas] = useState(3)
   const [semillaF, setSemillaF] = useState(nuevaSemilla)
   const [tapada, setTapada] = useState(true)
+  const [dispF, setDispF] = useState(0)
 
   const chip = (activo: boolean) => `filtro ${activo ? 'is-active' : ''}`
 
@@ -1110,8 +1254,25 @@ export default function Juego2() {
               la siguiente.
             </span>
           </button>
-          <button type="button" className="jp-card" onClick={() => setVista('garabato')}>
+          <button
+            type="button"
+            className="jp-card"
+            onClick={() => {
+              setCorriendoBloque(false)
+              setTerminadoBloque(false)
+              setListaBloque([])
+              setVista('bloque')
+            }}
+          >
             <span className="jp-num">02</span>
+            <span className="jp-card-titulo">Bloque de cosas</span>
+            <span className="jp-card-txt">
+              Tanda cerrada de 12 o 24 cosas, con los segundos que quieras. Al final, la lista
+              completa para comparar.
+            </span>
+          </button>
+          <button type="button" className="jp-card" onClick={() => setVista('garabato')}>
+            <span className="jp-num">03</span>
             <span className="jp-card-titulo">Garabato</span>
             <span className="jp-card-txt">
               Todos copian el mismo trazo y lo convierten en un dibujo. Gana la idea más
@@ -1119,7 +1280,7 @@ export default function Juego2() {
             </span>
           </button>
           <button type="button" className="jp-card" onClick={() => setVista('memoria')}>
-            <span className="jp-num">03</span>
+            <span className="jp-num">04</span>
             <span className="jp-card-titulo">De memoria</span>
             <span className="jp-card-txt">
               Dibujar de memoria algo que viste mil veces. Spoiler: nadie sabe dónde va la cadena
@@ -1127,7 +1288,7 @@ export default function Juego2() {
             </span>
           </button>
           <button type="button" className="jp-card" onClick={() => setVista('describir')}>
-            <span className="jp-num">04</span>
+            <span className="jp-num">05</span>
             <span className="jp-card-titulo">Describí y dibujá</span>
             <span className="jp-card-txt">
               Uno ve una figura y la describe sin nombrarla. El resto dibuja a ciegas.
@@ -1141,7 +1302,7 @@ export default function Juego2() {
               setVista('simultaneo')
             }}
           >
-            <span className="jp-num">05</span>
+            <span className="jp-num">06</span>
             <span className="jp-card-titulo">Todos a la vez</span>
             <span className="jp-card-txt">
               Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan
@@ -1156,7 +1317,7 @@ export default function Juego2() {
               setVista('emojis')
             }}
           >
-            <span className="jp-num">06</span>
+            <span className="jp-num">07</span>
             <span className="jp-card-titulo">Dibujá los emojis</span>
             <span className="jp-card-txt">
               Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.
@@ -1171,7 +1332,7 @@ export default function Juego2() {
               setVista('futbol')
             }}
           >
-            <span className="jp-num">07</span>
+            <span className="jp-num">08</span>
             <span className="jp-card-titulo">⚽ Fútbol emoji</span>
             <span className="jp-card-txt">
               Tres emojis, un futbolista. El primero que lo grite se lleva el punto.
@@ -1248,13 +1409,16 @@ export default function Juego2() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => setSemillaG(nuevaSemilla())}
+              onClick={() => {
+                setSemillaG(nuevaSemilla())
+                setDispG((d) => d + 1)
+              }}
             >
               Otro garabato
             </button>
           </div>
 
-          <Cronometro />
+          <Cronometro disparo={dispG} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -1268,6 +1432,125 @@ export default function Juego2() {
           jugadores={jugadores}
           guardar={guardarJugadores}
         />
+      )}
+
+      {vista === 'bloque' && (
+        <section className="jp-hoja">
+          <LuzBorde tipo={luzBloque} />
+          <h2 className="jp-titulo">Bloque de cosas</h2>
+          <p className="jp-sub">
+            Una tanda cerrada: {bloqueTam} cosas, {segBloque} segundo
+            {segBloque === 1 ? '' : 's'} cada una. Al final aparecen todas juntas.
+          </p>
+
+          {!corriendoBloque && !terminadoBloque && (
+            <>
+              <div className="jp-etiqueta">Cuántas cosas</div>
+              <div className="filtros">
+                {[12, 24].map((n) => (
+                  <button
+                    type="button"
+                    key={n}
+                    className={chip(bloqueTam === n)}
+                    onClick={() => setBloqueTam(n)}
+                  >
+                    {n} cosas
+                  </button>
+                ))}
+              </div>
+
+              <div className="jp-etiqueta">Segundos por cosa</div>
+              <div className="jp-reloj">
+                <div className="jp-reloj-fila">
+                  <button
+                    type="button"
+                    className="jp-mini"
+                    aria-label="Menos tiempo"
+                    disabled={segBloque <= 1}
+                    onClick={() => setSegBloque((s) => Math.max(1, s - 1))}
+                  >
+                    −
+                  </button>
+                  <span className="jp-digitos">{segBloque}s</span>
+                  <button
+                    type="button"
+                    className="jp-mini"
+                    aria-label="Más tiempo"
+                    onClick={() => setSegBloque((s) => Math.min(120, s + 1))}
+                  >
+                    +
+                  </button>
+                  <button type="button" className="btn btn-primary" onClick={empezarBloque}>
+                    Empezar
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {corriendoBloque && (
+            <>
+              <div className="jp-consigna jp-rafaga">
+                <div className="jp-consigna-cat">
+                  {idxBloque + 1} de {listaBloque.length}
+                </div>
+                <div className="jp-consigna-txt">{listaBloque[idxBloque]}</div>
+                <div className={`jp-rafaga-seg ${restaBloque <= 3 ? 'is-poco' : ''}`}>
+                  {restaBloque}s
+                </div>
+              </div>
+              <div className="jp-barra">
+                <i
+                  className={restaBloque <= 3 ? 'is-poco' : ''}
+                  style={{ width: `${(restaBloque / segBloque) * 100}%` }}
+                />
+              </div>
+              <div className="jp-acciones">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setCorriendoBloque(false)
+                    setTerminadoBloque(true)
+                  }}
+                >
+                  Cortar acá
+                </button>
+              </div>
+            </>
+          )}
+
+          {terminadoBloque && (
+            <>
+              <div className="jp-etiqueta">Las {listaBloque.length} cosas del bloque</div>
+              <ol className="jp-bloque-grid">
+                {listaBloque.map((c, i) => (
+                  <li className="jp-bloque-celda" key={i}>
+                    <span className="jp-bloque-num">{i + 1}</span>
+                    {c}
+                  </li>
+                ))}
+              </ol>
+              <div className="jp-acciones">
+                <button type="button" className="btn btn-primary" onClick={empezarBloque}>
+                  Otro bloque
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setTerminadoBloque(false)
+                    setListaBloque([])
+                  }}
+                >
+                  Cambiar ajustes
+                </button>
+              </div>
+            </>
+          )}
+
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
       )}
 
       {vista === 'cosas101' && (
@@ -1401,7 +1684,7 @@ export default function Juego2() {
             </button>
           </div>
 
-          <Cronometro />
+          <Cronometro disparo={dispF} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -1447,7 +1730,14 @@ export default function Juego2() {
               <div className="jp-escudo">
                 <strong>Solo mira quien describe</strong>
                 <span>Girá la pantalla antes de destapar.</span>
-                <button type="button" className="btn btn-primary" onClick={() => setTapada(false)}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setTapada(false)
+                    setDispF((d) => d + 1)
+                  }}
+                >
                   Destapar figura
                 </button>
               </div>
@@ -1475,7 +1765,7 @@ export default function Juego2() {
             )}
           </div>
 
-          <Cronometro />
+          <Cronometro disparo={dispFut} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -1511,7 +1801,10 @@ export default function Juego2() {
                     onClick={() => {
                       setVerConsigna(false)
                       if (turno + 1 < jugadores.length) setTurno(turno + 1)
-                      else setFase('dibujo')
+                      else {
+                        setFase('dibujo')
+                        setDispS((d) => d + 1)
+                      }
                     }}
                   >
                     {turno + 1 < jugadores.length ? 'Listo, siguiente' : 'Listo, a dibujar'}
@@ -1534,7 +1827,7 @@ export default function Juego2() {
               <p className="jp-sub">
                 Todos dibujan al mismo tiempo, cada uno lo suyo. Sin espiar, sin hablar.
               </p>
-              <Cronometro />
+              <Cronometro disparo={dispS} />
               <div className="jp-acciones">
                 <button
                   type="button"
@@ -1633,7 +1926,7 @@ export default function Juego2() {
             )}
           </div>
 
-          <Cronometro />
+          <Cronometro disparo={dispE} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
