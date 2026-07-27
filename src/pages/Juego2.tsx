@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { type Jugador, getJugadores, saveJugadores } from '../lib/storage'
+import { emojisDisponibles } from '../lib/emojis'
 
 type Vista =
   | 'menu'
@@ -141,6 +142,155 @@ const COSAS_101 = [
   'Una fogata',
   'Un trineo',
   'Un pincel',
+  // ── Animales ──
+  'Un león',
+  'Un tigre',
+  'Un oso',
+  'Un mono',
+  'Un conejo',
+  'Un ratón',
+  'Una oveja',
+  'Una gallina',
+  'Un pato',
+  'Un búho',
+  'Un zorro',
+  'Un ciervo',
+  'Un camello',
+  'Un koala',
+  'Un canguro',
+  'Un delfín',
+  'Un tiburón',
+  'Una medusa',
+  'Una abeja',
+  'Una hormiga',
+  'Una libélula',
+  'Una rana',
+  'Un lagarto',
+  'Una serpiente',
+  'Un murciélago',
+  'Una ardilla',
+  'Un loro',
+  'Un cisne',
+  'Un caballito de mar',
+  'Un caballo',
+  // ── Comida ──
+  'Una sandía',
+  'Una naranja',
+  'Un limón',
+  'Una frutilla',
+  'Una cereza',
+  'Una pera',
+  'Un durazno',
+  'Un coco',
+  'Un ají',
+  'Un tomate',
+  'Una cebolla',
+  'Una papa',
+  'Un brócoli',
+  'Un choclo',
+  'Un huevo',
+  'Un panqueque',
+  'Una galleta',
+  'Un chupetín',
+  'Un caramelo',
+  'Un cupcake',
+  'Un pochoclo',
+  'Unas papas fritas',
+  'Una salchicha',
+  'Un plato de sopa',
+  'Un frasco de miel',
+  // ── Objetos ──
+  'Una paleta de pintor',
+  'Una regla',
+  'Un clip',
+  'Un botón',
+  'Un peine',
+  'Un cepillo de dientes',
+  'Un espejo',
+  'Un jabón',
+  'Una toalla',
+  'Un destornillador',
+  'Una llave inglesa',
+  'Un clavo',
+  'Un serrucho',
+  'Una pala',
+  'Un rastrillo',
+  'Una regadera',
+  'Una linterna',
+  'Un enchufe',
+  'Una bombita de luz',
+  'Un imán',
+  'Una pesa',
+  'Una cinta métrica',
+  'Un embudo',
+  'Un colador',
+  'Un rallador',
+  'Un abrelatas',
+  'Una aguja con hilo',
+  'Un alfiler',
+  // ── Transporte y lugares ──
+  'Un camión',
+  'Un colectivo',
+  'Una moto',
+  'Una patineta',
+  'Unos patines',
+  'Un helicóptero',
+  'Un submarino',
+  'Un globo aerostático',
+  'Una ambulancia',
+  'Un tractor',
+  'Una grúa',
+  'Una boya',
+  'Una cabaña',
+  'Una iglesia',
+  'Una torre',
+  'Una rueda de la fortuna',
+  'Un tobogán',
+  'Una hamaca',
+  // ── Naturaleza ──
+  'Un arcoíris',
+  'Un copo de nieve',
+  'Una gota de agua',
+  'Una ola',
+  'Un volcán',
+  'Una isla',
+  'Una palmera',
+  'Un pino',
+  'Un girasol',
+  'Un tulipán',
+  'Una rosa',
+  'Un trébol',
+  'Una estrella de mar',
+  'Un caracol de mar',
+  // ── Deportes y música ──
+  'Una pelota de básquet',
+  'Un guante de béisbol',
+  'Unos dardos',
+  'Un casco',
+  'Una medalla',
+  'Un trofeo',
+  'Un piano',
+  'Un violín',
+  'Un saxofón',
+  'Un acordeón',
+  'Un micrófono',
+  'Unos auriculares',
+  'Un parlante',
+  'Una radio',
+  // ── Ropa ──
+  'Una remera',
+  'Un pantalón',
+  'Un vestido',
+  'Una campera',
+  'Una bufanda',
+  'Un gorro de lana',
+  'Un guante',
+  'Una media',
+  'Una bota',
+  'Un cinturón',
+  'Una cartera',
+  'Unos lentes de sol',
+  'Un reloj pulsera',
 ]
 
 // Nivel difícil: escenas con varias partes y cosas que no tienen forma.
@@ -196,6 +346,63 @@ const COSAS_DIFICILES = [
   'La amistad',
   'El aburrimiento',
   'La memoria',
+  // ── Escenas con varias partes ──
+  'Un pulpo cocinando en cuatro ollas',
+  'Una jirafa entrando a un ascensor',
+  'Un elefante en una hamaca',
+  'Un gato tocando el violín',
+  'Un pingüino en el desierto',
+  'Un astronauta paseando un perro',
+  'Un robot regando plantas',
+  'Una tortuga con cohete en el caparazón',
+  'Un oso pescando en un río',
+  'Una ciudad vista desde un avión',
+  'Un mercado con puestos',
+  'Una banda tocando en la plaza',
+  'Una fila de gente esperando',
+  'Un partido con la tribuna llena',
+  'Una fábrica con chimeneas',
+  'Un puerto con grúas',
+  'Un laberinto',
+  'Un reloj derritiéndose',
+  'Una escalera imposible',
+  'Un caballo de ajedrez',
+  'Un piano de cola',
+  'Una bicicleta desarmada',
+  'Un motor de auto',
+  'Un esqueleto humano',
+  'Una mano escribiendo',
+  'Un ojo con pestañas y reflejo',
+  'Una pareja bailando',
+  'Un bebé gateando',
+  'Un pulpo jugando al ajedrez consigo mismo',
+  'Una casa dada vuelta',
+  'Un árbol con raíces al aire',
+  'Un espejo reflejando otra cosa',
+  'Una sombra que no coincide',
+  'Un edificio en construcción',
+  'Un choque de dos autos',
+  // ── Sin forma: hay que resolverlas con ideas ──
+  'La envidia',
+  'La rutina',
+  'El desorden',
+  'La espera',
+  'La inflación',
+  'El insomnio',
+  'La ansiedad',
+  'El déjà vu',
+  'La injusticia',
+  'El progreso',
+  'La soledad',
+  'El chisme',
+  'La esperanza',
+  'El destino',
+  'La verdad',
+  'El secreto',
+  'La distancia',
+  'El olvido',
+  'El vértigo',
+  'La gravedad',
 ]
 
 // Niveles del bloque: se agregan sumando entradas acá.
@@ -887,7 +1094,7 @@ interface Tematico {
 
 const TEMATICOS: Record<string, Tematico> = {
   venezuela: {
-    num: '09',
+    num: '10',
     titulo: '🇻🇪 Venezuela',
     resumen: 'Arepas, tepuyes, gaita y todo lo que un venezolano dibuja con los ojos cerrados.',
     sub: 'Si alguien de afuera está jugando, que sufra un rato.',
@@ -953,7 +1160,7 @@ const TEMATICOS: Record<string, Tematico> = {
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
   },
   argentina: {
-    num: '10',
+    num: '11',
     titulo: '🇦🇷 Argentina',
     resumen: 'Mate, asado, Maradona y todo lo que se dibuja con acento porteño.',
     sub: 'Prohibido quejarse de que no sale la vaca.',
@@ -1011,7 +1218,7 @@ const TEMATICOS: Record<string, Tematico> = {
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
   },
   peliculas: {
-    num: '11',
+    num: '12',
     titulo: '🎬 Películas',
     resumen: 'Escenas, personajes y objetos que todos vimos mil veces en el cine.',
     sub: 'Sin decir el título, obvio.',
@@ -1157,6 +1364,7 @@ export default function Juego2() {
   const [emojis, setEmojis] = useState<string[]>([])
   const [repaso, setRepaso] = useState(false)
   const [dispE, setDispE] = useState(0)
+  const [cantEmojis, setCantEmojis] = useState(3)
 
   useEffect(() => {
     if (faseE === 'cuenta') {
@@ -1178,7 +1386,7 @@ export default function Juego2() {
 
   const rondaEmojis = () => {
     const elegidos: string[] = []
-    while (elegidos.length < 3) {
+    while (elegidos.length < cantEmojis) {
       const e = EMOJIS[Math.floor(Math.random() * EMOJIS.length)]
       if (!elegidos.includes(e)) elegidos.push(e)
     }
@@ -1256,11 +1464,12 @@ export default function Juego2() {
   const [pausaBloque, setPausaBloque] = useState(false)
   const [nivelBloque, setNivelBloque] = useState('facil')
   const [reveladasBloque, setReveladasBloque] = useState<number[]>([])
+  const [tipoBloque, setTipoBloque] = useState<'cosas' | 'emojis'>('cosas')
   const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
 
   const empezarBloque = () => {
     const nivel = NIVELES_BLOQUE.find((n) => n.id === nivelBloque) ?? NIVELES_BLOQUE[0]
-    const pool = [...nivel.banco]
+    const pool = tipoBloque === 'emojis' ? [...emojisDisponibles()] : [...nivel.banco]
     const elegidas: string[] = []
     while (elegidas.length < bloqueTam && pool.length) {
       elegidas.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
@@ -1356,6 +1565,7 @@ export default function Juego2() {
             type="button"
             className="jp-card"
             onClick={() => {
+              setTipoBloque('cosas')
               setCorriendoBloque(false)
               setTerminadoBloque(false)
               setListaBloque([])
@@ -1369,8 +1579,26 @@ export default function Juego2() {
               completa para comparar.
             </span>
           </button>
-          <button type="button" className="jp-card" onClick={() => setVista('garabato')}>
+          <button
+            type="button"
+            className="jp-card"
+            onClick={() => {
+              setTipoBloque('emojis')
+              setCorriendoBloque(false)
+              setTerminadoBloque(false)
+              setListaBloque([])
+              setVista('bloque')
+            }}
+          >
             <span className="jp-num">03</span>
+            <span className="jp-card-titulo">Bloque de emojis</span>
+            <span className="jp-card-txt">
+              Lo mismo pero con emojis, sacados de todos los que tiene el teléfono. Aparecen
+              cosas que nadie sabe ni cómo se llaman.
+            </span>
+          </button>
+          <button type="button" className="jp-card" onClick={() => setVista('garabato')}>
+            <span className="jp-num">04</span>
             <span className="jp-card-titulo">Garabato</span>
             <span className="jp-card-txt">
               Todos copian el mismo trazo y lo convierten en un dibujo. Gana la idea más
@@ -1378,7 +1606,7 @@ export default function Juego2() {
             </span>
           </button>
           <button type="button" className="jp-card" onClick={() => setVista('memoria')}>
-            <span className="jp-num">04</span>
+            <span className="jp-num">05</span>
             <span className="jp-card-titulo">De memoria</span>
             <span className="jp-card-txt">
               Dibujar de memoria algo que viste mil veces. Spoiler: nadie sabe dónde va la cadena
@@ -1386,7 +1614,7 @@ export default function Juego2() {
             </span>
           </button>
           <button type="button" className="jp-card" onClick={() => setVista('describir')}>
-            <span className="jp-num">05</span>
+            <span className="jp-num">06</span>
             <span className="jp-card-titulo">Describí y dibujá</span>
             <span className="jp-card-txt">
               Uno ve una figura y la describe sin nombrarla. El resto dibuja a ciegas.
@@ -1400,7 +1628,7 @@ export default function Juego2() {
               setVista('simultaneo')
             }}
           >
-            <span className="jp-num">06</span>
+            <span className="jp-num">07</span>
             <span className="jp-card-titulo">Todos a la vez</span>
             <span className="jp-card-txt">
               Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan
@@ -1415,7 +1643,7 @@ export default function Juego2() {
               setVista('emojis')
             }}
           >
-            <span className="jp-num">07</span>
+            <span className="jp-num">08</span>
             <span className="jp-card-titulo">Dibujá los emojis</span>
             <span className="jp-card-txt">
               Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.
@@ -1430,7 +1658,7 @@ export default function Juego2() {
               setVista('futbol')
             }}
           >
-            <span className="jp-num">08</span>
+            <span className="jp-num">09</span>
             <span className="jp-card-titulo">⚽ Fútbol emoji</span>
             <span className="jp-card-txt">
               Tres emojis, un futbolista. El primero que lo grite se lleva el punto.
@@ -1535,16 +1763,19 @@ export default function Juego2() {
       {vista === 'bloque' && (
         <section className="jp-hoja">
           <LuzBorde tipo={luzBloque} />
-          <h2 className="jp-titulo">Bloque de cosas</h2>
+          <h2 className="jp-titulo">
+            {tipoBloque === 'emojis' ? 'Bloque de emojis' : 'Bloque de cosas'}
+          </h2>
           <p className="jp-sub">
-            Una tanda cerrada: {bloqueTam} cosas, {segBloque} segundo
-            {segBloque === 1 ? '' : 's'} cada una. Al final aparecen todas juntas.
+            Una tanda cerrada: {bloqueTam} {tipoBloque === 'emojis' ? 'emojis' : 'cosas'},{' '}
+            {segBloque} segundo{segBloque === 1 ? '' : 's'} cada uno. Al final aparecen todos
+            juntos.
           </p>
 
           {!corriendoBloque && !terminadoBloque && (
             <>
-              <div className="jp-etiqueta">Nivel</div>
-              <div className="filtros">
+              {tipoBloque === 'cosas' && <div className="jp-etiqueta">Nivel</div>}
+              <div className="filtros" hidden={tipoBloque === 'emojis'}>
                 {NIVELES_BLOQUE.map((n) => (
                   <button
                     type="button"
@@ -1557,7 +1788,9 @@ export default function Juego2() {
                 ))}
               </div>
 
-              <div className="jp-etiqueta">Cuántas cosas</div>
+              <div className="jp-etiqueta">
+                Cuántos {tipoBloque === 'emojis' ? 'emojis' : 'cosas'}
+              </div>
               <div className="filtros">
                 {[12, 24].map((n) => (
                   <button
@@ -1566,7 +1799,7 @@ export default function Juego2() {
                     className={chip(bloqueTam === n)}
                     onClick={() => setBloqueTam(n)}
                   >
-                    {n} cosas
+                    {n}
                   </button>
                 ))}
               </div>
@@ -1607,7 +1840,11 @@ export default function Juego2() {
                 <div className="jp-consigna-cat">
                   {idxBloque + 1} de {listaBloque.length}
                 </div>
-                <div className="jp-consigna-txt">{listaBloque[idxBloque]}</div>
+                <div
+                  className={`jp-consigna-txt ${tipoBloque === 'emojis' ? 'jp-emoji-grande' : ''}`}
+                >
+                  {listaBloque[idxBloque]}
+                </div>
                 <div className={`jp-rafaga-seg ${restaBloque <= 3 ? 'is-poco' : ''}`}>
                   {restaBloque}s
                 </div>
@@ -1656,7 +1893,7 @@ export default function Juego2() {
             <>
               <div className="jp-etiqueta">
                 {reveladasBloque.length === listaBloque.length
-                  ? `Las ${listaBloque.length} cosas del bloque`
+                  ? `Los ${listaBloque.length} del bloque`
                   : `Tocá para ir descubriendo · ${reveladasBloque.length} de ${listaBloque.length}`}
               </div>
               <ol className="jp-bloque-grid">
@@ -1672,7 +1909,13 @@ export default function Juego2() {
                         }
                       >
                         <span className="jp-bloque-num">{i + 1}</span>
-                        <span className="jp-bloque-txt">{c}</span>
+                        <span
+                          className={`jp-bloque-txt ${
+                            tipoBloque === 'emojis' ? 'jp-bloque-emoji' : ''
+                          }`}
+                        >
+                          {c}
+                        </span>
                       </button>
                     </li>
                   )
@@ -2037,11 +2280,30 @@ export default function Juego2() {
         <section className="jp-hoja">
           <h2 className="jp-titulo">Dibujá los emojis</h2>
           <p className="jp-sub">
-            {faseE === 'espera' && 'Tres emojis, tres segundos. Después los dibujan de memoria.'}
+            {faseE === 'espera' &&
+              `${cantEmojis} emojis, tres segundos. Después los dibujan de memoria.`}
             {faseE === 'cuenta' && 'Ojos en la pantalla…'}
             {faseE === 'mostrando' && '¡Miralos bien!'}
-            {faseE === 'dibujando' && 'Se fueron. A dibujar los tres, en orden.'}
+            {faseE === 'dibujando' && 'Se fueron. A dibujarlos todos, en orden.'}
           </p>
+
+          {faseE === 'espera' && (
+            <>
+              <div className="jp-etiqueta">Cuántos a la vez</div>
+              <div className="filtros">
+                {[2, 3, 5, 7].map((n) => (
+                  <button
+                    type="button"
+                    key={n}
+                    className={chip(cantEmojis === n)}
+                    onClick={() => setCantEmojis(n)}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="jp-lienzo jp-emojis">
             {faseE === 'espera' && <span className="jp-emoji-espera">👀</span>}
