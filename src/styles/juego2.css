@@ -703,3 +703,14 @@
   margin-top: 2px;
   font-size: 13px;
 }
+
+/* Etiqueta al lado de un control +/- */
+.jp-etiqueta-inline {
+  flex: 1;
+  padding: 0;
+}
+
+.jp-digitos-chico {
+  font-size: 20px;
+  min-width: 34px;
+}

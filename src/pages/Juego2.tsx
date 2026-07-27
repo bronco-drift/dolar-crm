@@ -1364,7 +1364,7 @@ export default function Juego2() {
   const [emojis, setEmojis] = useState<string[]>([])
   const [repaso, setRepaso] = useState(false)
   const [dispE, setDispE] = useState(0)
-  const [cantEmojis, setCantEmojis] = useState(3)
+  const [cantEmojis, setCantEmojis] = useState(1)
 
   useEffect(() => {
     if (faseE === 'cuenta') {
@@ -2281,28 +2281,40 @@ export default function Juego2() {
           <h2 className="jp-titulo">Dibujá los emojis</h2>
           <p className="jp-sub">
             {faseE === 'espera' &&
-              `${cantEmojis} emojis, tres segundos. Después los dibujan de memoria.`}
+              `${cantEmojis} emoji${cantEmojis === 1 ? '' : 's'}, tres segundos. Después ${
+                cantEmojis === 1 ? 'lo dibujan' : 'los dibujan'
+              } de memoria.`}
             {faseE === 'cuenta' && 'Ojos en la pantalla…'}
             {faseE === 'mostrando' && '¡Miralos bien!'}
-            {faseE === 'dibujando' && 'Se fueron. A dibujarlos todos, en orden.'}
+            {faseE === 'dibujando' &&
+              (cantEmojis === 1 ? 'Se fue. A dibujarlo de memoria.' : 'Se fueron. A dibujarlos todos, en orden.')}
           </p>
 
           {(faseE === 'espera' || faseE === 'dibujando') && (
-            <>
-              <div className="jp-etiqueta">Cuántos a la vez</div>
-              <div className="filtros">
-                {[2, 3, 5, 7].map((n) => (
-                  <button
-                    type="button"
-                    key={n}
-                    className={chip(cantEmojis === n)}
-                    onClick={() => setCantEmojis(n)}
-                  >
-                    {n}
-                  </button>
-                ))}
+            <div className="jp-reloj">
+              <div className="jp-reloj-fila">
+                <span className="jp-etiqueta jp-etiqueta-inline">Cuántos a la vez</span>
+                <button
+                  type="button"
+                  className="jp-mini"
+                  aria-label="Menos emojis"
+                  disabled={cantEmojis <= 1}
+                  onClick={() => setCantEmojis((n) => Math.max(1, n - 1))}
+                >
+                  −
+                </button>
+                <span className="jp-digitos jp-digitos-chico">{cantEmojis}</span>
+                <button
+                  type="button"
+                  className="jp-mini"
+                  aria-label="Más emojis"
+                  disabled={cantEmojis >= 10}
+                  onClick={() => setCantEmojis((n) => Math.min(10, n + 1))}
+                >
+                  +
+                </button>
               </div>
-            </>
+            </div>
           )}
 
           <div className="jp-lienzo jp-emojis">
