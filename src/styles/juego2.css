@@ -714,3 +714,16 @@
   font-size: 20px;
   min-width: 34px;
 }
+
+/* Botones de la esquina del cuadro (voz y sonido) */
+.jp-esquina {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+}
+
+.jp-esquina .jp-sonido {
+  position: static;
+}

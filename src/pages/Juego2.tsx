@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { type Jugador, getJugadores, saveJugadores } from '../lib/storage'
 import { emojisDisponibles } from '../lib/emojis'
+import { alternarVoz, despertarVoz, hablar, vozActiva, vozDisponible } from '../lib/voz'
 
 type Vista =
   | 'menu'
@@ -613,8 +614,12 @@ function Cronometro({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disparo])
 
-  const ajustar = (delta: number) => {
-    const nuevo = Math.max(PASO, Math.min(30 * 60, total + delta))
+  // Abajo de un minuto se mueve de a 5 segundos; arriba, de a 30.
+  const salto = (v: number) => (v >= 60 ? PASO : 5)
+
+  const ajustar = (dir: 1 | -1) => {
+    const delta = dir > 0 ? salto(total) : -salto(total - 1)
+    const nuevo = Math.max(5, Math.min(30 * 60, total + delta))
     setTotal(nuevo)
     if (!andando) {
       setQuedan(nuevo)
@@ -633,9 +638,9 @@ function Cronometro({
           <button
             type="button"
             className="jp-mini"
-            aria-label="Restar 30 segundos"
-            disabled={total <= PASO}
-            onClick={() => ajustar(-PASO)}
+            aria-label="Restar tiempo"
+            disabled={total <= 5}
+            onClick={() => ajustar(-1)}
           >
             −
           </button>
@@ -643,8 +648,8 @@ function Cronometro({
           <button
             type="button"
             className="jp-mini"
-            aria-label="Sumar 30 segundos"
-            onClick={() => ajustar(PASO)}
+            aria-label="Sumar tiempo"
+            onClick={() => ajustar(1)}
           >
             +
           </button>
@@ -681,6 +686,27 @@ function alternarSonido() {
   sonidoOn = !sonidoOn
   localStorage.setItem(K_SONIDO, sonidoOn ? 'on' : 'off')
   return sonidoOn
+}
+
+function BotonVoz() {
+  const [on, setOn] = useState(vozActiva)
+  if (!vozDisponible()) return null
+  return (
+    <button
+      type="button"
+      className="jp-sonido jp-voz"
+      title={on ? 'Dejar de leer en voz alta' : 'Leer las consignas en voz alta'}
+      aria-label={on ? 'Dejar de leer en voz alta' : 'Leer las consignas en voz alta'}
+      onClick={(e) => {
+        e.stopPropagation()
+        const nuevo = alternarVoz()
+        setOn(nuevo)
+        if (nuevo) despertarVoz()
+      }}
+    >
+      {on ? '🗣️' : '🤐'}
+    </button>
+  )
 }
 
 function BotonSonido() {
@@ -1438,6 +1464,8 @@ export default function Juego2() {
     setCosa(el)
     setRestaCosa(segCosa)
     setRondaCosas((r) => r + 1)
+    // El tic marca el corte; la voz entra después para no pisarse.
+    setTimeout(() => hablar(el), 260)
   }
 
   // Un tick por segundo; al llegar a cero, cambia sola de consigna.
@@ -1962,7 +1990,10 @@ export default function Juego2() {
           </p>
 
           <div className="jp-consigna jp-rafaga">
-            <BotonSonido />
+            <div className="jp-esquina">
+              <BotonVoz />
+              <BotonSonido />
+            </div>
             <div className="jp-consigna-cat">
               {rondaCosas ? `dibujo ${rondaCosas}` : 'listos'}
             </div>
@@ -2013,6 +2044,7 @@ export default function Juego2() {
                 className="btn btn-primary"
                 onClick={() => {
                   if (!corriendo) {
+                    despertarVoz()
                     if (!cosa) siguienteCosa()
                     setLuzCosas('verde')
                     setTimeout(() => setLuzCosas(null), 1700)
