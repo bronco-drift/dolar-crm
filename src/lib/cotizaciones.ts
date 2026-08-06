@@ -297,6 +297,62 @@ export const PAISES_ENVIO: PaisEnvio[] = [
   { id: 'es', nombre: 'España', bandera: '🇪🇸', prefijo: '€', fiat: 'eur' },
 ]
 
+// ── Catálogo único de monedas del conversor ──
+// Todo lo que la app sabe cotizar, en un solo lugar: lo usan el conversor
+// y la pizarra, así no hay pares que existan en un lado y falten en otro.
+export interface MonedaConv {
+  id: string
+  nombre: string
+  prefijo: string
+  // fiat de CriptoYa; null = ya es dólar (o se calcula aparte)
+  fiat: string | null
+}
+
+export const MONEDAS_CONV: MonedaConv[] = [
+  { id: 'usd', nombre: '🇺🇸 Dólar', prefijo: 'US$', fiat: null },
+  { id: 'usdt', nombre: '₮ USDT', prefijo: '₮', fiat: null },
+  { id: 'ars', nombre: '🇦🇷 Peso argentino', prefijo: '$', fiat: 'ars' },
+  { id: 'ves', nombre: '🇻🇪 Bolívar', prefijo: 'Bs', fiat: 'ves' },
+  { id: 'eur', nombre: '🇪🇺 Euro', prefijo: '€', fiat: 'eur' },
+  { id: 'cop', nombre: '🇨🇴 Peso colombiano', prefijo: 'COP', fiat: 'cop' },
+  { id: 'brl', nombre: '🇧🇷 Real', prefijo: 'R$', fiat: 'brl' },
+  { id: 'clp', nombre: '🇨🇱 Peso chileno', prefijo: 'CLP', fiat: 'clp' },
+  { id: 'pen', nombre: '🇵🇪 Sol', prefijo: 'S/', fiat: 'pen' },
+  { id: 'mxn', nombre: '🇲🇽 Peso mexicano', prefijo: 'MX$', fiat: 'mxn' },
+  { id: 'uyu', nombre: '🇺🇾 Peso uruguayo', prefijo: '$U', fiat: 'uyu' },
+  { id: 'bob', nombre: '🇧🇴 Boliviano', prefijo: 'Bs.', fiat: 'bob' },
+  { id: 'pyg', nombre: '🇵🇾 Guaraní', prefijo: '₲', fiat: 'pyg' },
+]
+
+// Cotiza varias monedas de una: devuelve cuántas unidades locales vale
+// un USDT. Con lista vacía no pide nada (para cargar solo al abrir).
+export function useUsdtVarios(fiats: string[]): Record<string, number> {
+  const [datos, setDatos] = useState<Record<string, number>>({})
+  const clave = [...fiats].sort().join(',')
+
+  useEffect(() => {
+    if (!clave) return
+    let alive = true
+    Promise.all(
+      clave.split(',').map((f) =>
+        getUsdtFiat(f)()
+          .then((s) => [f, valorUsdt(s)] as const)
+          .catch(() => [f, null] as const),
+      ),
+    ).then((pares) => {
+      if (!alive) return
+      const mapa: Record<string, number> = {}
+      for (const [f, v] of pares) if (v != null) mapa[f] = v
+      setDatos((prev) => ({ ...prev, ...mapa }))
+    })
+    return () => {
+      alive = false
+    }
+  }, [clave])
+
+  return datos
+}
+
 // País del usuario: define qué cotizaciones son relevantes para él.
 const PAIS_USUARIO_KEY = 'dolar-crm:pais-usuario'
 

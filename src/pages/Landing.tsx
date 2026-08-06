@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import AppHeader from '../components/AppHeader'
 import {
   MAX_TASAS,
+  MONEDAS_CONV,
   PAISES_ENVIO,
   TASAS_DISPONIBLES,
   getOrdenPizarra,
@@ -23,6 +24,7 @@ import {
   useUsdtArs,
   useUsdtEur,
   useUsdtFiat,
+  useUsdtVarios,
   useUsdtVes,
   valorUsdt,
   valorVe,
@@ -50,15 +52,6 @@ function haceCuanto(iso: string): string {
   return h === 1 ? 'hace 1 hora' : `hace ${h} horas`
 }
 
-type MonedaConv = 'ars' | 'usd' | 'usdt' | 'eur' | 'ves'
-
-const MONEDAS_CONV: { id: MonedaConv; nombre: string; corto: string }[] = [
-  { id: 'ars', nombre: '🇦🇷 Peso argentino', corto: 'ARS' },
-  { id: 'usd', nombre: '🇺🇸 Dólar (blue)', corto: 'USD' },
-  { id: 'usdt', nombre: '₮ USDT', corto: 'USDT' },
-  { id: 'eur', nombre: '🇪🇺 Euro', corto: 'EUR' },
-  { id: 'ves', nombre: '🇻🇪 Bolívar', corto: 'Bs' },
-]
 
 // Los cuatro dólares argentinos de la fila principal.
 const DOLARES_AR = ['blue', 'oficial', 'mep', 'usdt'] as const
@@ -93,6 +86,14 @@ export default function Landing() {
   const { usdtFiat: usdtLocal } = useUsdtFiat(paisUsuario.fiat ?? 'ars')
   const usdEnLocal = paisUsuario.fiat ? valorUsdt(usdtLocal) : null
 
+  const [convirtiendo, setConvirtiendo] = useState(false)
+  // Las monedas del conversor se piden recién al abrirlo.
+  const otrasMonedas = useUsdtVarios(
+    convirtiendo
+      ? MONEDAS_CONV.map((m) => m.fiat).filter((f): f is string => f != null)
+      : [],
+  )
+
   const [paisEnvioId, setPaisEnvioId] = useState(getPaisEnvio)
   const paisEnvio = PAISES_ENVIO.find((p) => p.id === paisEnvioId) ?? PAISES_ENVIO[0]
   const { usdtFiat: usdtDestino } = useUsdtFiat(paisEnvio.fiat ?? 'ves')
@@ -100,11 +101,10 @@ export default function Landing() {
   const [orden, setOrden] = useState<string[]>(getOrdenPizarra)
   const [principal, setPrincipal] = useState<string | null>(getPrincipal)
   const [editando, setEditando] = useState(false)
-  const [convirtiendo, setConvirtiendo] = useState(false)
   const [mostrandoInfo, setMostrandoInfo] = useState(false)
   const [monto, setMonto] = useState('100')
-  const [moneda, setMoneda] = useState<MonedaConv>('usd')
-  const [destino, setDestino] = useState<MonedaConv>('ars')
+  const [moneda, setMoneda] = useState('usd')
+  const [destino, setDestino] = useState('ars')
   // Re-render por minuto para que el "hace X minutos" no quede congelado.
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -310,46 +310,44 @@ export default function Landing() {
   }
 
   // Conversor: todo pivotea por USD. usdPor[x] = cuántos USD vale 1 unidad de x.
-  const usdPor: Partial<Record<MonedaConv, number>> = { usd: 1 }
+  // Argentina va al blue y Venezuela al paralelo (las tasas que se usan de
+  // verdad); el resto sale del mercado USDT, que es como se opera.
+  const usdPor: Record<string, number> = { usd: 1, usdt: 1 }
   if (blue) {
     usdPor.ars = 1 / blue.venta
-    if (eurArs) usdPor.eur = eurArs.venta / blue.venta
     if (usdtEnPesos != null) usdPor.usdt = usdtEnPesos / blue.venta
   }
   if (paralelo != null) usdPor.ves = 1 / paralelo
+  for (const [fiat, porUsdt] of Object.entries(otrasMonedas)) {
+    if (porUsdt > 0 && usdPor[fiat] == null) usdPor[fiat] = 1 / porUsdt
+  }
+  // El euro argentino manda si está: es la referencia local.
+  if (blue && eurArs) usdPor.eur = eurArs.venta / blue.venta
 
   const montoNum = Number(monto.replace(',', '.'))
   const usdBase =
     usdPor[moneda] != null && Number.isFinite(montoNum) ? montoNum * usdPor[moneda] : null
 
-  const convertir = (id: MonedaConv): number | null => {
+  const convertir = (id: string): number | null => {
     const factor = usdPor[id]
     return usdBase != null && factor != null ? usdBase / factor : null
   }
 
   // Origen y destino nunca pueden coincidir: el otro select se corre solo.
-  const cambiarOrigen = (m: MonedaConv) => {
+  const cambiarOrigen = (m: string) => {
     setMoneda(m)
     if (m === destino) setDestino(m === 'usd' ? 'ars' : 'usd')
   }
-  const cambiarDestino = (m: MonedaConv) => {
+  const cambiarDestino = (m: string) => {
     setDestino(m)
     if (m === moneda) setMoneda(m === 'usd' ? 'ars' : 'usd')
   }
 
-  const formatearConv = (id: MonedaConv, valor: number): string => {
-    switch (id) {
-      case 'ars':
-        return `$ ${num2.format(valor)}`
-      case 'usd':
-        return `US$ ${num2.format(valor)}`
-      case 'eur':
-        return `€ ${num2.format(valor)}`
-      case 'ves':
-        return `Bs ${num2.format(valor)}`
-      case 'usdt':
-        return `₮ ${num2.format(valor)}`
-    }
+  const formatearConv = (id: string, valor: number): string => {
+    const m = MONEDAS_CONV.find((x) => x.id === id)
+    // Con montos grandes los centavos sobran (guaraníes, pesos colombianos…)
+    const n = Math.abs(valor) >= 10000 ? num0.format(valor) : num2.format(valor)
+    return `${m?.prefijo ?? ''} ${n}`.trim()
   }
 
   // Fila estilo pizarra de casa de cambio: par explícito, nombre y valor.
@@ -615,7 +613,7 @@ export default function Landing() {
             <div className="field-row conv-par">
               <label>
                 De
-                <select value={moneda} onChange={(e) => cambiarOrigen(e.target.value as MonedaConv)}>
+                <select value={moneda} onChange={(e) => cambiarOrigen(e.target.value)}>
                   {MONEDAS_CONV.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.nombre}
@@ -639,7 +637,7 @@ export default function Landing() {
                 A
                 <select
                   value={destino}
-                  onChange={(e) => cambiarDestino(e.target.value as MonedaConv)}
+                  onChange={(e) => cambiarDestino(e.target.value)}
                 >
                   {MONEDAS_CONV.map((m) => (
                     <option key={m.id} value={m.id}>
