@@ -87,9 +87,13 @@ export default function Landing() {
   const usdEnLocal = paisUsuario.fiat ? valorUsdt(usdtLocal) : null
 
   const [convirtiendo, setConvirtiendo] = useState(false)
-  // Las monedas del conversor se piden recién al abrirlo.
+  const [comparando, setComparando] = useState(false)
+  // Cadena de tres monedas: de dónde sale, por dónde pasa y dónde llega.
+  const [cadena, setCadena] = useState(['ars', 'usd', 'ves'])
+  const [montoC, setMontoC] = useState('100000')
+  // Las monedas se piden recién al abrir el conversor o el comparador.
   const otrasMonedas = useUsdtVarios(
-    convirtiendo
+    convirtiendo || comparando
       ? MONEDAS_CONV.map((m) => m.fiat).filter((f): f is string => f != null)
       : [],
   )
@@ -350,6 +354,15 @@ export default function Landing() {
     return `${m?.prefijo ?? ''} ${n}`.trim()
   }
 
+  // La tasa siempre se lee en el sentido que da un número grande:
+  // "1 US$ = $ 1.540" en vez de "1 $ = US$ 0,00".
+  const textoTasa = (desde: string, hasta: string, tasa: number): string => {
+    const pre = (id: string) => MONEDAS_CONV.find((m) => m.id === id)?.prefijo ?? ''
+    return tasa >= 1
+      ? `1 ${pre(desde)} = ${formatearConv(hasta, tasa)}`
+      : `1 ${pre(hasta)} = ${formatearConv(desde, 1 / tasa)}`
+  }
+
   // Fila estilo pizarra de casa de cambio: par explícito, nombre y valor.
   const filaTasa = (id: string) => {
     const t = rateInfo(id)
@@ -386,9 +399,20 @@ export default function Landing() {
         )}
 
         {hero && (
-          <button type="button" className="btn btn-ghost" onClick={() => setConvirtiendo(true)}>
-            ⇄ Convertir
-          </button>
+          <div className="acciones-hero">
+            <button type="button" className="btn btn-ghost" onClick={() => setConvirtiendo(true)}>
+              ⇄ Convertir
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-cuadrado"
+              title="Comparar tres monedas"
+              aria-label="Comparar tres monedas"
+              onClick={() => setComparando(true)}
+            >
+              ⇉
+            </button>
+          </div>
         )}
 
         {envio.costoDolar != null && (
@@ -670,6 +694,82 @@ export default function Landing() {
               type="button"
               className="btn btn-primary"
               onClick={() => setConvirtiendo(false)}
+            >
+              Listo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {comparando && (
+        <div
+          className="modal-backdrop"
+          onMouseDown={(e) => e.target === e.currentTarget && setComparando(false)}
+        >
+          <div className="modal">
+            <h2>Comparar</h2>
+            <label>
+              Monto
+              <input
+                type="number"
+                min="0"
+                step="any"
+                inputMode="decimal"
+                value={montoC}
+                autoFocus
+                onChange={(e) => setMontoC(e.target.value)}
+              />
+            </label>
+
+            <div className="cadena">
+              {cadena.map((id, i) => {
+                const num = Number(montoC.replace(',', '.'))
+                const usd =
+                  usdPor[cadena[0]] != null && Number.isFinite(num)
+                    ? num * usdPor[cadena[0]]
+                    : null
+                const factor = usdPor[id]
+                const valor = usd != null && factor != null ? usd / factor : null
+                // Tasa del salto anterior: cuántas unidades de esta moneda
+                // entran en una de la anterior.
+                const prev = i > 0 ? usdPor[cadena[i - 1]] : null
+                const tasa = prev != null && factor != null ? prev / factor : null
+                return (
+                  <div key={i}>
+                    {i > 0 && (
+                      <div className="cadena-salto">
+                        ↓ {tasa != null ? textoTasa(cadena[i - 1], id, tasa) : '—'}
+                      </div>
+                    )}
+                    <div className={`cadena-paso ${i === cadena.length - 1 ? 'is-final' : ''}`}>
+                      <select
+                        value={id}
+                        onChange={(e) =>
+                          setCadena(cadena.map((c, k) => (k === i ? e.target.value : c)))
+                        }
+                      >
+                        {MONEDAS_CONV.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="cadena-valor">
+                        {valor != null ? formatearConv(id, valor) : '—'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <p className="conv-nota">
+              Argentina al blue y Venezuela al paralelo; el resto, al mercado USDT.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setComparando(false)}
             >
               Listo
             </button>
