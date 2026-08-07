@@ -6,7 +6,9 @@ import {
   SERVICIOS,
   type Servicio,
   type Sub,
+  getMonedaVista,
   getSubs,
+  saveMonedaVista,
   saveSubs,
 } from '../lib/storage'
 
@@ -15,15 +17,19 @@ const ars = new Intl.NumberFormat('es-AR', {
   currency: 'ARS',
   maximumFractionDigits: 0,
 })
+// Con decimales solo cuando hacen falta: los planes chatos convertidos a
+// dólares (US$ 1,38) se distinguirían mal si se redondearan al entero.
 const usdFmt = new Intl.NumberFormat('es-AR', {
   style: 'currency',
   currency: 'USD',
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 })
 
 export default function Subs() {
   const [subs, setSubs] = useState<Sub[]>(getSubs)
   const [cat, setCat] = useState<string>('todas')
+  const [vista, setVista] = useState<'ars' | 'usd'>(getMonedaVista)
   const [editando, setEditando] = useState<Sub | null>(null)
   const { cotizaciones } = useCotizaciones()
   const blue = porCasa(cotizaciones, 'blue')?.venta ?? null
@@ -33,14 +39,27 @@ export default function Subs() {
     saveSubs(next)
   }
 
+  const cambiarVista = (m: 'ars' | 'usd') => {
+    setVista(m)
+    saveMonedaVista(m)
+  }
+
   // Todo se lleva a pesos: lo que se paga en dólares va al blue.
   const enPesos = (s: Sub): number | null =>
     s.moneda === 'ars' ? s.precio : blue != null ? s.precio * blue : null
 
+  // Un solo formateador para toda la pantalla: no importa en qué moneda
+  // se cobre cada servicio, se lee todo en la moneda elegida arriba.
+  const precio = (monto: number, moneda: 'ars' | 'usd'): string => {
+    if (moneda === vista) return (vista === 'ars' ? ars : usdFmt).format(monto)
+    if (blue == null) return '—'
+    return vista === 'ars' ? ars.format(monto * blue) : usdFmt.format(monto / blue)
+  }
+
   const activas = subs.filter((s) => !s.pausada)
   const totalMes = activas.reduce((acc, s) => acc + (enPesos(s) ?? 0), 0)
   const totalUsd = blue != null ? totalMes / blue : null
-  const faltaCotizacion = activas.some((s) => s.moneda === 'usd' && blue == null)
+  const faltaCotizacion = blue == null
 
   const subDe = (servicioId: string) => subs.find((s) => s.servicioId === servicioId)
 
@@ -106,17 +125,38 @@ export default function Subs() {
 
       <section className="subs-total">
         <div className="subs-total-fila">
-          <span className="subs-monto">{ars.format(totalMes)}</span>
+          <span className="subs-monto">
+            {vista === 'ars'
+              ? ars.format(totalMes)
+              : totalUsd != null
+                ? usdFmt.format(totalUsd)
+                : '—'}
+          </span>
           <span className="subs-por">por mes</span>
+          <div className="subs-moneda">
+            {(['ars', 'usd'] as const).map((m) => (
+              <button
+                type="button"
+                key={m}
+                className={vista === m ? 'is-active' : ''}
+                onClick={() => cambiarVista(m)}
+              >
+                {m === 'ars' ? 'ARS' : 'USD'}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="subs-detalle">
-          {ars.format(totalMes * 12)} al año
-          {totalUsd != null && ` · ${usdFmt.format(totalUsd)} al mes`}
+          {vista === 'ars'
+            ? `${ars.format(totalMes * 12)} al año`
+            : totalUsd != null
+              ? `${usdFmt.format(totalUsd * 12)} al año`
+              : 'sin cotización'}
           {` · ${activas.length} activa${activas.length === 1 ? '' : 's'}`}
           {subs.length > activas.length && ` · ${subs.length - activas.length} en pausa`}
         </div>
         {faltaCotizacion && (
-          <div className="subs-aviso">Sin cotización del blue todavía: faltan las que van en USD.</div>
+          <div className="subs-aviso">Sin cotización del blue todavía: faltan precios por convertir.</div>
         )}
       </section>
 
@@ -135,12 +175,7 @@ export default function Subs() {
                   </span>
                 </button>
                 <div className="fila-monto">
-                  <span className="monto-usd">
-                    {enPesos(s) != null ? ars.format(enPesos(s) as number) : '—'}
-                  </span>
-                  {s.moneda === 'usd' && (
-                    <span className="monto-ars">{usdFmt.format(s.precio)}</span>
-                  )}
+                  <span className="monto-usd">{precio(s.precio, s.moneda)}</span>
                 </div>
               </li>
             ))}
@@ -176,10 +211,7 @@ export default function Subs() {
                     title="Editar precio, día o pausar"
                     onClick={() => setEditando(sub)}
                   >
-                    {enPesos(sub) != null ? ars.format(enPesos(sub) as number) : '—'}
-                    {sub.moneda === 'usd' && (
-                      <span className="subs-serv-usd">{usdFmt.format(sub.precio)}</span>
-                    )}
+                    {precio(sub.precio, sub.moneda)}
                     {!activa && <span className="subs-serv-usd">en pausa</span>}
                   </button>
                 )}
@@ -193,9 +225,7 @@ export default function Subs() {
                     onClick={() => tocarPlan(serv, p)}
                   >
                     <span>{p.nombre}</span>
-                    <strong>
-                      {p.moneda === 'ars' ? ars.format(p.precio) : usdFmt.format(p.precio)}
-                    </strong>
+                    <strong>{precio(p.precio, p.moneda)}</strong>
                   </button>
                 ))}
               </div>
@@ -207,6 +237,7 @@ export default function Subs() {
       <footer className="crm-footer">
         <span>
           {SERVICIOS.length} servicios · precios de referencia Argentina, editables
+          {blue != null && ` · lo que se cobra en USD va al blue de ${ars.format(blue)}`}
         </span>
       </footer>
 

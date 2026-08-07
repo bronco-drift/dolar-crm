@@ -3,7 +3,7 @@ import { read, write } from './core'
 // Catálogo de servicios con precios de referencia. Los precios cambian
 // seguido: son un punto de partida, cada uno se puede editar y el valor
 // editado es el que manda.
-export type CatSub = 'video' | 'musica' | 'gaming' | 'ia' | 'nube' | 'otros'
+export type CatSub = 'video' | 'musica' | 'gaming' | 'ia' | 'nube' | 'internet' | 'otros'
 
 export interface PlanSub {
   id: string
@@ -25,6 +25,7 @@ export const CATEGORIAS: { id: CatSub; nombre: string }[] = [
   { id: 'gaming', nombre: 'Gaming' },
   { id: 'ia', nombre: 'IA' },
   { id: 'nube', nombre: 'Nube' },
+  { id: 'internet', nombre: 'Internet' },
   { id: 'otros', nombre: 'Otros' },
 ]
 
@@ -109,10 +110,11 @@ export const SERVICIOS: Servicio[] = [
   {
     id: 'flow',
     nombre: 'Flow',
-    cat: 'video',
+    cat: 'internet',
     planes: [
       { id: 'flex', nombre: 'Flex', precio: 9000, moneda: 'ars' },
       { id: 'full', nombre: 'Full', precio: 16000, moneda: 'ars' },
+      { id: 'futbol', nombre: 'Full + Fútbol', precio: 26000, moneda: 'ars' },
     ],
   },
   {
@@ -316,6 +318,95 @@ export const SERVICIOS: Servicio[] = [
     ],
   },
   {
+    id: 'personalfibra',
+    nombre: 'Personal Fibra',
+    cat: 'internet',
+    planes: [
+      { id: '100', nombre: '100 Mb', precio: 32000, moneda: 'ars' },
+      { id: '300', nombre: '300 Mb', precio: 40000, moneda: 'ars' },
+      { id: '500', nombre: '500 Mb', precio: 47000, moneda: 'ars' },
+      { id: '300flow', nombre: '300 Mb + Flow', precio: 55000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'telecentro',
+    nombre: 'Telecentro',
+    cat: 'internet',
+    planes: [
+      { id: '200', nombre: '200 Mb', precio: 34000, moneda: 'ars' },
+      { id: '500', nombre: '500 Mb', precio: 44000, moneda: 'ars' },
+      { id: '500cable', nombre: '500 Mb + Cable', precio: 58000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'movistarfibra',
+    nombre: 'Movistar Fibra',
+    cat: 'internet',
+    planes: [
+      { id: '100', nombre: '100 Mb', precio: 31000, moneda: 'ars' },
+      { id: '300', nombre: '300 Mb', precio: 39000, moneda: 'ars' },
+      { id: '500', nombre: '500 Mb', precio: 46000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'clarohogar',
+    nombre: 'Claro Hogar',
+    cat: 'internet',
+    planes: [
+      { id: '300', nombre: 'Internet 300 Mb', precio: 36000, moneda: 'ars' },
+      { id: 'cable', nombre: 'Internet + Cable', precio: 52000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'starlink',
+    nombre: 'Starlink',
+    cat: 'internet',
+    planes: [
+      { id: 'residencial', nombre: 'Residencial', precio: 55000, moneda: 'ars' },
+      { id: 'roam', nombre: 'Roam', precio: 75000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'personalmovil',
+    nombre: 'Personal (móvil)',
+    cat: 'internet',
+    planes: [
+      { id: '8', nombre: '8 GB', precio: 14000, moneda: 'ars' },
+      { id: '20', nombre: '20 GB', precio: 19000, moneda: 'ars' },
+      { id: '40', nombre: '40 GB', precio: 25000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'claromovil',
+    nombre: 'Claro (móvil)',
+    cat: 'internet',
+    planes: [
+      { id: '10', nombre: '10 GB', precio: 15000, moneda: 'ars' },
+      { id: '25', nombre: '25 GB', precio: 20000, moneda: 'ars' },
+      { id: '50', nombre: '50 GB', precio: 27000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'movistarmovil',
+    nombre: 'Movistar (móvil)',
+    cat: 'internet',
+    planes: [
+      { id: '10', nombre: '10 GB', precio: 14500, moneda: 'ars' },
+      { id: '25', nombre: '25 GB', precio: 19500, moneda: 'ars' },
+      { id: '45', nombre: '45 GB', precio: 26000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'tuenti',
+    nombre: 'Tuenti',
+    cat: 'internet',
+    planes: [
+      { id: '6', nombre: '6 GB', precio: 9000, moneda: 'ars' },
+      { id: '15', nombre: '15 GB', precio: 13000, moneda: 'ars' },
+      { id: '30', nombre: '30 GB', precio: 18000, moneda: 'ars' },
+    ],
+  },
+  {
     id: 'microsoft365',
     nombre: 'Microsoft 365',
     cat: 'otros',
@@ -399,6 +490,18 @@ export function getSubs(): Sub[] {
 
 export function saveSubs(subs: Sub[]) {
   write(K_SUBS, subs)
+}
+
+// Moneda en la que se muestra TODO: los precios nativos se guardan como
+// son, pero la pantalla se lee siempre en una sola moneda.
+const K_MONEDA = 'dolar-crm:subs-moneda'
+
+export function getMonedaVista(): 'ars' | 'usd' {
+  return localStorage.getItem(K_MONEDA) === 'usd' ? 'usd' : 'ars'
+}
+
+export function saveMonedaVista(m: 'ars' | 'usd') {
+  localStorage.setItem(K_MONEDA, m)
 }
 
 export function servicioPorId(id: string) {
