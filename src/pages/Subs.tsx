@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { porCasa, useCotizaciones } from '../lib/cotizaciones'
 import {
   CATEGORIAS,
+  type PlanSub,
   SERVICIOS,
+  type Servicio,
   type Sub,
   getSubs,
   saveSubs,
-  servicioPorId,
 } from '../lib/storage'
 
 const ars = new Intl.NumberFormat('es-AR', {
@@ -22,8 +23,7 @@ const usdFmt = new Intl.NumberFormat('es-AR', {
 
 export default function Subs() {
   const [subs, setSubs] = useState<Sub[]>(getSubs)
-  const [catalogo, setCatalogo] = useState(false)
-  const [cat, setCat] = useState<string>('video')
+  const [cat, setCat] = useState<string>('todas')
   const [editando, setEditando] = useState<Sub | null>(null)
   const { cotizaciones } = useCotizaciones()
   const blue = porCasa(cotizaciones, 'blue')?.venta ?? null
@@ -39,13 +39,32 @@ export default function Subs() {
 
   const activas = subs.filter((s) => !s.pausada)
   const totalMes = activas.reduce((acc, s) => acc + (enPesos(s) ?? 0), 0)
-  const faltaCotizacion = activas.some((s) => s.moneda === 'usd' && blue == null)
   const totalUsd = blue != null ? totalMes / blue : null
+  const faltaCotizacion = activas.some((s) => s.moneda === 'usd' && blue == null)
 
-  const agregar = (servicioId: string, planId: string) => {
-    const serv = servicioPorId(servicioId)
-    const plan = serv?.planes.find((p) => p.id === planId)
-    if (!serv || !plan) return
+  const subDe = (servicioId: string) => subs.find((s) => s.servicioId === servicioId)
+
+  // Las guardadas antes de que existiera planId se reconocen por el nombre.
+  const esElPlan = (sub: Sub | undefined, plan: PlanSub) =>
+    sub != null && (sub.planId ? sub.planId === plan.id : sub.plan === plan.nombre)
+
+  // Un toque en el plan: lo activa, cambia de plan, o da de baja.
+  const tocarPlan = (serv: Servicio, plan: PlanSub) => {
+    const actual = subDe(serv.id)
+    if (actual && esElPlan(actual, plan)) {
+      guardar(subs.filter((s) => s.id !== actual.id))
+      return
+    }
+    if (actual) {
+      guardar(
+        subs.map((s) =>
+          s.id === actual.id
+            ? { ...s, planId: plan.id, plan: plan.nombre, precio: plan.precio, moneda: plan.moneda }
+            : s,
+        ),
+      )
+      return
+    }
     guardar([
       ...subs,
       {
@@ -53,34 +72,35 @@ export default function Subs() {
         servicioId: serv.id,
         nombre: serv.nombre,
         plan: plan.nombre,
+        planId: plan.id,
         precio: plan.precio,
         moneda: plan.moneda,
       },
     ])
-    setCatalogo(false)
   }
 
-  const agregarPropia = () => {
-    const nueva: Sub = {
-      id: crypto.randomUUID(),
-      servicioId: 'custom',
-      nombre: '',
-      plan: '',
-      precio: 0,
-      moneda: 'ars',
-    }
-    setCatalogo(false)
-    setEditando(nueva)
-  }
-
-  const yaTengo = (id: string) => subs.some((s) => s.servicioId === id)
+  const propias = subs.filter((s) => s.servicioId === 'custom')
+  const visibles = SERVICIOS.filter((s) => cat === 'todas' || s.cat === cat)
 
   return (
     <>
       <header className="crm-header">
         <h1>Suscripciones</h1>
-        <button type="button" className="btn btn-primary" onClick={() => setCatalogo(true)}>
-          + Agregar
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() =>
+            setEditando({
+              id: crypto.randomUUID(),
+              servicioId: 'custom',
+              nombre: '',
+              plan: '',
+              precio: 0,
+              moneda: 'ars',
+            })
+          }
+        >
+          + Otra
         </button>
       </header>
 
@@ -100,18 +120,11 @@ export default function Subs() {
         )}
       </section>
 
-      {subs.length === 0 ? (
-        <div className="empty">
-          <p>Todavía no cargaste ninguna suscripción.</p>
-          <button type="button" className="btn btn-primary" onClick={() => setCatalogo(true)}>
-            Elegir del catálogo
-          </button>
-        </div>
-      ) : (
-        <ul className="lista">
-          {subs.map((s) => {
-            const pesos = enPesos(s)
-            return (
+      {propias.length > 0 && (
+        <>
+          <div className="jp-etiqueta">Tuyas</div>
+          <ul className="lista">
+            {propias.map((s) => (
               <li key={s.id} className={`fila subs-fila ${s.pausada ? 'is-pausada' : ''}`}>
                 <button type="button" className="fila-info" onClick={() => setEditando(s)}>
                   <span className="fila-nombre">{s.nombre || 'Sin nombre'}</span>
@@ -123,84 +136,79 @@ export default function Subs() {
                 </button>
                 <div className="fila-monto">
                   <span className="monto-usd">
-                    {pesos != null ? ars.format(pesos) : '—'}
+                    {enPesos(s) != null ? ars.format(enPesos(s) as number) : '—'}
                   </span>
                   {s.moneda === 'usd' && (
                     <span className="monto-ars">{usdFmt.format(s.precio)}</span>
                   )}
                 </div>
               </li>
-            )
-          })}
-        </ul>
+            ))}
+          </ul>
+        </>
       )}
+
+      <div className="filtros">
+        {[{ id: 'todas', nombre: 'Todas' }, ...CATEGORIAS].map((c) => (
+          <button
+            type="button"
+            key={c.id}
+            className={`filtro ${cat === c.id ? 'is-active' : ''}`}
+            onClick={() => setCat(c.id)}
+          >
+            {c.nombre}
+          </button>
+        ))}
+      </div>
+
+      <div className="subs-catalogo">
+        {visibles.map((serv) => {
+          const sub = subDe(serv.id)
+          const activa = sub != null && !sub.pausada
+          return (
+            <div key={serv.id} className={`subs-serv ${sub ? 'is-activa' : ''}`}>
+              <div className="subs-serv-head">
+                <span className="subs-serv-nombre">{serv.nombre}</span>
+                {sub && (
+                  <button
+                    type="button"
+                    className="subs-serv-precio"
+                    title="Editar precio, día o pausar"
+                    onClick={() => setEditando(sub)}
+                  >
+                    {enPesos(sub) != null ? ars.format(enPesos(sub) as number) : '—'}
+                    {sub.moneda === 'usd' && (
+                      <span className="subs-serv-usd">{usdFmt.format(sub.precio)}</span>
+                    )}
+                    {!activa && <span className="subs-serv-usd">en pausa</span>}
+                  </button>
+                )}
+              </div>
+              <div className="subs-planes">
+                {serv.planes.map((p) => (
+                  <button
+                    type="button"
+                    key={p.id}
+                    className={`subs-plan ${esElPlan(sub, p) ? 'is-elegido' : ''}`}
+                    onClick={() => tocarPlan(serv, p)}
+                  >
+                    <span>{p.nombre}</span>
+                    <strong>
+                      {p.moneda === 'ars' ? ars.format(p.precio) : usdFmt.format(p.precio)}
+                    </strong>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
       <footer className="crm-footer">
-        <span>Precios editables · guardado en este navegador</span>
-        {subs.length > 0 && (
-          <button type="button" className="btn-ghost" onClick={agregarPropia}>
-            + Otra
-          </button>
-        )}
+        <span>
+          {SERVICIOS.length} servicios · precios de referencia Argentina, editables
+        </span>
       </footer>
-
-      {catalogo && (
-        <div
-          className="modal-backdrop"
-          onMouseDown={(e) => e.target === e.currentTarget && setCatalogo(false)}
-        >
-          <div className="modal">
-            <h2>Agregar suscripción</h2>
-            <div className="filtros">
-              {CATEGORIAS.map((c) => (
-                <button
-                  type="button"
-                  key={c.id}
-                  className={`filtro ${cat === c.id ? 'is-active' : ''}`}
-                  onClick={() => setCat(c.id)}
-                >
-                  {c.nombre}
-                </button>
-              ))}
-            </div>
-
-            <div className="subs-catalogo">
-              {SERVICIOS.filter((s) => s.cat === cat).map((serv) => (
-                <div className="subs-serv" key={serv.id}>
-                  <div className="subs-serv-nombre">
-                    {serv.nombre}
-                    {yaTengo(serv.id) && <span className="subs-tag">ya la tenés</span>}
-                  </div>
-                  <div className="subs-planes">
-                    {serv.planes.map((p) => (
-                      <button
-                        type="button"
-                        key={p.id}
-                        className="subs-plan"
-                        onClick={() => agregar(serv.id, p.id)}
-                      >
-                        <span>{p.nombre}</span>
-                        <strong>
-                          {p.moneda === 'ars' ? ars.format(p.precio) : usdFmt.format(p.precio)}
-                        </strong>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="modal-actions">
-              <button type="button" className="btn btn-ghost" onClick={agregarPropia}>
-                Otra
-              </button>
-              <button type="button" className="btn btn-primary" onClick={() => setCatalogo(false)}>
-                Listo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {editando && (
         <SubForm
@@ -251,7 +259,7 @@ function SubForm({
           onSave({ ...draft, nombre: draft.nombre.trim() })
         }}
       >
-        <h2>{esNueva ? 'Nueva suscripción' : draft.nombre}</h2>
+        <h2>{esNueva ? 'Otra suscripción' : draft.nombre}</h2>
         <div className="field-row">
           <label>
             Nombre
@@ -326,7 +334,7 @@ function SubForm({
               if (confirm(`¿Dar de baja ${draft.nombre}?`)) onDelete(draft.id)
             }}
           >
-            Borrar
+            Dar de baja
           </button>
         )}
       </form>

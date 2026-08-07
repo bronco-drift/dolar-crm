@@ -44,62 +44,98 @@
   opacity: 0.45;
 }
 
-/* Catálogo */
+/* Catálogo completo, siempre a la vista */
 .subs-catalogo {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-height: 46dvh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  gap: 8px;
+}
+
+.subs-serv {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+
+/* La que tenés contratada se distingue de un vistazo */
+.subs-serv.is-activa {
+  border-color: var(--ink);
+}
+
+.subs-serv-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .subs-serv-nombre {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 5px;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
 }
 
-.subs-tag {
-  padding: 1px 8px;
-  border-radius: 99px;
+.subs-serv-precio {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.subs-serv-precio:hover {
   background: var(--soft);
+}
+
+.subs-serv-usd {
+  font-size: 11px;
+  font-weight: 500;
   color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .subs-planes {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .subs-plan {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  background: var(--surface);
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 10px;
+  background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  font-size: 13px;
-  text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  border-radius: 99px;
+  font-size: 12px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
 .subs-plan:hover {
   border-color: #c7c7cc;
-  background: var(--soft);
 }
 
 .subs-plan strong {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+}
+
+.subs-plan.is-elegido {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--sobre-ink);
+}
+
+.subs-plan.is-elegido strong {
+  color: var(--sobre-ink);
+  opacity: 0.7;
 }

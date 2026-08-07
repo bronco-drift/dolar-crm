@@ -64,31 +64,63 @@ export const SERVICIOS: Servicio[] = [
     id: 'prime',
     nombre: 'Prime Video',
     cat: 'video',
-    planes: [{ id: 'unico', nombre: 'Mensual', precio: 7954, moneda: 'ars' }],
+    planes: [
+      { id: 'mensual', nombre: 'Mensual', precio: 7954, moneda: 'ars' },
+      { id: 'anual', nombre: 'Anual (por mes)', precio: 6600, moneda: 'ars' },
+    ],
   },
   {
     id: 'appletv',
     nombre: 'Apple TV+',
     cat: 'video',
-    planes: [{ id: 'unico', nombre: 'Mensual', precio: 9000, moneda: 'ars' }],
+    planes: [
+      { id: 'mensual', nombre: 'Mensual', precio: 9000, moneda: 'ars' },
+      { id: 'anual', nombre: 'Anual (por mes)', precio: 7500, moneda: 'ars' },
+    ],
   },
   {
     id: 'paramount',
     nombre: 'Paramount+',
     cat: 'video',
-    planes: [{ id: 'unico', nombre: 'Mensual', precio: 6000, moneda: 'ars' }],
+    planes: [
+      { id: 'esencial', nombre: 'Esencial', precio: 6000, moneda: 'ars' },
+      { id: 'premium', nombre: 'Premium', precio: 8500, moneda: 'ars' },
+    ],
   },
   {
     id: 'crunchyroll',
     nombre: 'Crunchyroll',
     cat: 'video',
-    planes: [{ id: 'fan', nombre: 'Mega Fan', precio: 5500, moneda: 'ars' }],
+    planes: [
+      { id: 'fan', nombre: 'Fan', precio: 4500, moneda: 'ars' },
+      { id: 'megafan', nombre: 'Mega Fan', precio: 5500, moneda: 'ars' },
+      { id: 'ultimate', nombre: 'Ultimate Fan', precio: 7500, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'mubi',
+    nombre: 'Mubi',
+    cat: 'video',
+    planes: [
+      { id: 'mensual', nombre: 'Mensual', precio: 7000, moneda: 'ars' },
+      { id: 'anual', nombre: 'Anual (por mes)', precio: 5000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'flow',
+    nombre: 'Flow',
+    cat: 'video',
+    planes: [
+      { id: 'flex', nombre: 'Flex', precio: 9000, moneda: 'ars' },
+      { id: 'full', nombre: 'Full', precio: 16000, moneda: 'ars' },
+    ],
   },
   {
     id: 'spotify',
     nombre: 'Spotify',
     cat: 'musica',
     planes: [
+      { id: 'estudiante', nombre: 'Estudiante', precio: 1799, moneda: 'ars' },
       { id: 'individual', nombre: 'Individual', precio: 3299, moneda: 'ars' },
       { id: 'duo', nombre: 'Dúo', precio: 4399, moneda: 'ars' },
       { id: 'familiar', nombre: 'Familiar', precio: 5499, moneda: 'ars' },
@@ -99,6 +131,7 @@ export const SERVICIOS: Servicio[] = [
     nombre: 'YouTube Premium',
     cat: 'musica',
     planes: [
+      { id: 'estudiante', nombre: 'Estudiante', precio: 4000, moneda: 'ars' },
       { id: 'individual', nombre: 'Individual', precio: 7000, moneda: 'ars' },
       { id: 'familiar', nombre: 'Familiar', precio: 12000, moneda: 'ars' },
     ],
@@ -108,8 +141,18 @@ export const SERVICIOS: Servicio[] = [
     nombre: 'Apple Music',
     cat: 'musica',
     planes: [
+      { id: 'estudiante', nombre: 'Estudiante', precio: 2500, moneda: 'ars' },
       { id: 'individual', nombre: 'Individual', precio: 5000, moneda: 'ars' },
       { id: 'familiar', nombre: 'Familiar', precio: 7500, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'deezer',
+    nombre: 'Deezer',
+    cat: 'musica',
+    planes: [
+      { id: 'individual', nombre: 'Individual', precio: 3500, moneda: 'ars' },
+      { id: 'familiar', nombre: 'Familiar', precio: 5800, moneda: 'ars' },
     ],
   },
   {
@@ -149,17 +192,36 @@ export const SERVICIOS: Servicio[] = [
     planes: [
       { id: 'individual', nombre: 'Individual', precio: 3500, moneda: 'ars' },
       { id: 'familiar', nombre: 'Familiar', precio: 6000, moneda: 'ars' },
+      { id: 'expansion', nombre: 'Individual + Expansión', precio: 8000, moneda: 'ars' },
     ],
   },
   {
     id: 'ubisoft',
     nombre: 'Ubisoft+',
     cat: 'gaming',
-    planes: [{ id: 'premium', nombre: 'Premium', precio: 18, moneda: 'usd' }],
+    planes: [
+      { id: 'classics', nombre: 'Classics', precio: 8, moneda: 'usd' },
+      { id: 'premium', nombre: 'Premium', precio: 18, moneda: 'usd' },
+    ],
+  },
+  {
+    id: 'geforce',
+    nombre: 'GeForce Now',
+    cat: 'gaming',
+    planes: [
+      { id: 'performance', nombre: 'Performance', precio: 10, moneda: 'usd' },
+      { id: 'ultimate', nombre: 'Ultimate', precio: 20, moneda: 'usd' },
+    ],
+  },
+  {
+    id: 'arcade',
+    nombre: 'Apple Arcade',
+    cat: 'gaming',
+    planes: [{ id: 'mensual', nombre: 'Mensual', precio: 4500, moneda: 'ars' }],
   },
   {
     id: 'chatgpt',
-    nombre: 'ChatGPT Plus',
+    nombre: 'ChatGPT',
     cat: 'ia',
     planes: [
       { id: 'plus', nombre: 'Plus', precio: 20, moneda: 'usd' },
@@ -172,20 +234,45 @@ export const SERVICIOS: Servicio[] = [
     cat: 'ia',
     planes: [
       { id: 'pro', nombre: 'Pro', precio: 20, moneda: 'usd' },
-      { id: 'max', nombre: 'Max', precio: 100, moneda: 'usd' },
+      { id: 'max5', nombre: 'Max 5x', precio: 100, moneda: 'usd' },
+      { id: 'max20', nombre: 'Max 20x', precio: 200, moneda: 'usd' },
     ],
   },
   {
     id: 'gemini',
     nombre: 'Google AI',
     cat: 'ia',
-    planes: [{ id: 'pro', nombre: 'AI Pro', precio: 20, moneda: 'usd' }],
+    planes: [
+      { id: 'pro', nombre: 'AI Pro', precio: 20, moneda: 'usd' },
+      { id: 'ultra', nombre: 'AI Ultra', precio: 250, moneda: 'usd' },
+    ],
   },
   {
     id: 'cursor',
     nombre: 'Cursor',
     cat: 'ia',
-    planes: [{ id: 'pro', nombre: 'Pro', precio: 20, moneda: 'usd' }],
+    planes: [
+      { id: 'pro', nombre: 'Pro', precio: 20, moneda: 'usd' },
+      { id: 'ultra', nombre: 'Ultra', precio: 200, moneda: 'usd' },
+    ],
+  },
+  {
+    id: 'copilot',
+    nombre: 'GitHub Copilot',
+    cat: 'ia',
+    planes: [
+      { id: 'pro', nombre: 'Pro', precio: 10, moneda: 'usd' },
+      { id: 'proplus', nombre: 'Pro+', precio: 39, moneda: 'usd' },
+    ],
+  },
+  {
+    id: 'perplexity',
+    nombre: 'Perplexity',
+    cat: 'ia',
+    planes: [
+      { id: 'pro', nombre: 'Pro', precio: 20, moneda: 'usd' },
+      { id: 'max', nombre: 'Max', precio: 200, moneda: 'usd' },
+    ],
   },
   {
     id: 'icloud',
@@ -195,6 +282,7 @@ export const SERVICIOS: Servicio[] = [
       { id: '50', nombre: '50 GB', precio: 1500, moneda: 'ars' },
       { id: '200', nombre: '200 GB', precio: 4500, moneda: 'ars' },
       { id: '2tb', nombre: '2 TB', precio: 15000, moneda: 'ars' },
+      { id: '6tb', nombre: '6 TB', precio: 45000, moneda: 'ars' },
     ],
   },
   {
@@ -205,13 +293,27 @@ export const SERVICIOS: Servicio[] = [
       { id: '100', nombre: '100 GB', precio: 3000, moneda: 'ars' },
       { id: '200', nombre: '200 GB', precio: 4500, moneda: 'ars' },
       { id: '2tb', nombre: '2 TB', precio: 14000, moneda: 'ars' },
+      { id: '5tb', nombre: '5 TB', precio: 32000, moneda: 'ars' },
     ],
   },
   {
     id: 'dropbox',
     nombre: 'Dropbox',
     cat: 'nube',
-    planes: [{ id: 'plus', nombre: 'Plus 2 TB', precio: 12, moneda: 'usd' }],
+    planes: [
+      { id: 'plus', nombre: 'Plus 2 TB', precio: 12, moneda: 'usd' },
+      { id: 'essentials', nombre: 'Essentials 3 TB', precio: 18, moneda: 'usd' },
+      { id: 'family', nombre: 'Family 2 TB', precio: 20, moneda: 'usd' },
+    ],
+  },
+  {
+    id: 'onedrive',
+    nombre: 'OneDrive',
+    cat: 'nube',
+    planes: [
+      { id: '100', nombre: '100 GB', precio: 2500, moneda: 'ars' },
+      { id: '1tb', nombre: '1 TB (con 365)', precio: 6000, moneda: 'ars' },
+    ],
   },
   {
     id: 'microsoft365',
@@ -226,14 +328,18 @@ export const SERVICIOS: Servicio[] = [
     id: 'canva',
     nombre: 'Canva',
     cat: 'otros',
-    planes: [{ id: 'pro', nombre: 'Pro', precio: 8000, moneda: 'ars' }],
+    planes: [
+      { id: 'pro', nombre: 'Pro', precio: 8000, moneda: 'ars' },
+      { id: 'equipos', nombre: 'Equipos', precio: 15000, moneda: 'ars' },
+    ],
   },
   {
     id: 'adobe',
-    nombre: 'Adobe Creative Cloud',
+    nombre: 'Adobe',
     cat: 'otros',
     planes: [
       { id: 'foto', nombre: 'Fotografía', precio: 12, moneda: 'usd' },
+      { id: 'unaapp', nombre: 'Una app', precio: 23, moneda: 'usd' },
       { id: 'todo', nombre: 'Todas las apps', precio: 60, moneda: 'usd' },
     ],
   },
@@ -241,7 +347,34 @@ export const SERVICIOS: Servicio[] = [
     id: 'notion',
     nombre: 'Notion',
     cat: 'otros',
-    planes: [{ id: 'plus', nombre: 'Plus', precio: 10, moneda: 'usd' }],
+    planes: [
+      { id: 'plus', nombre: 'Plus', precio: 10, moneda: 'usd' },
+      { id: 'business', nombre: 'Business', precio: 20, moneda: 'usd' },
+    ],
+  },
+  {
+    id: 'linkedin',
+    nombre: 'LinkedIn Premium',
+    cat: 'otros',
+    planes: [
+      { id: 'carrera', nombre: 'Carrera', precio: 30, moneda: 'usd' },
+      { id: 'business', nombre: 'Business', precio: 60, moneda: 'usd' },
+    ],
+  },
+  {
+    id: 'duolingo',
+    nombre: 'Duolingo',
+    cat: 'otros',
+    planes: [
+      { id: 'super', nombre: 'Super', precio: 6000, moneda: 'ars' },
+      { id: 'max', nombre: 'Max', precio: 12000, moneda: 'ars' },
+    ],
+  },
+  {
+    id: 'strava',
+    nombre: 'Strava',
+    cat: 'otros',
+    planes: [{ id: 'premium', nombre: 'Premium', precio: 12, moneda: 'usd' }],
   },
 ]
 
@@ -251,6 +384,7 @@ export interface Sub {
   servicioId: string // 'custom' para las propias
   nombre: string
   plan: string
+  planId?: string // qué plan del catálogo está activo
   precio: number
   moneda: 'ars' | 'usd'
   dia?: number // día del mes en que se cobra
