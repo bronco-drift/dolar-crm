@@ -4,6 +4,7 @@ import Gastos from './Gastos'
 import Pto from './Pto'
 import Habitos from './Habitos'
 import Tareas from './Tareas'
+import Subs from './Subs'
 import Juego1 from './Juego1'
 import Juego2 from './Juego2'
 import AppHeader from '../components/AppHeader'
@@ -14,6 +15,7 @@ const TOOLS = [
   { id: 'pto', label: 'PTO Planner' },
   { id: 'habitos', label: 'Hábitos' },
   { id: 'tareas', label: 'Mis tareas' },
+  { id: 'subs', label: 'Subs' },
   { id: 'juego1', label: 'Juego 1' },
   { id: 'juego2', label: 'Juego 2' },
 ] as const
@@ -55,6 +57,7 @@ export default function Herramientas() {
       {tool === 'pto' && <Pto />}
       {tool === 'habitos' && <Habitos />}
       {tool === 'tareas' && <Tareas />}
+      {tool === 'subs' && <Subs />}
       {tool === 'juego1' && <Juego1 />}
       {tool === 'juego2' && <Juego2 />}
     </div>

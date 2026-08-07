@@ -1,0 +1,105 @@
+/* ─── Subs · suscripciones mensuales ─────────────────────────── */
+.subs-total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.subs-total-fila {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.subs-monto {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.subs-por {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.subs-detalle {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.subs-aviso {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #c0452f;
+}
+
+.subs-fila.is-pausada .fila-nombre,
+.subs-fila.is-pausada .monto-usd {
+  opacity: 0.45;
+}
+
+/* Catálogo */
+.subs-catalogo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 46dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.subs-serv-nombre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.subs-tag {
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: var(--soft);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.subs-planes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subs-plan {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.subs-plan:hover {
+  border-color: #c7c7cc;
+  background: var(--soft);
+}
+
+.subs-plan strong {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
