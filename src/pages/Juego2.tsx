@@ -709,6 +709,15 @@ function BotonVoz() {
   )
 }
 
+// La consigna se lee desde el otro lado de la mesa, así que va lo más
+// grande posible: el CSS baja un escalón por cada tramo de largo.
+const claseLargo = (txt: string | null | undefined) => {
+  const n = txt?.length ?? 0
+  if (n > 30) return 'is-muy-largo'
+  if (n > 16) return 'is-largo'
+  return ''
+}
+
 function BotonSonido() {
   const [on, setOn] = useState(sonidoOn)
   return (
@@ -898,7 +907,9 @@ function JuegoConsignas({
         <div className="jp-consigna-cat">
           {consigna ? (nombres[consigna.cat] ?? consigna.cat) : 'esperando'}
         </div>
-        <div className="jp-consigna-txt">{consigna?.txt ?? 'Sacá una consigna'}</div>
+        <div className={`jp-consigna-txt ${claseLargo(consigna?.txt)}`}>
+          {consigna?.txt ?? 'Sacá una consigna'}
+        </div>
       </div>
       <div className="jp-codigo">ronda {consigna ? ronda : '—'}</div>
 
@@ -1869,7 +1880,11 @@ export default function Juego2() {
                   {idxBloque + 1} de {listaBloque.length}
                 </div>
                 <div
-                  className={`jp-consigna-txt ${tipoBloque === 'emojis' ? 'jp-emoji-grande' : ''}`}
+                  className={`jp-consigna-txt ${
+                    tipoBloque === 'emojis'
+                      ? 'jp-emoji-grande'
+                      : claseLargo(listaBloque[idxBloque])
+                  }`}
                 >
                   {listaBloque[idxBloque]}
                 </div>
@@ -1997,7 +2012,9 @@ export default function Juego2() {
             <div className="jp-consigna-cat">
               {rondaCosas ? `dibujo ${rondaCosas}` : 'listos'}
             </div>
-            <div className="jp-consigna-txt">{cosa ?? 'Tocá empezar'}</div>
+            <div className={`jp-consigna-txt ${claseLargo(cosa)}`}>
+              {cosa ?? 'Tocá empezar'}
+            </div>
             <div className={`jp-rafaga-seg ${restaCosa <= 3 && corriendo ? 'is-poco' : ''}`}>
               {corriendo || cosa ? restaCosa : segCosa}s
             </div>
@@ -2090,7 +2107,9 @@ export default function Juego2() {
             {nombreVisible ? (
               <>
                 <div className="jp-consigna-cat">era</div>
-                <div className="jp-consigna-txt">{futbolista?.n}</div>
+                <div className={`jp-consigna-txt ${claseLargo(futbolista?.n)}`}>
+                  {futbolista?.n}
+                </div>
               </>
             ) : (
               <div className="jp-consigna-txt jp-tapado">¿Quién es?</div>
@@ -2217,7 +2236,9 @@ export default function Juego2() {
                 </div>
                 {verConsigna ? (
                   <>
-                    <div className="jp-consigna-txt">{consignas[turno]}</div>
+                    <div className={`jp-consigna-txt ${claseLargo(consignas[turno])}`}>
+                      {consignas[turno]}
+                    </div>
                     <p className="jp-aviso">Memorizala y pasá el teléfono.</p>
                   </>
                 ) : (

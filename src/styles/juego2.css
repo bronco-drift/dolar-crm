@@ -161,11 +161,26 @@
   color: var(--muted);
 }
 
+/* El teléfono se pasa alrededor de una mesa: la consigna se lee a 60-80 cm,
+   no a 30. Escala con el ancho y baja un escalón por cada tramo de largo,
+   así una frase larga entra sin desbordar y una corta llena la tarjeta. */
 .jp-consigna-txt {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: clamp(30px, 10vw, 52px);
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.jp-consigna-txt.is-largo {
+  font-size: clamp(26px, 8.4vw, 44px);
+}
+
+.jp-consigna-txt.is-muy-largo {
+  font-size: clamp(22px, 7vw, 36px);
+  line-height: 1.2;
 }
 
 /* Modo emojis */
@@ -265,9 +280,12 @@
 .jp-rafaga {
   position: relative;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  gap: 8px;
-  padding: 26px 18px;
+  gap: 10px;
+  /* Alto fijo: la tarjeta no salta de tamaño al cambiar de consigna */
+  min-height: 230px;
+  padding: 26px 16px;
 }
 
 /* Silenciador en la esquina del cuadro */
@@ -289,8 +307,17 @@
   background: var(--soft);
 }
 
+/* Cosas 101 son consignas cortas: se les da todo el ancho de la tarjeta */
 .jp-rafaga .jp-consigna-txt {
-  font-size: 26px;
+  font-size: clamp(38px, 13vw, 66px);
+}
+
+.jp-rafaga .jp-consigna-txt.is-largo {
+  font-size: clamp(30px, 10vw, 52px);
+}
+
+.jp-rafaga .jp-consigna-txt.is-muy-largo {
+  font-size: clamp(24px, 8vw, 42px);
 }
 
 .jp-emoji-grande {
