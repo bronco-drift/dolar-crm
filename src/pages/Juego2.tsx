@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { type Jugador, getJugadores, saveJugadores } from '../lib/storage'
+import {
+  type Jugador,
+  getArchivados,
+  getJugadores,
+  saveArchivados,
+  saveJugadores,
+} from '../lib/storage'
 import { emojisDisponibles } from '../lib/emojis'
 import { alternarVoz, despertarVoz, hablar, vozActiva, vozDisponible } from '../lib/voz'
 
@@ -14,6 +20,7 @@ type Vista =
   | 'futbol'
   | 'cosas101'
   | 'bloque'
+  | 'archivados'
 
 // Emojis dibujables: nada de caras sutiles ni banderas.
 const EMOJIS = [
@@ -1381,6 +1388,8 @@ const consignaAlAzar = () =>
 
 export default function Juego2() {
   const [vista, setVista] = useState<Vista>('menu')
+  const [archivados, setArchivados] = useState<string[]>(getArchivados)
+  const [menuAbierto, setMenuAbierto] = useState<string | null>(null)
   const [jugadores, setJugadores] = useState<Jugador[]>(getJugadores)
   const guardarJugadores = (js: Jugador[]) => {
     setJugadores(js)
@@ -1570,158 +1579,221 @@ export default function Juego2() {
 
   const chip = (activo: boolean) => `filtro ${activo ? 'is-active' : ''}`
 
-  if (vista === 'menu') {
+  // El menú como datos: cada juego sabe abrirse solo. Sumar uno nuevo es
+  // agregar un objeto acá, y el archivado le sale gratis.
+  const JUEGOS: { id: string; titulo: string; resumen: string; abrir: () => void }[] = [
+    {
+      id: 'cosas101',
+      titulo: 'Cosas 101',
+      resumen:
+        'Para entrar en calor: cosas simples, diez segundos cada una y la pantalla pasa sola a la siguiente.',
+      abrir: () => {
+        setCorriendo(false)
+        setCosa(null)
+        setRondaCosas(0)
+        setRestaCosa(segCosa)
+        setVista('cosas101')
+      },
+    },
+    {
+      id: 'bloque-cosas',
+      titulo: 'Bloque de cosas',
+      resumen:
+        'Tanda cerrada de 12 o 24 cosas, con los segundos que quieras. Al final, la lista completa para comparar.',
+      abrir: () => {
+        setTipoBloque('cosas')
+        setCorriendoBloque(false)
+        setTerminadoBloque(false)
+        setListaBloque([])
+        setVista('bloque')
+      },
+    },
+    {
+      id: 'bloque-emojis',
+      titulo: 'Bloque de emojis',
+      resumen:
+        'Lo mismo pero con emojis, sacados de todos los que tiene el teléfono. Aparecen cosas que nadie sabe ni cómo se llaman.',
+      abrir: () => {
+        setTipoBloque('emojis')
+        setCorriendoBloque(false)
+        setTerminadoBloque(false)
+        setListaBloque([])
+        setVista('bloque')
+      },
+    },
+    {
+      id: 'garabato',
+      titulo: 'Garabato',
+      resumen:
+        'Todos copian el mismo trazo y lo convierten en un dibujo. Gana la idea más inesperada.',
+      abrir: () => setVista('garabato'),
+    },
+    {
+      id: 'memoria',
+      titulo: 'De memoria',
+      resumen:
+        'Dibujar de memoria algo que viste mil veces. Spoiler: nadie sabe dónde va la cadena de la bici.',
+      abrir: () => setVista('memoria'),
+    },
+    {
+      id: 'describir',
+      titulo: 'Describí y dibujá',
+      resumen: 'Uno ve una figura y la describe sin nombrarla. El resto dibuja a ciegas.',
+      abrir: () => setVista('describir'),
+    },
+    {
+      id: 'simultaneo',
+      titulo: 'Todos a la vez',
+      resumen:
+        'Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan qué dibujó el otro.',
+      abrir: () => {
+        nuevaRonda()
+        setVista('simultaneo')
+      },
+    },
+    {
+      id: 'emojis',
+      titulo: 'Dibujá los emojis',
+      resumen: 'Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.',
+      abrir: () => {
+        setFaseE('espera')
+        setVista('emojis')
+      },
+    },
+    {
+      id: 'futbol',
+      titulo: '⚽ Fútbol emoji',
+      resumen: 'Tres emojis, un futbolista. El primero que lo grite se lleva el punto.',
+      abrir: () => {
+        otroFutbolista()
+        setVista('futbol')
+      },
+    },
+    ...Object.entries(TEMATICOS).map(([id, t]) => ({
+      id: `tema-${id}`,
+      titulo: t.titulo,
+      resumen: t.resumen,
+      abrir: () => {
+        setTema(id)
+        setVista('tematico')
+      },
+    })),
+  ]
+
+  const activos = JUEGOS.filter((j) => !archivados.includes(j.id))
+  const guardados = JUEGOS.filter((j) => archivados.includes(j.id))
+
+  const cambiarEstado = (id: string, estado: 'activo' | 'archivado') => {
+    const next =
+      estado === 'archivado'
+        ? [...archivados.filter((x) => x !== id), id]
+        : archivados.filter((x) => x !== id)
+    setArchivados(next)
+    saveArchivados(next)
+    setMenuAbierto(null)
+    // Si vaciaste el archivo, no tiene sentido quedarse mirándolo
+    if (next.length === 0) setVista('menu')
+  }
+
+  const tarjeta = (j: (typeof JUEGOS)[number], num: number) => (
+    <div className="jp-card-wrap" key={j.id}>
+      <button type="button" className="jp-card" onClick={j.abrir}>
+        <span className="jp-num">{String(num).padStart(2, '0')}</span>
+        <span className="jp-card-titulo">{j.titulo}</span>
+        <span className="jp-card-txt">{j.resumen}</span>
+      </button>
+      <button
+        type="button"
+        className="jp-puntos"
+        title="Estado del juego"
+        aria-label={`Estado de ${j.titulo}`}
+        aria-expanded={menuAbierto === j.id}
+        onClick={() => setMenuAbierto((m) => (m === j.id ? null : j.id))}
+      >
+        ⋯
+      </button>
+      {menuAbierto === j.id && (
+        <div className="jp-estado-menu">
+          {(['activo', 'archivado'] as const).map((e) => {
+            const esteEstado = archivados.includes(j.id) ? 'archivado' : 'activo'
+            return (
+              <button
+                type="button"
+                key={e}
+                className={esteEstado === e ? 'is-actual' : ''}
+                onClick={() => cambiarEstado(j.id, e)}
+              >
+                <span>{e === 'activo' ? 'Activo' : 'Archivado'}</span>
+                {esteEstado === e && <span className="jp-tilde">✓</span>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+
+  if (vista === 'menu' || vista === 'archivados') {
+    const enArchivo = vista === 'archivados'
+    const lista = enArchivo ? guardados : activos
     return (
       <>
         <header className="crm-header">
-          <h1>Juegos de papel</h1>
-        </header>
-        <p className="conv-nota jp-bajada">
-          Juegos para una mesa con hojas y lápices. La pantalla solo reparte consignas y
-          controla el tiempo.
-        </p>
-
-        <div className="jp-menu">
-          <button
-            type="button"
-            className="jp-card"
-            onClick={() => {
-              setCorriendo(false)
-              setCosa(null)
-              setRondaCosas(0)
-              setRestaCosa(segCosa)
-              setVista('cosas101')
-            }}
-          >
-            <span className="jp-num">01</span>
-            <span className="jp-card-titulo">Cosas 101</span>
-            <span className="jp-card-txt">
-              Para entrar en calor: cosas simples, diez segundos cada una y la pantalla pasa sola a
-              la siguiente.
-            </span>
-          </button>
-          <button
-            type="button"
-            className="jp-card"
-            onClick={() => {
-              setTipoBloque('cosas')
-              setCorriendoBloque(false)
-              setTerminadoBloque(false)
-              setListaBloque([])
-              setVista('bloque')
-            }}
-          >
-            <span className="jp-num">02</span>
-            <span className="jp-card-titulo">Bloque de cosas</span>
-            <span className="jp-card-txt">
-              Tanda cerrada de 12 o 24 cosas, con los segundos que quieras. Al final, la lista
-              completa para comparar.
-            </span>
-          </button>
-          <button
-            type="button"
-            className="jp-card"
-            onClick={() => {
-              setTipoBloque('emojis')
-              setCorriendoBloque(false)
-              setTerminadoBloque(false)
-              setListaBloque([])
-              setVista('bloque')
-            }}
-          >
-            <span className="jp-num">03</span>
-            <span className="jp-card-titulo">Bloque de emojis</span>
-            <span className="jp-card-txt">
-              Lo mismo pero con emojis, sacados de todos los que tiene el teléfono. Aparecen
-              cosas que nadie sabe ni cómo se llaman.
-            </span>
-          </button>
-          <button type="button" className="jp-card" onClick={() => setVista('garabato')}>
-            <span className="jp-num">04</span>
-            <span className="jp-card-titulo">Garabato</span>
-            <span className="jp-card-txt">
-              Todos copian el mismo trazo y lo convierten en un dibujo. Gana la idea más
-              inesperada.
-            </span>
-          </button>
-          <button type="button" className="jp-card" onClick={() => setVista('memoria')}>
-            <span className="jp-num">05</span>
-            <span className="jp-card-titulo">De memoria</span>
-            <span className="jp-card-txt">
-              Dibujar de memoria algo que viste mil veces. Spoiler: nadie sabe dónde va la cadena
-              de la bici.
-            </span>
-          </button>
-          <button type="button" className="jp-card" onClick={() => setVista('describir')}>
-            <span className="jp-num">06</span>
-            <span className="jp-card-titulo">Describí y dibujá</span>
-            <span className="jp-card-txt">
-              Uno ve una figura y la describe sin nombrarla. El resto dibuja a ciegas.
-            </span>
-          </button>
-          <button
-            type="button"
-            className="jp-card"
-            onClick={() => {
-              nuevaRonda()
-              setVista('simultaneo')
-            }}
-          >
-            <span className="jp-num">07</span>
-            <span className="jp-card-titulo">Todos a la vez</span>
-            <span className="jp-card-txt">
-              Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan
-              qué dibujó el otro.
-            </span>
-          </button>
-          <button
-            type="button"
-            className="jp-card"
-            onClick={() => {
-              setFaseE('espera')
-              setVista('emojis')
-            }}
-          >
-            <span className="jp-num">08</span>
-            <span className="jp-card-titulo">Dibujá los emojis</span>
-            <span className="jp-card-txt">
-              Tres emojis aparecen tres segundos y desaparecen. A dibujarlos de memoria, en orden.
-            </span>
-          </button>
-
-          <button
-            type="button"
-            className="jp-card"
-            onClick={() => {
-              otroFutbolista()
-              setVista('futbol')
-            }}
-          >
-            <span className="jp-num">09</span>
-            <span className="jp-card-titulo">⚽ Fútbol emoji</span>
-            <span className="jp-card-txt">
-              Tres emojis, un futbolista. El primero que lo grite se lleva el punto.
-            </span>
-          </button>
-
-          {Object.entries(TEMATICOS).map(([id, t]) => (
+          {enArchivo ? (
             <button
               type="button"
-              className="jp-card"
-              key={id}
+              className="btn-ghost jp-volver"
               onClick={() => {
-                setTema(id)
-                setVista('tematico')
+                setMenuAbierto(null)
+                setVista('menu')
               }}
             >
-              <span className="jp-num">{t.num}</span>
-              <span className="jp-card-titulo">{t.titulo}</span>
-              <span className="jp-card-txt">{t.resumen}</span>
+              ← Todos los juegos
             </button>
-          ))}
+          ) : (
+            <h1>Juegos de papel</h1>
+          )}
+        </header>
+        {enArchivo ? (
+          <h2 className="jp-titulo">Juegos archivados</h2>
+        ) : (
+          <p className="conv-nota jp-bajada">
+            Juegos para una mesa con hojas y lápices. La pantalla solo reparte consignas y
+            controla el tiempo.
+          </p>
+        )}
+
+        {/* Un clic afuera cierra el menú de estado abierto */}
+        <div className="jp-menu" onClick={(e) => e.target === e.currentTarget && setMenuAbierto(null)}>
+          {lista.map((j, i) => tarjeta(j, i + 1))}
+
+          {enArchivo && lista.length === 0 && (
+            <p className="conv-nota">
+              No archivaste ninguno. Usá los tres puntos de cada juego para sacarlo del menú
+              sin perderlo.
+            </p>
+          )}
+
+          {!enArchivo && guardados.length > 0 && (
+            <button
+              type="button"
+              className="jp-card jp-card-archivo"
+              onClick={() => {
+                setMenuAbierto(null)
+                setVista('archivados')
+              }}
+            >
+              <span className="jp-num">🗂️</span>
+              <span className="jp-card-titulo">Juegos archivados</span>
+              <span className="jp-card-txt">
+                {guardados.length} guardado{guardados.length === 1 ? '' : 's'}:{' '}
+                {guardados.map((g) => g.titulo).join(', ')}
+              </span>
+            </button>
+          )}
         </div>
 
-        <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        {!enArchivo && <Marcador jugadores={jugadores} guardar={guardarJugadores} />}
       </>
     )
   }

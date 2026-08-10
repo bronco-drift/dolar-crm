@@ -29,6 +29,88 @@
   border-color: #c7c7cc;
 }
 
+/* La tarjeta es un botón entero, así que los tres puntos van encima
+   como hermano y no adentro: un botón no puede anidar otro botón. */
+.jp-card-wrap {
+  position: relative;
+  display: flex;
+}
+
+.jp-card-wrap .jp-card {
+  flex: 1;
+  /* le deja aire a los tres puntos para que no pisen el texto */
+  padding-right: 46px;
+}
+
+.jp-puntos {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--muted);
+  opacity: 0.6;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.jp-puntos:hover,
+.jp-puntos[aria-expanded='true'] {
+  opacity: 1;
+  background: var(--soft);
+}
+
+.jp-estado-menu {
+  position: absolute;
+  top: 42px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 148px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.jp-estado-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.jp-estado-menu button:hover {
+  background: var(--soft);
+}
+
+.jp-estado-menu button.is-actual {
+  font-weight: 600;
+}
+
+.jp-tilde {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* La carpeta de archivados se distingue de un juego */
+.jp-card-archivo {
+  border-style: dashed;
+}
+
+.jp-card-archivo .jp-num {
+  font-size: 22px;
+}
+
 .jp-card:active {
   transform: scale(0.99);
 }
