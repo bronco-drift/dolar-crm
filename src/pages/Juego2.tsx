@@ -414,10 +414,6 @@ const COSAS_DIFICILES = [
 ]
 
 // Niveles del bloque: se agregan sumando entradas acá.
-const NIVELES_BLOQUE = [
-  { id: 'facil', nombre: 'Fácil', banco: COSAS_101 },
-  { id: 'dificil', nombre: 'Difícil', banco: COSAS_DIFICILES },
-]
 
 // Fútbol emoji: tres pistas y a adivinar de quién se trata.
 const FUTBOL: { e: string; n: string }[] = [
@@ -1386,6 +1382,46 @@ const consignaAlAzar = () =>
     SITUACIONES[Math.floor(Math.random() * SITUACIONES.length)]
   }`
 
+// ── Fuentes del Bloque ──────────────────────────────────────────────
+// El motor del bloque es uno solo; cada fuente solo dice de dónde salen
+// las cosas. Un bloque temático nuevo es una entrada acá (y si el tema
+// ya existe en TEMATICOS, el banco se reutiliza: el contenido vive en
+// un solo lugar).
+interface FuenteBloque {
+  titulo: string
+  unidad: string
+  pregunta: string
+  esEmoji?: boolean
+  niveles?: { id: string; nombre: string }[]
+  pool: (nivel: string) => string[]
+}
+
+const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
+  cosas: {
+    titulo: 'Bloque de cosas',
+    unidad: 'cosas',
+    pregunta: 'Cuántas cosas',
+    niveles: [
+      { id: 'facil', nombre: 'Fácil' },
+      { id: 'dificil', nombre: 'Difícil' },
+    ],
+    pool: (nivel) => (nivel === 'dificil' ? [...COSAS_DIFICILES] : [...COSAS_101]),
+  },
+  emojis: {
+    titulo: 'Bloque de emojis',
+    unidad: 'emojis',
+    pregunta: 'Cuántos emojis',
+    esEmoji: true,
+    pool: () => [...emojisDisponibles()],
+  },
+  argentina: {
+    titulo: '🇦🇷 Bloque argentino',
+    unidad: 'cosas',
+    pregunta: 'Cuántas cosas',
+    pool: () => Object.values(TEMATICOS.argentina.banco).flat(),
+  },
+}
+
 export default function Juego2() {
   const [vista, setVista] = useState<Vista>('menu')
   const [archivados, setArchivados] = useState<string[]>(getArchivados)
@@ -1512,12 +1548,12 @@ export default function Juego2() {
   const [pausaBloque, setPausaBloque] = useState(false)
   const [nivelBloque, setNivelBloque] = useState('facil')
   const [reveladasBloque, setReveladasBloque] = useState<number[]>([])
-  const [tipoBloque, setTipoBloque] = useState<'cosas' | 'emojis'>('cosas')
+  const [fuenteBloque, setFuenteBloque] = useState<string>('cosas')
   const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
+  const bloque = FUENTES_BLOQUE[fuenteBloque] ?? FUENTES_BLOQUE.cosas
 
   const empezarBloque = () => {
-    const nivel = NIVELES_BLOQUE.find((n) => n.id === nivelBloque) ?? NIVELES_BLOQUE[0]
-    const pool = tipoBloque === 'emojis' ? [...emojisDisponibles()] : [...nivel.banco]
+    const pool = bloque.pool(nivelBloque)
     const elegidas: string[] = []
     while (elegidas.length < bloqueTam && pool.length) {
       elegidas.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
@@ -1579,6 +1615,15 @@ export default function Juego2() {
 
   const chip = (activo: boolean) => `filtro ${activo ? 'is-active' : ''}`
 
+  // Todos los bloques comparten motor: abrir uno es solo elegir la fuente.
+  const abrirBloque = (fuente: string) => {
+    setFuenteBloque(fuente)
+    setCorriendoBloque(false)
+    setTerminadoBloque(false)
+    setListaBloque([])
+    setVista('bloque')
+  }
+
   // El menú como datos: cada juego sabe abrirse solo. Sumar uno nuevo es
   // agregar un objeto acá, y el archivado le sale gratis.
   const JUEGOS: { id: string; titulo: string; resumen: string; abrir: () => void }[] = [
@@ -1600,26 +1645,21 @@ export default function Juego2() {
       titulo: 'Bloque de cosas',
       resumen:
         'Tanda cerrada de 12 o 24 cosas, con los segundos que quieras. Al final, la lista completa para comparar.',
-      abrir: () => {
-        setTipoBloque('cosas')
-        setCorriendoBloque(false)
-        setTerminadoBloque(false)
-        setListaBloque([])
-        setVista('bloque')
-      },
+      abrir: () => abrirBloque('cosas'),
     },
     {
       id: 'bloque-emojis',
       titulo: 'Bloque de emojis',
       resumen:
         'Lo mismo pero con emojis, sacados de todos los que tiene el teléfono. Aparecen cosas que nadie sabe ni cómo se llaman.',
-      abrir: () => {
-        setTipoBloque('emojis')
-        setCorriendoBloque(false)
-        setTerminadoBloque(false)
-        setListaBloque([])
-        setVista('bloque')
-      },
+      abrir: () => abrirBloque('emojis'),
+    },
+    {
+      id: 'bloque-argentina',
+      titulo: '🇦🇷 Bloque argentino',
+      resumen:
+        'La tanda cerrada, pero todo argentino: comida, lugares y cultura del banco de Argentina.',
+      abrir: () => abrirBloque('argentina'),
     },
     {
       id: 'garabato',
@@ -1874,34 +1914,34 @@ export default function Juego2() {
       {vista === 'bloque' && (
         <section className="jp-hoja">
           <LuzBorde tipo={luzBloque} />
-          <h2 className="jp-titulo">
-            {tipoBloque === 'emojis' ? 'Bloque de emojis' : 'Bloque de cosas'}
-          </h2>
+          <h2 className="jp-titulo">{bloque.titulo}</h2>
           <p className="jp-sub">
-            Una tanda cerrada: {bloqueTam} {tipoBloque === 'emojis' ? 'emojis' : 'cosas'},{' '}
+            Una tanda cerrada: {bloqueTam} {bloque.unidad},{' '}
             {segBloque} segundo{segBloque === 1 ? '' : 's'} cada uno. Al final aparecen todos
             juntos.
           </p>
 
           {!corriendoBloque && !terminadoBloque && (
             <>
-              {tipoBloque === 'cosas' && <div className="jp-etiqueta">Nivel</div>}
-              <div className="filtros" hidden={tipoBloque === 'emojis'}>
-                {NIVELES_BLOQUE.map((n) => (
-                  <button
-                    type="button"
-                    key={n.id}
-                    className={chip(nivelBloque === n.id)}
-                    onClick={() => setNivelBloque(n.id)}
-                  >
-                    {n.nombre}
-                  </button>
-                ))}
-              </div>
+              {bloque.niveles && (
+                <>
+                  <div className="jp-etiqueta">Nivel</div>
+                  <div className="filtros">
+                    {bloque.niveles.map((n) => (
+                      <button
+                        type="button"
+                        key={n.id}
+                        className={chip(nivelBloque === n.id)}
+                        onClick={() => setNivelBloque(n.id)}
+                      >
+                        {n.nombre}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
 
-              <div className="jp-etiqueta">
-                Cuántos {tipoBloque === 'emojis' ? 'emojis' : 'cosas'}
-              </div>
+              <div className="jp-etiqueta">{bloque.pregunta}</div>
               <div className="filtros">
                 {[12, 24].map((n) => (
                   <button
@@ -1953,9 +1993,7 @@ export default function Juego2() {
                 </div>
                 <div
                   className={`jp-consigna-txt ${
-                    tipoBloque === 'emojis'
-                      ? 'jp-emoji-grande'
-                      : claseLargo(listaBloque[idxBloque])
+                    bloque.esEmoji ? 'jp-emoji-grande' : claseLargo(listaBloque[idxBloque])
                   }`}
                 >
                   {listaBloque[idxBloque]}
@@ -2025,9 +2063,7 @@ export default function Juego2() {
                       >
                         <span className="jp-bloque-num">{i + 1}</span>
                         <span
-                          className={`jp-bloque-txt ${
-                            tipoBloque === 'emojis' ? 'jp-bloque-emoji' : ''
-                          }`}
+                          className={`jp-bloque-txt ${bloque.esEmoji ? 'jp-bloque-emoji' : ''}`}
                         >
                           {c}
                         </span>
