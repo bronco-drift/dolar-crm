@@ -46,21 +46,43 @@
         border-bottom: 1px solid #999;
       }
 
-      .controles {
+      .controles,
+      .custom {
         display: flex;
+        align-items: center;
         gap: 8px;
-        margin: 14px 0 18px;
+        flex-wrap: wrap;
+        margin: 14px 0 0;
       }
 
-      .controles button {
+      .custom {
+        margin: 10px 0 0;
+        font-size: 13px;
+        color: #555;
+      }
+
+      .controles button,
+      .custom button {
         height: 36px;
-        padding: 0 16px;
+        padding: 0 14px;
         border: 1px solid #d7d7dc;
         border-radius: 10px;
         background: #fff;
         font-size: 13.5px;
         font-weight: 500;
         cursor: pointer;
+      }
+
+      .custom button {
+        width: 36px;
+        padding: 0;
+        font-size: 16px;
+      }
+
+      .custom b {
+        font-variant-numeric: tabular-nums;
+        min-width: 20px;
+        text-align: center;
       }
 
       .controles button.is-active,
@@ -76,39 +98,24 @@
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        margin-top: 16px;
       }
 
-      .grid.g24 {
-        grid-template-columns: repeat(4, 1fr);
-      }
-
-      .grid.g96 {
-        grid-template-columns: repeat(8, 1fr);
-        gap: 0;
-      }
-
-      .grid.g96 .celda {
-        border-radius: 0;
-        /* bordes compartidos, como hoja cuadriculada de verdad */
-        margin: 0 -1px -1px 0;
-      }
-
+      /* Cuadrícula de verdad: bordes compartidos entre casillas */
       .celda {
         position: relative;
         border: 1px solid #c7c7cc;
-        border-radius: 8px;
+        margin: 0 -1px -1px 0;
         aspect-ratio: 1 / 1.05;
       }
 
       .celda span {
         position: absolute;
-        top: 4px;
-        left: 7px;
-        font-size: 10px;
+        top: 3px;
+        left: 5px;
+        font-size: 9px;
         font-weight: 700;
-        color: #b5b5ba;
+        color: #c2c2c7;
         font-variant-numeric: tabular-nums;
       }
 
@@ -124,27 +131,16 @@
         }
 
         .controles,
+        .custom,
         .nota {
           display: none;
         }
 
+        /* La cuadrícula completa entra en una carilla A4 */
         .celda {
-          border-radius: 0;
-          break-inside: avoid;
-        }
-
-        /* 12 celdas grandes o 24 más chicas: siempre en una carilla */
-        .grid .celda {
           aspect-ratio: auto;
-          height: 62mm;
-        }
-
-        .grid.g24 .celda {
-          height: 41mm;
-        }
-
-        .grid.g96 .celda {
-          height: 20.5mm;
+          height: calc(246mm / var(--filas, 12));
+          break-inside: avoid;
         }
       }
     </style>
@@ -156,35 +152,85 @@
     </header>
 
     <div class="controles">
-      <button type="button" id="b96" class="is-active" onclick="armar(96)">8 × 12</button>
-      <button type="button" id="b12" onclick="armar(12)">12 grandes</button>
-      <button type="button" id="b24" onclick="armar(24)">24</button>
+      <button type="button" id="b812" onclick="preset(8, 12, this)">8 × 12</button>
+      <button type="button" id="b612" onclick="preset(6, 12, this)">6 × 12</button>
+      <button type="button" id="bcustom" onclick="personalizada(this)">Personalizada</button>
       <button type="button" class="imprimir" onclick="window.print()">Imprimir</button>
+    </div>
+
+    <div class="custom" id="custom" hidden>
+      columnas
+      <button type="button" onclick="ajustar('cols', -1)">−</button>
+      <b id="vcols">6</b>
+      <button type="button" onclick="ajustar('cols', 1)">+</button>
+      · filas
+      <button type="button" onclick="ajustar('filas', -1)">−</button>
+      <b id="vfilas">6</b>
+      <button type="button" onclick="ajustar('filas', 1)">+</button>
     </div>
 
     <div class="grid" id="grid"></div>
 
     <p class="nota">
       Una casilla por dibujo, en orden: la número 1 es el primer dibujo. La 8 × 12 rinde
-      para toda la noche; 12 y 24 dan casilleros grandes para una sola tanda.
+      para toda la noche; en Personalizada elegís columnas y filas (desde 6 × 6).
     </p>
 
     <script>
-      function armar(n) {
+      var cols = 8
+      var filas = 12
+
+      function armar() {
         var grid = document.getElementById('grid')
-        grid.className = 'grid' + (n === 24 ? ' g24' : n === 96 ? ' g96' : '')
+        grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)'
+        grid.style.setProperty('--filas', filas)
         grid.innerHTML = ''
-        for (var i = 1; i <= n; i++) {
+        for (var i = 1; i <= cols * filas; i++) {
           var c = document.createElement('div')
           c.className = 'celda'
           c.innerHTML = '<span>' + i + '</span>'
           grid.appendChild(c)
         }
-        document.getElementById('b96').className = n === 96 ? 'is-active' : ''
-        document.getElementById('b12').className = n === 12 ? 'is-active' : ''
-        document.getElementById('b24').className = n === 24 ? 'is-active' : ''
       }
-      armar(96)
+
+      function activo(boton) {
+        var ids = ['b812', 'b612', 'bcustom']
+        for (var i = 0; i < ids.length; i++) {
+          document.getElementById(ids[i]).className = ''
+        }
+        boton.className = 'is-active'
+      }
+
+      function preset(c, f, boton) {
+        cols = c
+        filas = f
+        document.getElementById('custom').hidden = true
+        activo(boton)
+        armar()
+      }
+
+      function personalizada(boton) {
+        cols = 6
+        filas = 6
+        document.getElementById('vcols').textContent = cols
+        document.getElementById('vfilas').textContent = filas
+        document.getElementById('custom').hidden = false
+        activo(boton)
+        armar()
+      }
+
+      function ajustar(cual, dir) {
+        if (cual === 'cols') {
+          cols = Math.max(6, Math.min(12, cols + dir))
+          document.getElementById('vcols').textContent = cols
+        } else {
+          filas = Math.max(6, Math.min(18, filas + dir))
+          document.getElementById('vfilas').textContent = filas
+        }
+        armar()
+      }
+
+      preset(8, 12, document.getElementById('b812'))
     </script>
   </body>
 </html>
