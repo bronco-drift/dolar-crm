@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import {
   type Jugador,
   getArchivados,
@@ -776,6 +776,110 @@ function tonos(tiempos: number[], hz: number) {
   }
 }
 
+// ── Previa compartida ───────────────────────────────────────────────
+// Pantalla previa de cada juego: los ajustes (tiempo, y acá entran los
+// niveles fácil/difícil el día que se sumen a los demás juegos) y el
+// Preparados / Listos antes de largar, para que nada empiece de golpe.
+function Previa({
+  ajustes,
+  tiempo,
+  setTiempo,
+  minTiempo = 5,
+  maxTiempo = 30 * 60,
+  etiquetaTiempo = 'Tiempo para dibujar',
+  sinCuenta,
+  onEmpezar,
+}: {
+  ajustes?: ReactNode
+  tiempo?: number
+  setTiempo?: (n: number) => void
+  minTiempo?: number
+  maxTiempo?: number
+  etiquetaTiempo?: string
+  // Para juegos que ya tienen su propia cuenta (Dibujá los emojis)
+  sinCuenta?: boolean
+  onEmpezar: () => void
+}) {
+  const [cuenta, setCuenta] = useState<string | null>(null)
+  const seq = useRef(0)
+  // Si la previa se desmonta a mitad de cuenta, no larga nada
+  useEffect(
+    () => () => {
+      seq.current++
+    },
+    [],
+  )
+
+  const fmt = (s: number) =>
+    s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`
+  // Mismos saltos que el cronómetro: de a 5 abajo del minuto, de a 30 arriba
+  const salto = (v: number) => (v >= 60 ? 30 : 5)
+
+  const largar = () => {
+    despertarVoz()
+    if (sinCuenta) {
+      onEmpezar()
+      return
+    }
+    const id = ++seq.current
+    setCuenta('Preparados')
+    tic()
+    setTimeout(() => {
+      if (seq.current !== id) return
+      setCuenta('Listos')
+      tic()
+      setTimeout(() => {
+        if (seq.current !== id) return
+        onEmpezar()
+      }, 900)
+    }, 900)
+  }
+
+  if (cuenta)
+    return (
+      <div className="jp-consigna jp-rafaga">
+        <div className="jp-consigna-txt">{cuenta}</div>
+      </div>
+    )
+
+  return (
+    <>
+      {ajustes}
+      {tiempo != null && setTiempo && (
+        <>
+          <div className="jp-etiqueta">{etiquetaTiempo}</div>
+          <div className="jp-reloj">
+            <div className="jp-reloj-fila">
+              <button
+                type="button"
+                className="jp-mini"
+                aria-label="Menos tiempo"
+                disabled={tiempo <= minTiempo}
+                onClick={() => setTiempo(Math.max(minTiempo, tiempo - salto(tiempo - 1)))}
+              >
+                −
+              </button>
+              <span className="jp-digitos">{fmt(tiempo)}</span>
+              <button
+                type="button"
+                className="jp-mini"
+                aria-label="Más tiempo"
+                disabled={tiempo >= maxTiempo}
+                onClick={() => setTiempo(Math.min(maxTiempo, tiempo + salto(tiempo)))}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      <button type="button" className="btn btn-primary jp-empezar" onClick={largar}>
+        Empezar
+      </button>
+    </>
+  )
+}
+
 // ── Marcador de jugadores ──
 function Marcador({
   jugadores,
@@ -1019,6 +1123,7 @@ function JuegoConsignas({
   sub,
   banco,
   nombres,
+  segundos = 30,
   jugadores,
   guardar,
 }: {
@@ -1026,6 +1131,7 @@ function JuegoConsignas({
   sub: string
   banco: Record<string, string[]>
   nombres: Record<string, string>
+  segundos?: number
   jugadores: Jugador[]
   guardar: (js: Jugador[]) => void
 }) {
@@ -1034,6 +1140,8 @@ function JuegoConsignas({
   const [consigna, setConsigna] = useState<{ cat: string; txt: string } | null>(null)
   const usadas = useRef<string[]>([])
   const [disparo, setDisparo] = useState(0)
+  const [jugando, setJugando] = useState(false)
+  const [tiempo, setTiempo] = useState(segundos)
 
   const sacar = () => {
     const pool =
@@ -1057,40 +1165,64 @@ function JuegoConsignas({
       <h2 className="jp-titulo">{titulo}</h2>
       <p className="jp-sub">{sub}</p>
 
-      <div className="jp-etiqueta">De dónde sale la consigna</div>
-      <div className="filtros">
-        {['todas', ...Object.keys(banco)].map((c) => (
-          <button
-            type="button"
-            key={c}
-            className={`filtro ${cat === c ? 'is-active' : ''}`}
-            onClick={() => {
-              setCat(c)
-              usadas.current = []
-            }}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
+      {!jugando ? (
+        <Previa
+          tiempo={tiempo}
+          setTiempo={setTiempo}
+          ajustes={
+            <>
+              <div className="jp-etiqueta">De dónde sale la consigna</div>
+              <div className="filtros">
+                {['todas', ...Object.keys(banco)].map((c) => (
+                  <button
+                    type="button"
+                    key={c}
+                    className={`filtro ${cat === c ? 'is-active' : ''}`}
+                    onClick={() => {
+                      setCat(c)
+                      usadas.current = []
+                    }}
+                  >
+                    {c === 'todas' ? 'todas' : (nombres[c] ?? c)}
+                  </button>
+                ))}
+              </div>
+            </>
+          }
+          onEmpezar={() => {
+            setJugando(true)
+            sacar()
+          }}
+        />
+      ) : (
+        <>
+          <div className="jp-consigna">
+            <div className="jp-consigna-cat">
+              {consigna ? (nombres[consigna.cat] ?? consigna.cat) : 'esperando'}
+            </div>
+            <div className={`jp-consigna-txt ${claseLargo(consigna?.txt)}`}>
+              {consigna?.txt ?? 'Sacá una consigna'}
+            </div>
+          </div>
+          <div className="jp-codigo">ronda {consigna ? ronda : '—'}</div>
 
-      <div className="jp-consigna">
-        <div className="jp-consigna-cat">
-          {consigna ? (nombres[consigna.cat] ?? consigna.cat) : 'esperando'}
-        </div>
-        <div className={`jp-consigna-txt ${claseLargo(consigna?.txt)}`}>
-          {consigna?.txt ?? 'Sacá una consigna'}
-        </div>
-      </div>
-      <div className="jp-codigo">ronda {consigna ? ronda : '—'}</div>
+          <div className="jp-acciones">
+            <button type="button" className="btn btn-primary" onClick={sacar}>
+              Otra consigna
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setJugando(false)}
+            >
+              Cambiar ajustes
+            </button>
+          </div>
 
-      <div className="jp-acciones">
-        <button type="button" className="btn btn-primary" onClick={sacar}>
-          {consigna ? 'Otra consigna' : 'Sacar consigna'}
-        </button>
-      </div>
+          <Cronometro key={tiempo} total={tiempo} disparo={disparo} />
+        </>
+      )}
 
-      <Cronometro disparo={disparo} />
       <Marcador jugadores={jugadores} guardar={guardar} />
     </section>
   )
@@ -1852,6 +1984,10 @@ export default function Juego2() {
   const [archivados, setArchivados] = useState<string[]>(getArchivados)
   const [menuAbierto, setMenuAbierto] = useState<string | null>(null)
   const [jugadores, setJugadores] = useState<Jugador[]>(getJugadores)
+  // Previa compartida: todo juego arranca en ajustes, y el tiempo elegido
+  // queda para el próximo (es el ritmo de la mesa, no del juego).
+  const [jugando, setJugando] = useState(false)
+  const [tiempoJuego, setTiempoJuego] = useState(30)
   const guardarJugadores = (js: Jugador[]) => {
     setJugadores(js)
     saveJugadores(js)
@@ -1864,6 +2000,25 @@ export default function Juego2() {
   const [consignas, setConsignas] = useState<string[]>([])
   const [revelado, setRevelado] = useState<number[]>([])
   const [dispS, setDispS] = useState(0)
+  // Veredicto por jugador en la revelación: ✓ suma el punto solo
+  const [marcasSim, setMarcasSim] = useState<Record<number, 'ok' | 'mal'>>({})
+
+  const cicloSim = (i: number) => {
+    const actual = marcasSim[i]
+    const siguiente = actual === 'ok' ? 'mal' : actual === 'mal' ? undefined : 'ok'
+    const next = { ...marcasSim }
+    if (siguiente) next[i] = siguiente
+    else delete next[i]
+    setMarcasSim(next)
+    const delta = (siguiente === 'ok' ? 1 : 0) - (actual === 'ok' ? 1 : 0)
+    if (delta !== 0 && jugadores[i]) {
+      guardarJugadores(
+        jugadores.map((j, ix) =>
+          ix === i ? { ...j, puntos: Math.max(0, j.puntos + delta) } : j,
+        ),
+      )
+    }
+  }
 
   // Modo emojis: cuenta regresiva → 3 segundos a la vista → a dibujar
   const [faseE, setFaseE] = useState<'espera' | 'cuenta' | 'mostrando' | 'dibujando'>('espera')
@@ -1914,6 +2069,7 @@ export default function Juego2() {
     setTurno(0)
     setVerConsigna(false)
     setRevelado([])
+    setMarcasSim({})
   }
 
   // Garabato
@@ -2185,9 +2341,9 @@ export default function Juego2() {
     },
     {
       id: 'simultaneo',
-      titulo: 'Todos a la vez',
+      titulo: 'Cada uno lo suyo',
       resumen:
-        'Cada uno recibe su consigna en secreto, dibujan al mismo tiempo y después adivinan qué dibujó el otro.',
+        'Cada uno recibe su consigna en secreto y dibuja lo suyo. Al final se revela quién lo hizo bien y los puntos se suman solos.',
       abrir: () => {
         nuevaRonda()
         setVista('simultaneo')
@@ -2239,7 +2395,14 @@ export default function Juego2() {
 
   const tarjeta = (j: (typeof JUEGOS)[number], num: number) => (
     <div className="jp-card-wrap" key={j.id}>
-      <button type="button" className="jp-card" onClick={j.abrir}>
+      <button
+        type="button"
+        className="jp-card"
+        onClick={() => {
+          setJugando(false) // todo juego entra por su previa
+          j.abrir()
+        }}
+      >
         <span className="jp-num">{String(num).padStart(2, '0')}</span>
         <span className="jp-card-titulo">{j.titulo}</span>
         <span className="jp-card-txt">{j.resumen}</span>
@@ -2358,51 +2521,76 @@ export default function Juego2() {
           <h2 className="jp-titulo">Garabato</h2>
           <p className="jp-sub">Mismo trazo para todos: cada uno lo convierte en otra cosa.</p>
 
-          <div className="jp-etiqueta">Dificultad</div>
-          <div className="filtros">
-            {[1, 2, 3].map((d) => (
-              <button
-                type="button"
-                key={d}
-                className={chip(dif === d)}
-                onClick={() => {
-                  setDif(d)
-                  setSemillaG(nuevaSemilla())
-                }}
-              >
-                {['suave', 'normal', 'caos'][d - 1]}
-              </button>
-            ))}
-          </div>
-
-          <div className="jp-lienzo">
-            <svg viewBox={`0 0 ${garabato.W} ${garabato.H}`} role="img" aria-label="Garabato">
-              <path
-                d={garabato.d}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <div className="jp-codigo">garabato n.º {semillaG}</div>
-
-          <div className="jp-acciones">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
+          {!jugando ? (
+            <Previa
+              tiempo={tiempoJuego}
+              setTiempo={setTiempoJuego}
+              ajustes={
+                <>
+                  <div className="jp-etiqueta">Dificultad</div>
+                  <div className="filtros">
+                    {[1, 2, 3].map((d) => (
+                      <button
+                        type="button"
+                        key={d}
+                        className={chip(dif === d)}
+                        onClick={() => setDif(d)}
+                      >
+                        {['suave', 'normal', 'caos'][d - 1]}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              }
+              onEmpezar={() => {
                 setSemillaG(nuevaSemilla())
                 setDispG((d) => d + 1)
+                setJugando(true)
               }}
-            >
-              Otro garabato
-            </button>
-          </div>
+            />
+          ) : (
+            <>
+              <div className="jp-lienzo">
+                <svg
+                  viewBox={`0 0 ${garabato.W} ${garabato.H}`}
+                  role="img"
+                  aria-label="Garabato"
+                >
+                  <path
+                    d={garabato.d}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <div className="jp-codigo">garabato n.º {semillaG}</div>
 
-          <Cronometro disparo={dispG} />
+              <div className="jp-acciones">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setSemillaG(nuevaSemilla())
+                    setDispG((d) => d + 1)
+                  }}
+                >
+                  Otro garabato
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setJugando(false)}
+                >
+                  Cambiar ajustes
+                </button>
+              </div>
+
+              <Cronometro key={tiempoJuego} total={tiempoJuego} disparo={dispG} />
+            </>
+          )}
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -2704,7 +2892,35 @@ export default function Juego2() {
         </section>
       )}
 
-      {vista === 'cosas101' && (
+      {vista === 'cosas101' && !jugando && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">Cosas 101</h2>
+          <p className="jp-sub">
+            Cosas fáciles, una atrás de otra. Cuando se acaba el tiempo cambia sola: no hay
+            tiempo para pensarla.
+          </p>
+          <Previa
+            tiempo={segCosa}
+            setTiempo={(n) => {
+              setSegCosa(n)
+              setRestaCosa(n)
+            }}
+            minTiempo={5}
+            maxTiempo={120}
+            etiquetaTiempo="Segundos por cosa"
+            onEmpezar={() => {
+              siguienteCosa()
+              setCorriendo(true)
+              setLuzCosas('verde')
+              setTimeout(() => setLuzCosas(null), 1700)
+              setJugando(true)
+            }}
+          />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
+      )}
+
+      {vista === 'cosas101' && jugando && (
         <section className="jp-hoja">
           <LuzBorde tipo={luzCosas} />
           <h2 className="jp-titulo">Cosas 101</h2>
@@ -2797,7 +3013,26 @@ export default function Juego2() {
         </section>
       )}
 
-      {vista === 'futbol' && (
+      {vista === 'futbol' && !jugando && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">⚽ Fútbol emoji</h2>
+          <p className="jp-sub">
+            Tres pistas por jugador: bandera, apodo, manías. El primero que acierta, punto.
+          </p>
+          <Previa
+            tiempo={tiempoJuego}
+            setTiempo={setTiempoJuego}
+            etiquetaTiempo="Tiempo para adivinar"
+            onEmpezar={() => {
+              otroFutbolista()
+              setJugando(true)
+            }}
+          />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
+      )}
+
+      {vista === 'futbol' && jugando && (
         <section className="jp-hoja">
           <h2 className="jp-titulo">⚽ Fútbol emoji</h2>
           <p className="jp-sub">
@@ -2844,7 +3079,7 @@ export default function Juego2() {
             </button>
           </div>
 
-          <Cronometro disparo={dispF} />
+          <Cronometro key={tiempoJuego} total={tiempoJuego} disparo={dispFut} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
@@ -2856,33 +3091,50 @@ export default function Juego2() {
           sub={TEMATICOS[tema].sub}
           banco={TEMATICOS[tema].banco}
           nombres={TEMATICOS[tema].nombres}
+          segundos={TEMATICOS[tema].segundos}
           jugadores={jugadores}
           guardar={guardarJugadores}
         />
       )}
 
-      {vista === 'describir' && (
+      {vista === 'describir' && !jugando && (
         <section className="jp-hoja">
           <h2 className="jp-titulo">Describí y dibujá</h2>
           <p className="jp-sub">Solo formas, tamaños y posiciones. Prohibido decir a qué se parece.</p>
+          <Previa
+            tiempo={tiempoJuego}
+            setTiempo={setTiempoJuego}
+            ajustes={
+              <>
+                <div className="jp-etiqueta">Cuántas formas</div>
+                <div className="filtros">
+                  {[3, 5, 8].map((n) => (
+                    <button
+                      type="button"
+                      key={n}
+                      className={chip(formas === n)}
+                      onClick={() => setFormas(n)}
+                    >
+                      {n} · {['suave', 'normal', 'caos'][[3, 5, 8].indexOf(n)]}
+                    </button>
+                  ))}
+                </div>
+              </>
+            }
+            onEmpezar={() => {
+              setSemillaF(nuevaSemilla())
+              setTapada(true)
+              setJugando(true)
+            }}
+          />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
+      )}
 
-          <div className="jp-etiqueta">Cuántas formas</div>
-          <div className="filtros">
-            {[3, 5, 8].map((n) => (
-              <button
-                type="button"
-                key={n}
-                className={chip(formas === n)}
-                onClick={() => {
-                  setFormas(n)
-                  setSemillaF(nuevaSemilla())
-                  setTapada(true)
-                }}
-              >
-                {n} · {['suave', 'normal', 'caos'][[3, 5, 8].indexOf(n)]}
-              </button>
-            ))}
-          </div>
+      {vista === 'describir' && jugando && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">Describí y dibujá</h2>
+          <p className="jp-sub">Solo formas, tamaños y posiciones. Prohibido decir a qué se parece.</p>
 
           <div className="jp-lienzo">
             <div dangerouslySetInnerHTML={{ __html: figuraSvg(semillaF, formas) }} />
@@ -2923,16 +3175,42 @@ export default function Juego2() {
                 Tapar
               </button>
             )}
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setJugando(false)}
+            >
+              Cambiar ajustes
+            </button>
           </div>
 
-          <Cronometro disparo={dispFut} />
+          <Cronometro key={tiempoJuego} total={tiempoJuego} disparo={dispF} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}
 
-      {vista === 'simultaneo' && (
+      {vista === 'simultaneo' && !jugando && (
         <section className="jp-hoja">
-          <h2 className="jp-titulo">Todos a la vez</h2>
+          <h2 className="jp-titulo">Cada uno lo suyo</h2>
+          <p className="jp-sub">
+            Cada uno dibuja su consigna secreta. Al final, otro marca ✓ o ✗ y los puntos se
+            suman solos.
+          </p>
+          <Previa
+            tiempo={tiempoJuego}
+            setTiempo={setTiempoJuego}
+            onEmpezar={() => {
+              nuevaRonda()
+              setJugando(true)
+            }}
+          />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
+      )}
+
+      {vista === 'simultaneo' && jugando && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">Cada uno lo suyo</h2>
 
           {fase === 'reparto' && (
             <>
@@ -2989,7 +3267,7 @@ export default function Juego2() {
               <p className="jp-sub">
                 Todos dibujan al mismo tiempo, cada uno lo suyo. Sin espiar, sin hablar.
               </p>
-              <Cronometro disparo={dispS} />
+              <Cronometro key={tiempoJuego} total={tiempoJuego} disparo={dispS} />
               <div className="jp-acciones">
                 <button
                   type="button"
@@ -3005,26 +3283,46 @@ export default function Juego2() {
           {fase === 'adivinar' && (
             <>
               <p className="jp-sub">
-                Uno muestra su dibujo, el resto tira. Después revelás y sumás punto al que acertó
-                (y al dibujante si alguien le acertó).
+                Uno muestra su dibujo, el resto tira qué es. Revelá la consigna y tocá la
+                fila: ✓ si lo dibujó bien, ✗ si no — el punto se suma solo.
               </p>
               <ul className="jp-revelar">
-                {jugadores.map((j, i) => (
-                  <li key={i} className="jp-revelar-fila">
-                    <span className="jp-revelar-nombre">{j.nombre}</span>
-                    {revelado.includes(i) ? (
-                      <span className="jp-revelar-txt">{consignas[i]}</span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn btn-ghost"
-                        onClick={() => setRevelado([...revelado, i])}
-                      >
-                        Revelar
-                      </button>
-                    )}
-                  </li>
-                ))}
+                {jugadores.map((j, i) => {
+                  const marca = marcasSim[i]
+                  return (
+                    <li key={i}>
+                      {revelado.includes(i) ? (
+                        // Revelada, la fila entera cicla ✓ → ✗ → neutra
+                        <button
+                          type="button"
+                          className={`jp-revelar-fila jp-revelar-toque ${
+                            marca === 'ok' ? 'is-ok' : marca === 'mal' ? 'is-mal' : ''
+                          }`}
+                          onClick={() => cicloSim(i)}
+                        >
+                          <span className="jp-revelar-nombre">{j.nombre}</span>
+                          <span className="jp-revelar-txt">{consignas[i]}</span>
+                          {marca && (
+                            <span className="jp-bloque-marca">
+                              {marca === 'ok' ? '✓' : '✗'}
+                            </span>
+                          )}
+                        </button>
+                      ) : (
+                        <div className="jp-revelar-fila">
+                          <span className="jp-revelar-nombre">{j.nombre}</span>
+                          <button
+                            type="button"
+                            className="btn btn-ghost"
+                            onClick={() => setRevelado([...revelado, i])}
+                          >
+                            Revelar
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
               <div className="jp-acciones">
                 <button type="button" className="btn btn-primary" onClick={nuevaRonda}>
@@ -3038,7 +3336,55 @@ export default function Juego2() {
         </section>
       )}
 
-      {vista === 'emojis' && (
+      {vista === 'emojis' && !jugando && (
+        <section className="jp-hoja">
+          <h2 className="jp-titulo">Dibujá los emojis</h2>
+          <p className="jp-sub">
+            {cantEmojis} emoji{cantEmojis === 1 ? '' : 's'}, tres segundos a la vista.
+            Después se {cantEmojis === 1 ? 'dibuja' : 'dibujan'} de memoria.
+          </p>
+          <Previa
+            sinCuenta
+            tiempo={tiempoJuego}
+            setTiempo={setTiempoJuego}
+            ajustes={
+              <>
+                <div className="jp-etiqueta">Cuántos a la vez</div>
+                <div className="jp-reloj">
+                  <div className="jp-reloj-fila">
+                    <button
+                      type="button"
+                      className="jp-mini"
+                      aria-label="Menos emojis"
+                      disabled={cantEmojis <= 1}
+                      onClick={() => setCantEmojis((n) => Math.max(1, n - 1))}
+                    >
+                      −
+                    </button>
+                    <span className="jp-digitos jp-digitos-chico">{cantEmojis}</span>
+                    <button
+                      type="button"
+                      className="jp-mini"
+                      aria-label="Más emojis"
+                      disabled={cantEmojis >= 10}
+                      onClick={() => setCantEmojis((n) => Math.min(10, n + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </>
+            }
+            onEmpezar={() => {
+              setJugando(true)
+              rondaEmojis()
+            }}
+          />
+          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
+        </section>
+      )}
+
+      {vista === 'emojis' && jugando && (
         <section className="jp-hoja">
           <h2 className="jp-titulo">Dibujá los emojis</h2>
           <p className="jp-sub">
@@ -3119,7 +3465,7 @@ export default function Juego2() {
             )}
           </div>
 
-          <Cronometro disparo={dispE} />
+          <Cronometro key={tiempoJuego} total={tiempoJuego} disparo={dispE} />
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
       )}

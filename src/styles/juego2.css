@@ -520,6 +520,12 @@
   background: var(--line);
 }
 
+/* Empezar de la previa compartida: call to action a lo ancho */
+.jp-empezar {
+  width: 100%;
+  margin-top: 2px;
+}
+
 /* Previa del bloque: los demás jugadores, chiquitos, por si cambia el turno */
 .jp-previa-otros {
   display: flex;
@@ -762,8 +768,45 @@
   padding: 10px 14px;
 }
 
-.jp-revelar-fila + .jp-revelar-fila {
+.jp-revelar li + li {
   border-top: 1px solid var(--line);
+}
+
+/* Fila revelada: se toca entera y cicla ✓ verde → ✗ roja → neutra */
+.jp-revelar-toque {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  border-radius: 0;
+  transition: background 0.15s;
+}
+
+.jp-revelar li:first-child .jp-revelar-toque {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.jp-revelar li:last-child .jp-revelar-toque {
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.jp-revelar-toque.is-ok {
+  background: #a8e6cf;
+}
+
+.jp-revelar-toque.is-ok .jp-revelar-nombre,
+.jp-revelar-toque.is-ok .jp-revelar-txt,
+.jp-revelar-toque.is-ok .jp-bloque-marca {
+  color: #1b4332;
+}
+
+.jp-revelar-toque.is-mal {
+  background: #f5c0b8;
+}
+
+.jp-revelar-toque.is-mal .jp-revelar-nombre,
+.jp-revelar-toque.is-mal .jp-revelar-txt,
+.jp-revelar-toque.is-mal .jp-bloque-marca {
+  color: #7f1d1d;
 }
 
 .jp-revelar-nombre {
