@@ -84,6 +84,17 @@
         grid-template-columns: repeat(4, 1fr);
       }
 
+      .grid.g96 {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 0;
+      }
+
+      .grid.g96 .celda {
+        border-radius: 0;
+        /* bordes compartidos, como hoja cuadriculada de verdad */
+        margin: 0 -1px -1px 0;
+      }
+
       .celda {
         position: relative;
         border: 1px solid #c7c7cc;
@@ -131,6 +142,10 @@
         .grid.g24 .celda {
           height: 41mm;
         }
+
+        .grid.g96 .celda {
+          height: 20.5mm;
+        }
       }
     </style>
   </head>
@@ -141,22 +156,23 @@
     </header>
 
     <div class="controles">
-      <button type="button" id="b12" class="is-active" onclick="armar(12)">12 casillas</button>
-      <button type="button" id="b24" onclick="armar(24)">24 casillas</button>
+      <button type="button" id="b96" class="is-active" onclick="armar(96)">8 × 12</button>
+      <button type="button" id="b12" onclick="armar(12)">12 grandes</button>
+      <button type="button" id="b24" onclick="armar(24)">24</button>
       <button type="button" class="imprimir" onclick="window.print()">Imprimir</button>
     </div>
 
     <div class="grid" id="grid"></div>
 
     <p class="nota">
-      Una casilla por dibujo, en orden: la número 1 es el primer dibujo de la tanda. Con 12
-      quedan casilleros bien grandes; con 24 entra la tanda larga en una sola carilla.
+      Una casilla por dibujo, en orden: la número 1 es el primer dibujo. La 8 × 12 rinde
+      para toda la noche; 12 y 24 dan casilleros grandes para una sola tanda.
     </p>
 
     <script>
       function armar(n) {
         var grid = document.getElementById('grid')
-        grid.className = 'grid' + (n === 24 ? ' g24' : '')
+        grid.className = 'grid' + (n === 24 ? ' g24' : n === 96 ? ' g96' : '')
         grid.innerHTML = ''
         for (var i = 1; i <= n; i++) {
           var c = document.createElement('div')
@@ -164,10 +180,11 @@
           c.innerHTML = '<span>' + i + '</span>'
           grid.appendChild(c)
         }
+        document.getElementById('b96').className = n === 96 ? 'is-active' : ''
         document.getElementById('b12').className = n === 12 ? 'is-active' : ''
         document.getElementById('b24').className = n === 24 ? 'is-active' : ''
       }
-      armar(12)
+      armar(96)
     </script>
   </body>
 </html>
