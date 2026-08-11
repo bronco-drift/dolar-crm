@@ -580,6 +580,37 @@
   opacity: 0.75;
 }
 
+/* Call to action del pase de turno: solo en su línea, con un rebote
+   suave cada tanto para recordar que hay que tocarlo */
+.jp-siguiente {
+  width: 100%;
+  margin-top: 2px;
+  animation: jp-rebote 3s ease-in-out 1.2s infinite;
+}
+
+@keyframes jp-rebote {
+  0%,
+  14%,
+  100% {
+    transform: none;
+  }
+  4% {
+    transform: translateY(-5px);
+  }
+  8% {
+    transform: none;
+  }
+  11% {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jp-siguiente {
+    animation: none;
+  }
+}
+
 /* Fútbol emoji */
 .jp-futbol-emojis span {
   font-size: clamp(38px, 12vw, 56px);

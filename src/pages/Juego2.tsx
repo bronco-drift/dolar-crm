@@ -2504,20 +2504,6 @@ export default function Juego2() {
                 )}
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    // El turno pasa solo al siguiente y se confirma en la previa
-                    setTurnoBloque((idxTurno + 1) % Math.max(1, jugadores.length))
-                    setTerminadoBloque(false)
-                    setListaBloque([])
-                    setPreviaBloque(true)
-                  }}
-                >
-                  Turno de {jugadores[(idxTurno + 1) % Math.max(1, jugadores.length)]?.nombre ||
-                    'siguiente'}
-                </button>
-                <button
-                  type="button"
                   className="btn btn-ghost"
                   onClick={() => {
                     setTerminadoBloque(false)
@@ -2527,6 +2513,19 @@ export default function Juego2() {
                   Cambiar ajustes
                 </button>
               </div>
+              <button
+                type="button"
+                className="btn btn-primary jp-siguiente"
+                onClick={() => {
+                  // El turno pasa solo al siguiente y se confirma en la previa
+                  setTurnoBloque((idxTurno + 1) % Math.max(1, jugadores.length))
+                  setTerminadoBloque(false)
+                  setListaBloque([])
+                  setPreviaBloque(true)
+                }}
+              >
+                Siguiente
+              </button>
             </>
           )}
 
