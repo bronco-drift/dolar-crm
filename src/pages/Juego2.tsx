@@ -983,8 +983,10 @@ function bancosInventario() {
   meter('🍳 Cocina', 'Difícil', 'general', BLOQUE_COCINA_DIFICIL)
   // Cada uno lo suyo arma la consigna combinando sujeto + situación,
   // así que sus dos piezas entran como categorías propias, sin nivel.
-  meter('Cada uno lo suyo', '—', 'sujetos', SUJETOS)
-  meter('Cada uno lo suyo', '—', 'situaciones', SITUACIONES)
+  meter('Cada uno lo suyo', 'Fácil', 'sujetos', SUJETOS_FACIL)
+  meter('Cada uno lo suyo', 'Difícil', 'sujetos', SUJETOS_DIFICIL)
+  meter('Cada uno lo suyo', 'Fácil', 'situaciones', SITUACIONES_FACIL)
+  meter('Cada uno lo suyo', 'Difícil', 'situaciones', SITUACIONES_DIFICIL)
   // Emojis: los niveles curados. Imposible usa todos los del teléfono
   // (~1600), así que no se lista acá.
   meter('😀 Emojis', 'Fácil', 'general', EMOJIS)
@@ -1654,7 +1656,7 @@ const TEMATICOS: Record<string, Tematico> = {
 
 // Consignas del modo simultáneo: sujeto + situación, combinables.
 // Poco contenido, muchísimas combinaciones y siempre absurdas.
-const SUJETOS = [
+const SUJETOS_FACIL = [
   'Un pingüino',
   'Un pulpo',
   'Una jirafa',
@@ -1669,12 +1671,15 @@ const SUJETOS = [
   'Un fantasma',
   'Un pirata',
   'Un caballo',
-  'Un mimo',
-  'Un dentista',
   'Una hormiga',
-  'Un yeti',
   'Un mago',
   'Un caracol',
+]
+
+const SUJETOS_DIFICIL = [
+  'Un mimo',
+  'Un dentista',
+  'Un yeti',
   'Un turpial',
   'Una guacamaya',
   'Un llanero',
@@ -1689,27 +1694,30 @@ const SUJETOS = [
   'Un cura',
 ]
 
-const SITUACIONES = [
+const SITUACIONES_FACIL = [
   'tomando mate',
   'andando en monopatín',
   'cortándose el pelo',
   'esperando el colectivo',
   'haciendo yoga',
   'lavando los platos',
-  'en una entrevista de trabajo',
   'jugando al tenis',
   'con dolor de muelas',
   'sacándose una selfie',
-  'armando un mueble',
-  'perdido en el supermercado',
-  'bailando tango',
   'pintando una pared',
   'atendiendo el teléfono',
   'en la playa con frío',
   'cocinando un asado',
   'corriendo una maratón',
-  'mudándose de casa',
   'aprendiendo a andar en bici',
+]
+
+const SITUACIONES_DIFICIL = [
+  'en una entrevista de trabajo',
+  'armando un mueble',
+  'perdido en el supermercado',
+  'bailando tango',
+  'mudándose de casa',
   'haciendo arepas',
   'bailando joropo',
   'en la cola de la panadería',
@@ -1724,10 +1732,13 @@ const SITUACIONES = [
   'cambiando dólares en la calle',
 ]
 
-const consignaAlAzar = () =>
-  `${SUJETOS[Math.floor(Math.random() * SUJETOS.length)]} ${
-    SITUACIONES[Math.floor(Math.random() * SITUACIONES.length)]
+const consignaAlAzar = (nivel: string) => {
+  const sujetos = nivel === 'dificil' ? SUJETOS_DIFICIL : SUJETOS_FACIL
+  const situaciones = nivel === 'dificil' ? SITUACIONES_DIFICIL : SITUACIONES_FACIL
+  return `${sujetos[Math.floor(Math.random() * sujetos.length)]} ${
+    situaciones[Math.floor(Math.random() * situaciones.length)]
   }`
+}
 
 // ── Bancos propios de los bloques temáticos ─────────────────────────
 // El nivel fácil de Argentina y Venezuela reutiliza el banco de su juego
@@ -2290,6 +2301,7 @@ export default function Juego2() {
   const [dispS, setDispS] = useState(0)
   // Veredicto por jugador en la revelación: ✓ suma el punto solo
   const [marcasSim, setMarcasSim] = useState<Record<number, 'ok' | 'mal'>>({})
+  const [nivelSim, setNivelSim] = useState('facil')
 
   const cicloSim = (i: number) => {
     const actual = marcasSim[i]
@@ -2349,7 +2361,7 @@ export default function Juego2() {
   const nuevaRonda = () => {
     const nuevas: string[] = []
     while (nuevas.length < jugadores.length) {
-      const c = consignaAlAzar()
+      const c = consignaAlAzar(nivelSim)
       if (!nuevas.includes(c)) nuevas.push(c)
     }
     setConsignas(nuevas)
@@ -3404,6 +3416,23 @@ export default function Juego2() {
           <Previa
             tiempo={tiempoJuego}
             setTiempo={setTiempoJuego}
+            ajustes={
+              <>
+                <div className="jp-etiqueta">Nivel</div>
+                <div className="filtros">
+                  {NIVELES_2.map((n) => (
+                    <button
+                      type="button"
+                      key={n.id}
+                      className={chip(nivelSim === n.id)}
+                      onClick={() => setNivelSim(n.id)}
+                    >
+                      {n.nombre}
+                    </button>
+                  ))}
+                </div>
+              </>
+            }
             onEmpezar={() => {
               nuevaRonda()
               setJugando(true)
