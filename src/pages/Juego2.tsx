@@ -2156,6 +2156,8 @@ interface FuenteBloque {
   // La grilla final llega ya destapada (Cosas 101); si no, se destapa
   // a mano — clave en el bloque de emojis, que es de memoria.
   revelada?: boolean
+  // Lee cada cosa en voz alta (solo Cosas 101, como siempre fue)
+  conVoz?: boolean
   // Fuentes que comparten banco comparten memoria de repetición
   memoria?: string
   segDefault?: number
@@ -2179,6 +2181,8 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
     pregunta: 'Cuántas cosas',
     paraTodos: true,
     revelada: true,
+    conVoz: true,
+    segDefault: 5,
     niveles: NIVELES_2,
     pool: (nivel) => (nivel === 'dificil' ? [...COSAS_DIFICILES] : [...COSAS_101]),
   },
@@ -2189,6 +2193,7 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
     memoria: 'cosas',
+    segDefault: 3,
     niveles: NIVELES_2,
     pool: (nivel) => (nivel === 'dificil' ? [...COSAS_DIFICILES] : [...COSAS_101]),
   },
@@ -2484,7 +2489,7 @@ export default function Juego2() {
   // Lee la cosa en voz alta al aparecer (si la voz está activa). El tic
   // marca el corte; la voz entra después para no pisarse.
   useEffect(() => {
-    if (!corriendoBloque || bloque.esEmoji) return
+    if (!corriendoBloque || !bloque.conVoz) return
     const item = listaBloque[idxBloque]
     if (!item) return
     const t = setTimeout(() => hablar(item), 260)
@@ -3063,7 +3068,7 @@ export default function Juego2() {
             <>
               <div className="jp-consigna jp-rafaga">
                 <div className="jp-esquina">
-                  {!bloque.esEmoji && <BotonVoz />}
+                  {bloque.conVoz && <BotonVoz />}
                   <BotonSonido />
                 </div>
                 <div className="jp-consigna-cat">
