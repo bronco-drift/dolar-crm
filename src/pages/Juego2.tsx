@@ -1816,18 +1816,41 @@ export default function Juego2() {
   const [turnoBloque, setTurnoBloque] = useState(0)
   const [marcasBloque, setMarcasBloque] = useState<Record<number, 'ok' | 'mal'>>({})
   const [infoBloque, setInfoBloque] = useState(() => !getInfoBloqueCerrada())
+  // Pantalla previa: confirma el turno y da aire antes de largar
+  const [previaBloque, setPreviaBloque] = useState(false)
+  const [cuentaBloque, setCuentaBloque] = useState<string | null>(null)
+  const cuentaSeq = useRef(0)
+
+  const largarBloque = () => {
+    const id = ++cuentaSeq.current
+    setCuentaBloque('Preparados')
+    tic()
+    setTimeout(() => {
+      if (cuentaSeq.current !== id) return
+      setCuentaBloque('Listos')
+      tic()
+      setTimeout(() => {
+        if (cuentaSeq.current !== id) return
+        setCuentaBloque(null)
+        setPreviaBloque(false)
+        empezarBloque()
+      }, 900)
+    }, 900)
+  }
   // Si se borraron jugadores, el turno no puede apuntar al vacío.
   const idxTurno = jugadores[turnoBloque] ? turnoBloque : 0
   const nombreTurno = jugadores[idxTurno]?.nombre || `Jugador ${idxTurno + 1}`
 
-  const marcarBloque = (i: number, marca: 'ok' | 'mal') => {
+  // La tarjeta revelada se toca y cicla: ✓ verde → ✗ roja → neutra.
+  // El punto va y viene con la marca, sin botón de "sumar".
+  const cicloBloque = (i: number) => {
     const actual = marcasBloque[i]
+    const siguiente = actual === 'ok' ? 'mal' : actual === 'mal' ? undefined : 'ok'
     const next = { ...marcasBloque }
-    if (actual === marca) delete next[i]
-    else next[i] = marca
+    if (siguiente) next[i] = siguiente
+    else delete next[i]
     setMarcasBloque(next)
-    // El punto va y viene con la marca, sin botón de "sumar".
-    const delta = (next[i] === 'ok' ? 1 : 0) - (actual === 'ok' ? 1 : 0)
+    const delta = (siguiente === 'ok' ? 1 : 0) - (actual === 'ok' ? 1 : 0)
     if (delta !== 0 && jugadores[idxTurno]) {
       guardarJugadores(
         jugadores.map((j, ix) =>
@@ -1903,9 +1926,12 @@ export default function Juego2() {
 
   // Todos los bloques comparten motor: abrir uno es solo elegir la fuente.
   const abrirBloque = (fuente: string) => {
+    cuentaSeq.current++ // corta cualquier cuenta regresiva pendiente
     setFuenteBloque(fuente)
     setCorriendoBloque(false)
     setTerminadoBloque(false)
+    setPreviaBloque(false)
+    setCuentaBloque(null)
     setListaBloque([])
     setVista('bloque')
   }
@@ -2231,7 +2257,54 @@ export default function Juego2() {
             juntos.
           </p>
 
-          {!corriendoBloque && !terminadoBloque && (
+          {previaBloque && !corriendoBloque && !terminadoBloque && (
+            <>
+              <div className="jp-consigna jp-rafaga">
+                {cuentaBloque ? (
+                  <div className="jp-consigna-txt">{cuentaBloque}</div>
+                ) : (
+                  <>
+                    <div className="jp-consigna-cat">turno de</div>
+                    <div className={`jp-consigna-txt ${claseLargo(nombreTurno)}`}>
+                      {nombreTurno}
+                    </div>
+                    {jugadores.length > 1 && (
+                      <div className="jp-previa-otros">
+                        {jugadores.map(
+                          (j, i) =>
+                            i !== idxTurno && (
+                              <button
+                                type="button"
+                                key={i}
+                                onClick={() => setTurnoBloque(i)}
+                              >
+                                {j.nombre || `Jugador ${i + 1}`}
+                              </button>
+                            ),
+                        )}
+                      </div>
+                    )}
+                    <button type="button" className="btn btn-primary" onClick={largarBloque}>
+                      Empezar
+                    </button>
+                  </>
+                )}
+              </div>
+              {!cuentaBloque && (
+                <div className="jp-acciones">
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => setPreviaBloque(false)}
+                  >
+                    Cambiar ajustes
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {!previaBloque && !corriendoBloque && !terminadoBloque && (
             <>
               {infoBloque && (
                 <div className="jp-info">
@@ -2246,25 +2319,11 @@ export default function Juego2() {
                   >
                     ×
                   </button>
-                  Se juega por turnos: elegí quién dibuja la tanda. Al final, otro jugador
-                  revela las tarjetas y marca ✓ o ✗ — cada ✓ suma un punto solo. Los
-                  jugadores se agregan en el marcador de abajo.
+                  Se juega por turnos: uno dibuja la tanda y al final otro va tocando cada
+                  tarjeta — un toque la revela, otro la marca ✓, otro ✗. Cada ✓ suma un
+                  punto solo. Los jugadores se agregan en el marcador de abajo.
                 </div>
               )}
-
-              <div className="jp-etiqueta">Dibuja</div>
-              <div className="filtros">
-                {jugadores.map((j, i) => (
-                  <button
-                    type="button"
-                    key={i}
-                    className={chip(idxTurno === i)}
-                    onClick={() => setTurnoBloque(i)}
-                  >
-                    {j.nombre || `Jugador ${i + 1}`}
-                  </button>
-                ))}
-              </div>
 
               {bloque.niveles && (
                 <>
@@ -2319,7 +2378,11 @@ export default function Juego2() {
                   >
                     +
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={empezarBloque}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setPreviaBloque(true)}
+                  >
                     Empezar
                   </button>
                 </div>
@@ -2332,7 +2395,7 @@ export default function Juego2() {
               <div className="jp-consigna jp-rafaga">
                 <BotonSonido />
                 <div className="jp-consigna-cat">
-                  dibuja {nombreTurno} · {idxBloque + 1} de {listaBloque.length}
+                  {idxBloque + 1} de {listaBloque.length}
                 </div>
                 <div
                   className={`jp-consigna-txt ${
@@ -2398,56 +2461,33 @@ export default function Juego2() {
                 {listaBloque.map((c, i) => {
                   const abierta = reveladasBloque.includes(i)
                   const marca = marcasBloque[i]
-                  const texto = (
-                    <>
-                      <span className="jp-bloque-num">{i + 1}</span>
-                      <span
-                        className={`jp-bloque-txt ${bloque.esEmoji ? 'jp-bloque-emoji' : ''}`}
-                      >
-                        {c}
-                      </span>
-                    </>
-                  )
                   return (
                     <li key={i}>
-                      {abierta ? (
-                        // Revelada deja de ser botón: adentro van los de veredicto
-                        <div
-                          className={`jp-bloque-celda is-abierta ${
-                            marca === 'ok' ? 'is-ok' : marca === 'mal' ? 'is-mal' : ''
-                          }`}
+                      {/* La tarjeta entera es el botón: revela, y después
+                          cicla ✓ → ✗ → neutra. El color es el veredicto. */}
+                      <button
+                        type="button"
+                        className={`jp-bloque-celda ${abierta ? 'is-abierta' : ''} ${
+                          marca === 'ok' ? 'is-ok' : marca === 'mal' ? 'is-mal' : ''
+                        }`}
+                        onClick={() =>
+                          abierta
+                            ? cicloBloque(i)
+                            : setReveladasBloque((r) => (r.includes(i) ? r : [...r, i]))
+                        }
+                      >
+                        <span className="jp-bloque-num">{i + 1}</span>
+                        <span
+                          className={`jp-bloque-txt ${bloque.esEmoji ? 'jp-bloque-emoji' : ''}`}
                         >
-                          {texto}
-                          <div className="jp-veredicto">
-                            <button
-                              type="button"
-                              aria-label={`La ${i + 1} salió bien`}
-                              className={marca === 'ok' ? 'is-on' : ''}
-                              onClick={() => marcarBloque(i, 'ok')}
-                            >
-                              ✓
-                            </button>
-                            <button
-                              type="button"
-                              aria-label={`La ${i + 1} no salió`}
-                              className={marca === 'mal' ? 'is-on' : ''}
-                              onClick={() => marcarBloque(i, 'mal')}
-                            >
-                              ✗
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="jp-bloque-celda"
-                          onClick={() =>
-                            setReveladasBloque((r) => (r.includes(i) ? r : [...r, i]))
-                          }
-                        >
-                          {texto}
-                        </button>
-                      )}
+                          {c}
+                        </span>
+                        {marca && (
+                          <span className="jp-bloque-marca">
+                            {marca === 'ok' ? '✓' : '✗'}
+                          </span>
+                        )}
+                      </button>
                     </li>
                   )
                 })}
@@ -2466,9 +2506,11 @@ export default function Juego2() {
                   type="button"
                   className="btn btn-primary"
                   onClick={() => {
-                    // El turno pasa solo al siguiente jugador
+                    // El turno pasa solo al siguiente y se confirma en la previa
                     setTurnoBloque((idxTurno + 1) % Math.max(1, jugadores.length))
-                    empezarBloque()
+                    setTerminadoBloque(false)
+                    setListaBloque([])
+                    setPreviaBloque(true)
                   }}
                 >
                   Turno de {jugadores[(idxTurno + 1) % Math.max(1, jugadores.length)]?.nombre ||

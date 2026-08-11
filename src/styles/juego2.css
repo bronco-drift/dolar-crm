@@ -437,6 +437,7 @@
 
 /* Celda tapada: bloque de tinta que se descubre al tocarlo */
 .jp-bloque-celda {
+  position: relative;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -519,32 +520,34 @@
   background: var(--line);
 }
 
-/* Veredicto del verificador: ✓ suma el punto, ✗ no */
-.jp-veredicto {
+/* Previa del bloque: los demás jugadores, chiquitos, por si cambia el turno */
+.jp-previa-otros {
   display: flex;
-  gap: 5px;
-  margin-top: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
 }
 
-.jp-veredicto button {
-  width: 32px;
-  height: 25px;
-  border-radius: 6px;
+.jp-previa-otros button {
+  padding: 5px 12px;
   border: 1px solid var(--line);
-  background: var(--bg);
-  font-size: 12px;
-  line-height: 1;
+  border-radius: 99px;
+  font-size: 12.5px;
   color: var(--muted);
   transition: border-color 0.12s, color 0.12s;
 }
 
-.jp-veredicto button.is-on {
-  border-color: currentColor;
+.jp-previa-otros button:hover {
+  border-color: #c7c7cc;
   color: var(--ink);
-  font-weight: 700;
 }
 
-/* La tarjeta toma el color del veredicto, como los días de Hábitos */
+/* Veredicto tocando la tarjeta: el color es el mensaje, como los días
+   de Hábitos. La marca queda chiquita en la esquina. */
+.jp-bloque-celda.is-abierta {
+  cursor: pointer;
+}
+
 .jp-bloque-celda.is-ok {
   background: #a8e6cf;
   border-color: #a8e6cf;
@@ -567,21 +570,14 @@
   opacity: 1;
 }
 
-.jp-bloque-celda.is-ok .jp-veredicto button,
-.jp-bloque-celda.is-mal .jp-veredicto button {
-  background: rgb(255 255 255 / 0.5);
-  border-color: transparent;
-  color: inherit;
-}
-
-.jp-bloque-celda.is-ok .jp-veredicto button.is-on {
-  color: #1b4332;
-  border-color: #1b4332;
-}
-
-.jp-bloque-celda.is-mal .jp-veredicto button.is-on {
-  color: #7f1d1d;
-  border-color: #7f1d1d;
+.jp-bloque-marca {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.75;
 }
 
 /* Fútbol emoji */
