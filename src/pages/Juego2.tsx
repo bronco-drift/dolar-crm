@@ -2135,6 +2135,7 @@ export default function Juego2() {
   const [reveladasBloque, setReveladasBloque] = useState<number[]>([])
   const [fuenteBloque, setFuenteBloque] = useState<string>('cosas')
   const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
+  const usadosBloque = useRef<Record<string, string[]>>({})
   const bloque = FUENTES_BLOQUE[fuenteBloque] ?? FUENTES_BLOQUE.cosas
 
   // Por turnos: uno dibuja la tanda, otro verifica las tarjetas al final
@@ -2187,11 +2188,20 @@ export default function Juego2() {
   }
 
   const empezarBloque = () => {
+    // Memoria entre tandas, como en los demás juegos: no se repite una
+    // cosa hasta agotar el banco de esa fuente y nivel.
+    const clave = `${fuenteBloque}:${nivelBloque}`
     const pool = bloque.pool(nivelBloque)
-    const elegidas: string[] = []
-    while (elegidas.length < bloqueTam && pool.length) {
-      elegidas.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0])
+    let libres = pool.filter((c) => !(usadosBloque.current[clave] ?? []).includes(c))
+    if (libres.length < bloqueTam) {
+      usadosBloque.current[clave] = []
+      libres = pool
     }
+    const elegidas: string[] = []
+    while (elegidas.length < bloqueTam && libres.length) {
+      elegidas.push(libres.splice(Math.floor(Math.random() * libres.length), 1)[0])
+    }
+    usadosBloque.current[clave] = [...(usadosBloque.current[clave] ?? []), ...elegidas]
     setListaBloque(elegidas)
     setIdxBloque(0)
     setRestaBloque(segBloque)
