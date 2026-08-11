@@ -20,7 +20,6 @@ type Vista =
   | 'emojis'
   | 'tematico'
   | 'futbol'
-  | 'cosas101'
   | 'bloque'
   | 'archivados'
 
@@ -71,9 +70,9 @@ const COSAS_101 = [
   'Un hongo',
   'Un cactus',
   'Un dado',
-  'Una campana',
+  'Un farol de plaza',
   'Una lámpara',
-  'Una guitarra',
+  'Un espantapájaros',
   'Una bicicleta',
   'Un cohete',
   'Una corona',
@@ -87,24 +86,24 @@ const COSAS_101 = [
   'Una montaña',
   'Un ojo',
   'Una mano',
-  'Un fantasma',
-  'Un caracol',
+  'Una lámpara de lava',
+  'Una pluma',
   'Una pizza',
   'Un regalo',
-  'Una nota musical',
+  'Un boomerang',
   'Un semáforo',
   'Un ancla',
   'Un rayo',
   'Un avión',
   'Un tren',
-  'Un robot',
+  'Un satélite',
   'Un castillo',
-  'Un dinosaurio',
+  'Un mamut',
   'Unos anteojos',
   'Una mochila',
   'Una raqueta',
-  'Un tambor',
-  'Una trompeta',
+  'Un yoyo',
+  'Un trompo',
   'Una sartén',
   'Un tenedor',
   'Un plato',
@@ -125,7 +124,7 @@ const COSAS_101 = [
   'Un queso',
   'Un pan',
   'Una hamburguesa',
-  'Un pingüino',
+  'Una morsa',
   'Un elefante',
   'Una tortuga',
   'Una araña',
@@ -133,7 +132,7 @@ const COSAS_101 = [
   'Una ballena',
   'Un cerdo',
   'Una vaca',
-  'Un pulpo',
+  'Un calamar',
   'Un sombrero de copa',
   'Una corbata',
   'Un reloj de arena',
@@ -172,7 +171,7 @@ const COSAS_101 = [
   'Un tiburón',
   'Una medusa',
   'Una abeja',
-  'Una hormiga',
+  'Un escarabajo',
   'Una libélula',
   'Una rana',
   'Un lagarto',
@@ -182,7 +181,7 @@ const COSAS_101 = [
   'Un loro',
   'Un cisne',
   'Un caballito de mar',
-  'Un caballo',
+  'Un burro',
   // ── Comida ──
   'Una sandía',
   'Una naranja',
@@ -280,11 +279,11 @@ const COSAS_101 = [
   'Una medalla',
   'Un trofeo',
   'Un piano',
-  'Un violín',
-  'Un saxofón',
-  'Un acordeón',
-  'Un micrófono',
-  'Unos auriculares',
+  'Un barrilete',
+  'Un sacapuntas',
+  'Un abanico',
+  'Un megáfono',
+  'Unos binoculares',
   'Un parlante',
   'Una radio',
   // ── Ropa ──
@@ -377,7 +376,7 @@ const COSAS_DIFICILES = [
   'Un reloj derritiéndose',
   'Una escalera imposible',
   'Un caballo de ajedrez',
-  'Un piano de cola',
+  'Un piano subido con sogas por el balcón',
   'Una bicicleta desarmada',
   'Un motor de auto',
   'Un esqueleto humano',
@@ -1461,6 +1460,9 @@ const TEMATICOS: Record<string, Tematico> = {
         'Un pan de jamón cortado',
         'Un dulce de lechosa',
         'Un cocuy con su botella',
+        'Un cepillado de fresa',
+        'Una reina pepiada',
+        'Un quesillo tembloroso',
       ],
       lugares: [
         'El Salto Ángel',
@@ -1475,6 +1477,9 @@ const TEMATICOS: Record<string, Tematico> = {
         'Un pueblo de la Colonia Tovar',
         'La Cota Mil un domingo',
         'Choroní con sus palmeras',
+        'La Plaza Bolívar con sus ardillas',
+        'Isla de Margarita en el mapa',
+        'El Parque del Este con su lago',
       ],
       cosas: [
         'Un cuatro venezolano',
@@ -1487,6 +1492,9 @@ const TEMATICOS: Record<string, Tematico> = {
         'Un billete de un millón de bolívares',
         'Una gorra de la Vinotinto',
         'Un mango verde con sal',
+        'Una mata de plátano',
+        'Un anime de fiesta infantil',
+        'Un litro de chicha con canela',
       ],
       cultura: [
         'Simón Bolívar a caballo',
@@ -1499,6 +1507,9 @@ const TEMATICOS: Record<string, Tematico> = {
         'Una Miss Venezuela con su corona',
         'Un niño de El Sistema con su violín',
         'La bandera con sus ocho estrellas',
+        'Un oso frontino',
+        'Un tamborero de San Juan',
+        'Simón Díaz con su sombrero',
       ],
     },
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
@@ -1523,6 +1534,11 @@ const TEMATICOS: Record<string, Tematico> = {
         'Una picada completa',
         'Un locro humeante',
         'Una porción de fugazzeta',
+        'Una provoleta derretida',
+        'Un sándwich de miga',
+        'Un pancho con papitas',
+        'Un vitel toné',
+        'Un submarino con medialunas',
       ],
       lugares: [
         'El Obelisco',
@@ -1537,6 +1553,11 @@ const TEMATICOS: Record<string, Tematico> = {
         'Un colectivo porteño',
         'El Cabildo',
         'La Quebrada de Humahuaca',
+        'El Puente de la Mujer',
+        'El Rosedal de Palermo',
+        'Bariloche con chocolate y nieve',
+        'Mar del Plata con sus lobos marinos',
+        'El Tren de las Nubes',
       ],
       cosas: [
         'Un bandoneón abierto',
@@ -1547,6 +1568,11 @@ const TEMATICOS: Record<string, Tematico> = {
         'Un matambre a la pizza',
         'Un guardapolvo blanco',
         'Un sifón de soda',
+        'Una birome',
+        'Una escarapela',
+        'Un termo Stanley',
+        'Una camiseta albiceleste',
+        'Un cuaderno Gloria',
       ],
       cultura: [
         'Maradona con la 10',
@@ -1557,6 +1583,11 @@ const TEMATICOS: Record<string, Tematico> = {
         'San Martín cruzando los Andes',
         'El sol de la bandera',
         'Un hincha con la camiseta puesta',
+        'Evita saludando',
+        'El Gauchito Gil con sus cintas rojas',
+        'Charly García con su bigote bicolor',
+        'El Eternauta con su máscara',
+        'Un payador improvisando',
       ],
     },
     nombres: { comida: 'comida', lugares: 'lugar', cosas: 'objeto', cultura: 'cultura' },
@@ -1714,6 +1745,30 @@ const BLOQUE_ARG_DIFICIL = [
   'La 9 de Julio con siete carriles',
   'Un alfajor triple mordido',
   'Un relator gritando un gol eterno',
+  'Messi diciendo qué mirás bobo',
+  'El Dibu bailando en el arco',
+  'Un colectivero que no te frena',
+  'La bombilla tapada en pleno mate',
+  'Una parrillada para doce en una mesa para cuatro',
+  'Un oficinista corriendo el colectivo',
+  'Un asador defendiendo su punto de cocción',
+  'Una abuela sirviendo la tercera porción sin preguntar',
+  'El gol de Maradona a los ingleses, el bueno',
+  'Un plomero que dice que va el lunes',
+  'Una pareja discutiendo qué gusto de helado pedir',
+  'El subte parado por un paro sorpresa',
+  'Un DT despedido a los tres partidos',
+  'La cábala del hincha en la final',
+  'Un kiosquero dando caramelos de vuelto',
+  'Un porteño explicando por qué Buenos Aires es lo más',
+  'Una milanesa más grande que el plato',
+  'El colectivo 60 doblando como si nada',
+  'Un tanguero llorando con la radio',
+  'La costanera llena de termos y reposeras',
+  'Un turista probando mate amargo y arrepintiéndose',
+  'Un carrito de panchos a la madrugada',
+  'Un trapito cuidando autos',
+  'Un vendedor ambulante en el tren con de todo',
 ]
 
 const BLOQUE_VEN_DIFICIL = [
@@ -1741,6 +1796,30 @@ const BLOQUE_VEN_DIFICIL = [
   'Una parrilla con bollitos y guasacaca',
   'Un juego de bolas criollas',
   'Un apagón con todos alumbrando con el teléfono',
+  'Un motorizado esquivando huecos',
+  'Un heladero tocando su cornetica',
+  'El primo que llegó de Miami con cuatro maletas',
+  'Una gallina en el patio de la abuela',
+  'Un ventilador de pie en su máxima potencia',
+  'El último tequeño de la bandeja y todos mirándolo',
+  'Una lora repitiendo groserías',
+  'Un chamo bañándose en un aguacero',
+  'El taxista cobrando en tres monedas distintas',
+  'Un arbolito de Navidad en octubre',
+  'La abuela haciendo hallacas y mandando a todos',
+  'Un grandeliga bateando un jonrón',
+  'El vecino con planta eléctrica que no la presta',
+  'Un bautizo con torta de tres pisos',
+  'Una guacamaya despertando al edificio entero',
+  'Un cuñado experto en todo dando cátedra',
+  'La arepa de madrugada después de la fiesta',
+  'Un niño pidiendo la bendición por teléfono',
+  'El carrito de perros calientes con todas las salsas',
+  'Una olla de sancocho para todo el barrio',
+  'Un maracucho hablando a todo volumen',
+  'El metro cerrando justo cuando llegas',
+  'Una cola kilométrica por el pan de jamón en diciembre',
+  'Simón Bolívar en todos los billetes',
 ]
 
 const BLOQUE_FUTBOL_FACIL = [
@@ -1768,6 +1847,30 @@ const BLOQUE_FUTBOL_FACIL = [
   'Un alcanzapelotas aburrido',
   'Una chilena',
   'Una tanda de penales',
+  'Una pelota pinchada',
+  'Un guante de arquero',
+  'Una red rota por un golazo',
+  'Un escudo de equipo',
+  'Una entrada al estadio',
+  'Un bombo de la hinchada',
+  'Una camiseta firmada',
+  'Una medalla de subcampeón',
+  'Un dorsal con el nombre mal escrito',
+  'Una cancha de barrio con arcos oxidados',
+  'Un picadito con buzos como arcos',
+  'Un perro entrando a la cancha',
+  'Un gol en contra',
+  'Un capitán con la cinta',
+  'Un línea con su banderín a cuadros',
+  'Un penal atajado con la cara',
+  'Un festejo con baile ensayado',
+  'Una pelota en la terraza del vecino',
+  'Un arco sin red',
+  'Un botín con los cordones desatados',
+  'Una tribuna de madera',
+  'Un trofeo de plástico dorado',
+  'Una pizarra táctica',
+  'Un niño dormido abrazado a la pelota',
 ]
 
 const BLOQUE_FUTBOL_DIFICIL = [
@@ -1795,6 +1898,30 @@ const BLOQUE_FUTBOL_DIFICIL = [
   'Un lateral largo al área',
   'Un gol festejado antes de tiempo y anulado',
   'Un abrazo de todo el equipo en el córner',
+  'Un jugador fingiendo un dolor terrible',
+  'El VAR dibujando líneas torcidas',
+  'Un relator quedándose sin voz en el minuto 90',
+  'Un DT comiéndose las uñas en el alargue',
+  'Dos camilleros llevándose a uno que ya se curó',
+  'Un festejo de Topo Gigio',
+  'Todo el equipo pidiendo offside con la mano',
+  'Un hincha rezando con la camiseta en la cabeza',
+  'El banco de suplentes saltando en el gol',
+  'Una tarjeta roja por aplaudir al árbitro',
+  'Un debutante con la camiseta hasta las rodillas',
+  'La moneda del sorteo perdida en el pasto',
+  'Un masajista con la esponja mágica',
+  'Un lateral que sube y no baja nunca',
+  'El 9 tirándola a las nubes solo frente al arco',
+  'Un 0 a 0 con toda la tribuna bostezando',
+  'La foto del equipo con uno que salió moviéndose',
+  'Un paraguas dado vuelta en la tribuna',
+  'Un gol validado por un centímetro',
+  'Un arquero adivinando el penal para el otro lado',
+  'Un alcanzapelotas haciendo tiempo',
+  'Un sombrerito y definición de volea',
+  'Una barrera con todos tapándose',
+  'Un DT expulsado mirando el partido desde un techo',
 ]
 
 const BLOQUE_MUSICA_FACIL = [
@@ -1822,6 +1949,30 @@ const BLOQUE_MUSICA_FACIL = [
   'Un coro cantando',
   'Un karaoke con la letra en pantalla',
   'Una campana',
+  'Una pandereta',
+  'Un xilófono',
+  'Una armónica',
+  'Un banjo',
+  'Unas castañuelas',
+  'Un güiro',
+  'Una tuba',
+  'Un clarinete',
+  'Unos platillos chocando',
+  'Un violonchelo',
+  'Un cencerro',
+  'Un metrónomo',
+  'Un bombo legüero',
+  'Una corneta de cotillón',
+  'Una matraca',
+  'Un piano de juguete',
+  'Un disco rayado',
+  'Una cajita musical con bailarina',
+  'Un organillero con su mono',
+  'Una guitarra de aire',
+  'Un solo de batería con lápices en la mesa',
+  'Un cantante de ducha con el shampoo de micrófono',
+  'Una flauta de pan',
+  'Un gong',
 ]
 
 const BLOQUE_MUSICA_DIFICIL = [
@@ -1849,6 +2000,30 @@ const BLOQUE_MUSICA_DIFICIL = [
   'Una púa perdida adentro de la guitarra',
   'Un ecualizador con las barras saltando',
   'Un vecino golpeando la pared por el ruido',
+  'Un DJ que solo aprieta play y levanta las manos',
+  'Un fan llorando en primera fila',
+  'Un guardia de recital aburrido con tapones',
+  'Una banda tributo con pelucas',
+  'Un cantante estirando la última nota una hora',
+  'Un pogo con uno buscando su zapatilla',
+  'Una orquesta afinando todos a la vez',
+  'Un intérprete de señas en pleno tema movido',
+  'Un roadie probando el micrófono uno dos uno dos',
+  'Un trombonista pegándole al de adelante',
+  'Una diva tirando el micrófono al piso',
+  'Un coro góspel con túnicas',
+  'Un cantautor triste con guitarra y bufanda',
+  'Un acomodador dormido en la ópera',
+  'Una banda de jazz en un sótano con humo',
+  'Un rapero con una cadena gigante',
+  'Un tecladista con cinco teclados apilados',
+  'Un aplauso en el momento equivocado del concierto',
+  'El director apuntando al del triángulo en su gran momento',
+  'Una serenata en el balcón equivocado',
+  'Un karaoke con uno que se cree Freddie Mercury',
+  'Un baterista perdiendo un palillo en pleno solo',
+  'Un cuarteto de cuerdas en un casamiento',
+  'Un abuelo diciendo que la música de antes era mejor',
 ]
 
 const BLOQUE_COCINA_FACIL = [
@@ -1876,6 +2051,30 @@ const BLOQUE_COCINA_FACIL = [
   'Un bol con masa y la cuchara',
   'Una parrilla con carne',
   'Un helado de tres bochas',
+  'Una espátula',
+  'Un cucharón',
+  'Una olla quemada en remojo',
+  'Un tostador escupiendo la tostada',
+  'Un frasco imposible de abrir',
+  'Un choclo con manteca',
+  'Un melón',
+  'Un exprimidor de limones',
+  'Una docena de huevos',
+  'Un salero y un pimentero',
+  'Una pila de panqueques con miel',
+  'Un pollo entero al horno',
+  'Una lata de sardinas',
+  'Una cabeza de ajo',
+  'Una papa con forma de corazón',
+  'Un helado cayéndose del cono',
+  'Un espagueti colgando del tenedor',
+  'Una hamburguesa que no entra en la boca',
+  'Un huevo de doble yema',
+  'Una torta con el nombre mal escrito',
+  'Un tupper sin su tapa',
+  'Una jarra de jugo',
+  'Un mantel a cuadros',
+  'Un guante de horno',
 ]
 
 const BLOQUE_COCINA_DIFICIL = [
@@ -1903,6 +2102,30 @@ const BLOQUE_COCINA_DIFICIL = [
   'Un fideo pegado en la pared',
   'Un recetario manchado de salsa',
   'Un huevo estrellado fuera de la sartén',
+  'Un chef gritando como Gordon Ramsay',
+  'Una abuela cocinando sin medir y saliéndole perfecto',
+  'Una freidora escupiendo aceite',
+  'Un mozo recitando el menú de memoria',
+  'Una cocina nevada de harina',
+  'Un imán de heladera sosteniendo diez papeles',
+  'Un huevo explotando en el microondas',
+  'Una ensalada triste de dieta',
+  'Una parrilla con un solo chorizo para ocho',
+  'Un postre quemado con soplete',
+  'La cuchara de palo de mamá en modo amenaza',
+  'Un niño lamiendo la olla del dulce',
+  'Un panadero a las 4 de la mañana',
+  'Una torta derrumbándose en cámara lenta',
+  'Un concurso de comer perros calientes',
+  'Un brindis que termina en copa rota',
+  'Un sushiman cortando a toda velocidad',
+  'Una empanada abierta para ver el relleno',
+  'Un buffet libre con platos como torres',
+  'Una heladera de soltero con una sola mostaza',
+  'Un gato mirando fijo el jamón de la mesa',
+  'Una receta de la abuela que dice cantidad necesaria',
+  'Una cuenta de restaurante que da un infarto',
+  'Un delivery buscando el timbre bajo la lluvia',
 ]
 
 // ── Fuentes del Bloque ──────────────────────────────────────────────
@@ -1927,7 +2150,7 @@ const NIVELES_2 = [
 
 const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   cosas: {
-    titulo: 'Bloque de cosas',
+    titulo: 'Cosas 101',
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
     niveles: NIVELES_2,
@@ -2085,43 +2308,6 @@ export default function Juego2() {
   // Modo temático activo (Venezuela, Argentina, Películas)
   const [tema, setTema] = useState<string | null>(null)
 
-  // Cosas 101: ráfaga con auto-avance
-  const [luzCosas, setLuzCosas] = useState<'verde' | null>(null)
-  const [cosa, setCosa] = useState<string | null>(null)
-  const [segCosa, setSegCosa] = useState(10)
-  const [restaCosa, setRestaCosa] = useState(10)
-  const [corriendo, setCorriendo] = useState(false)
-  const [rondaCosas, setRondaCosas] = useState(0)
-  const usadasCosas = useRef<string[]>([])
-
-  const siguienteCosa = () => {
-    let libres = COSAS_101.filter((c) => !usadasCosas.current.includes(c))
-    if (!libres.length) {
-      usadasCosas.current = []
-      libres = COSAS_101
-    }
-    const el = libres[Math.floor(Math.random() * libres.length)]
-    usadasCosas.current.push(el)
-    setCosa(el)
-    setRestaCosa(segCosa)
-    setRondaCosas((r) => r + 1)
-    // El tic marca el corte; la voz entra después para no pisarse.
-    setTimeout(() => hablar(el), 260)
-  }
-
-  // Un tick por segundo; al llegar a cero, cambia sola de consigna.
-  useEffect(() => {
-    if (!corriendo) return
-    if (restaCosa <= 0) {
-      tic()
-      siguienteCosa()
-      return
-    }
-    const t = setTimeout(() => setRestaCosa((r) => r - 1), 1000)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [corriendo, restaCosa])
-
   // Bloque de cosas: una tanda cerrada de 12 o 24, y al final la lista
   const [bloqueTam, setBloqueTam] = useState(12)
   const [segBloque, setSegBloque] = useState(10)
@@ -2233,6 +2419,17 @@ export default function Juego2() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [corriendoBloque, restaBloque, pausaBloque])
 
+  // Lee la cosa en voz alta al aparecer (si la voz está activa). El tic
+  // marca el corte; la voz entra después para no pisarse.
+  useEffect(() => {
+    if (!corriendoBloque || bloque.esEmoji) return
+    const item = listaBloque[idxBloque]
+    if (!item) return
+    const t = setTimeout(() => hablar(item), 260)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [corriendoBloque, idxBloque])
+
   // Fútbol emoji: pistas primero, nombre después
   const [futbolista, setFutbolista] = useState<{ e: string; n: string } | null>(null)
   const [nombreVisible, setNombreVisible] = useState(false)
@@ -2276,23 +2473,13 @@ export default function Juego2() {
   // agregar un objeto acá, y el archivado le sale gratis.
   const JUEGOS: { id: string; titulo: string; resumen: string; abrir: () => void }[] = [
     {
+      // Cosas 101 y Bloque de cosas eran el mismo juego con distinta ropa:
+      // ahora es uno solo sobre el motor del bloque, con tanda cerrada,
+      // tarjetas al final y puntos por turno.
       id: 'cosas101',
       titulo: 'Cosas 101',
       resumen:
-        'Para entrar en calor: cosas simples, diez segundos cada una y la pantalla pasa sola a la siguiente.',
-      abrir: () => {
-        setCorriendo(false)
-        setCosa(null)
-        setRondaCosas(0)
-        setRestaCosa(segCosa)
-        setVista('cosas101')
-      },
-    },
-    {
-      id: 'bloque-cosas',
-      titulo: 'Bloque de cosas',
-      resumen:
-        'Tanda cerrada de 12 o 24 cosas, con los segundos que quieras. Al final, la lista completa para comparar.',
+        'Tanda cerrada de 12 o 24 cosas para entrar en calor, con los segundos que quieras. Al final, las tarjetas para comparar y sumar puntos.',
       abrir: () => abrirBloque('cosas'),
     },
     {
@@ -2766,7 +2953,10 @@ export default function Juego2() {
           {corriendoBloque && (
             <>
               <div className="jp-consigna jp-rafaga">
-                <BotonSonido />
+                <div className="jp-esquina">
+                  {!bloque.esEmoji && <BotonVoz />}
+                  <BotonSonido />
+                </div>
                 <div className="jp-consigna-cat">
                   {idxBloque + 1} de {listaBloque.length}
                 </div>
@@ -2901,127 +3091,6 @@ export default function Juego2() {
               </button>
             </>
           )}
-
-          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
-        </section>
-      )}
-
-      {vista === 'cosas101' && !jugando && (
-        <section className="jp-hoja">
-          <h2 className="jp-titulo">Cosas 101</h2>
-          <p className="jp-sub">
-            Cosas fáciles, una atrás de otra. Cuando se acaba el tiempo cambia sola: no hay
-            tiempo para pensarla.
-          </p>
-          <Previa
-            tiempo={segCosa}
-            setTiempo={(n) => {
-              setSegCosa(n)
-              setRestaCosa(n)
-            }}
-            minTiempo={5}
-            maxTiempo={120}
-            etiquetaTiempo="Segundos por cosa"
-            onEmpezar={() => {
-              siguienteCosa()
-              setCorriendo(true)
-              setLuzCosas('verde')
-              setTimeout(() => setLuzCosas(null), 1700)
-              setJugando(true)
-            }}
-          />
-          <Marcador jugadores={jugadores} guardar={guardarJugadores} />
-        </section>
-      )}
-
-      {vista === 'cosas101' && jugando && (
-        <section className="jp-hoja">
-          <LuzBorde tipo={luzCosas} />
-          <h2 className="jp-titulo">Cosas 101</h2>
-          <p className="jp-sub">
-            Cosas fáciles, una atrás de otra. Cuando se acaba el tiempo cambia sola: no hay
-            tiempo para pensarla.
-          </p>
-
-          <div className="jp-consigna jp-rafaga">
-            <div className="jp-esquina">
-              <BotonVoz />
-              <BotonSonido />
-            </div>
-            <div className="jp-consigna-cat">
-              {rondaCosas ? `dibujo ${rondaCosas}` : 'listos'}
-            </div>
-            <div className={`jp-consigna-txt ${claseLargo(cosa)}`}>
-              {cosa ?? 'Tocá empezar'}
-            </div>
-            <div className={`jp-rafaga-seg ${restaCosa <= 3 && corriendo ? 'is-poco' : ''}`}>
-              {corriendo || cosa ? restaCosa : segCosa}s
-            </div>
-          </div>
-
-          <div className="jp-barra">
-            <i
-              className={restaCosa <= 3 && corriendo ? 'is-poco' : ''}
-              style={{ width: `${(restaCosa / segCosa) * 100}%` }}
-            />
-          </div>
-
-          <div className="jp-reloj">
-            <div className="jp-reloj-fila">
-              <button
-                type="button"
-                className="jp-mini"
-                aria-label="Menos tiempo"
-                disabled={segCosa <= 5 || corriendo}
-                onClick={() => {
-                  const n = Math.max(5, segCosa - 5)
-                  setSegCosa(n)
-                  setRestaCosa(n)
-                }}
-              >
-                −
-              </button>
-              <span className="jp-digitos">{segCosa}s</span>
-              <button
-                type="button"
-                className="jp-mini"
-                aria-label="Más tiempo"
-                disabled={corriendo}
-                onClick={() => {
-                  const n = Math.min(120, segCosa + 5)
-                  setSegCosa(n)
-                  setRestaCosa(n)
-                }}
-              >
-                +
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  if (!corriendo) {
-                    despertarVoz()
-                    if (!cosa) siguienteCosa()
-                    setLuzCosas('verde')
-                    setTimeout(() => setLuzCosas(null), 1700)
-                  }
-                  setCorriendo((c) => !c)
-                }}
-              >
-                {corriendo ? 'Pausar' : cosa ? 'Seguir' : 'Empezar'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => {
-                  pitido()
-                  siguienteCosa()
-                }}
-              >
-                Saltar
-              </button>
-            </div>
-          </div>
 
           <Marcador jugadores={jugadores} guardar={guardarJugadores} />
         </section>
