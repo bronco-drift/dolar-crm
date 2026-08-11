@@ -32,6 +32,14 @@ const EMOJIS = [
   '🌈','⚡','🔥','❄️','🌙','⭐','🌊','🗻',
 ]
 
+// Emojis difíciles: se reconocen, pero dibujarlos es otra historia.
+const EMOJIS_DIFICILES = [
+  '🤹','🧗','🏇','🤸','🏄','🚣','🧘','🤺','🏋️','🪂','🤿','🎠','🎡','🎢','🪩','🎭',
+  '🩰','🪄','🧨','🪅','🗿','🛸','🔭','🧬','🦠','🪤','🧯','🧲','⚖️','⛲','🌋','🗽',
+  '🎪','⛩️','🛶','🚡','🛰️','⚓','🪝','🧵','🪡','🧶','🪢','🛼','🛹','🪀','🎳','🥌',
+  '⛸️','🎿','🛷','👾','🧜','🧛','🧟','🧞','🧙','🥷','🕵️','💂',
+]
+
 // Cosas 101: lo más simple del mundo, para entrar en calor.
 const COSAS_101 = [
   'Una casa',
@@ -977,6 +985,10 @@ function bancosInventario() {
   // así que sus dos piezas entran como categorías propias, sin nivel.
   meter('Cada uno lo suyo', '—', 'sujetos', SUJETOS)
   meter('Cada uno lo suyo', '—', 'situaciones', SITUACIONES)
+  // Emojis: los niveles curados. Imposible usa todos los del teléfono
+  // (~1600), así que no se lista acá.
+  meter('😀 Emojis', 'Fácil', 'general', EMOJIS)
+  meter('😀 Emojis', 'Difícil', 'general', EMOJIS_DIFICILES)
   return filas
 }
 
@@ -1017,8 +1029,8 @@ function InventarioCosas() {
     <section className="jp-inv">
       <h3 className="jp-inv-titulo">Inventario de cosas</h3>
       <p className="conv-nota">
-        Vista interina para auditar los bancos. Cosas 101 usa el mismo banco que el nivel
-        fácil del Bloque de cosas.
+        Vista interina para auditar los bancos. Cosas 101 y Bloque de cosas comparten mazo,
+        y el nivel Imposible de emojis usa todos los del teléfono, así que no se lista.
       </p>
       <div className="jp-inv-kpis">
         <span>
@@ -2138,6 +2150,16 @@ interface FuenteBloque {
   unidad: string
   pregunta: string
   esEmoji?: boolean
+  // Todos juegan a la vez: sin turnos ni veredicto por tarjeta, los
+  // puntos se cargan a mano en el marcador.
+  paraTodos?: boolean
+  // La grilla final llega ya destapada (Cosas 101); si no, se destapa
+  // a mano — clave en el bloque de emojis, que es de memoria.
+  revelada?: boolean
+  // Fuentes que comparten banco comparten memoria de repetición
+  memoria?: string
+  segDefault?: number
+  tamanos?: number[]
   niveles?: { id: string; nombre: string }[]
   pool: (nivel: string) => string[]
 }
@@ -2150,18 +2172,47 @@ const NIVELES_2 = [
 
 const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   cosas: {
+    // Calentamiento colectivo: todos dibujan a la vez y la grilla
+    // final se revela sola para comparar.
     titulo: 'Cosas 101',
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
+    paraTodos: true,
+    revelada: true,
+    niveles: NIVELES_2,
+    pool: (nivel) => (nivel === 'dificil' ? [...COSAS_DIFICILES] : [...COSAS_101]),
+  },
+  bloquecosas: {
+    // El mismo banco pero competitivo: por turnos, con veredicto en
+    // las tarjetas y puntos automáticos.
+    titulo: 'Bloque de cosas',
+    unidad: 'cosas',
+    pregunta: 'Cuántas cosas',
+    memoria: 'cosas',
     niveles: NIVELES_2,
     pool: (nivel) => (nivel === 'dificil' ? [...COSAS_DIFICILES] : [...COSAS_101]),
   },
   emojis: {
+    // De memoria por defecto: pasan de a uno, un segundo cada uno, y
+    // después se dibujan sin mirar. La grilla queda tapada para
+    // comparar al final. También se puede jugar por turnos.
     titulo: 'Bloque de emojis',
     unidad: 'emojis',
     pregunta: 'Cuántos emojis',
     esEmoji: true,
-    pool: () => [...emojisDisponibles()],
+    segDefault: 1,
+    tamanos: [6, 12, 24],
+    niveles: [
+      { id: 'facil', nombre: 'Fácil' },
+      { id: 'dificil', nombre: 'Difícil' },
+      { id: 'imposible', nombre: 'Imposible' },
+    ],
+    pool: (nivel) =>
+      nivel === 'imposible'
+        ? [...emojisDisponibles()]
+        : nivel === 'dificil'
+          ? [...EMOJIS_DIFICILES]
+          : [...EMOJIS],
   },
   argentina: {
     titulo: '🇦🇷 Bloque argentino',
@@ -2323,6 +2374,9 @@ export default function Juego2() {
   const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
   const usadosBloque = useRef<Record<string, string[]>>({})
   const bloque = FUENTES_BLOQUE[fuenteBloque] ?? FUENTES_BLOQUE.cosas
+  // El bloque de emojis elige modo; el resto lo trae fijo de la fuente
+  const [modoEmojis, setModoEmojis] = useState<'todos' | 'turnos'>('todos')
+  const sinTurnos = bloque.esEmoji ? modoEmojis === 'todos' : !!bloque.paraTodos
 
   // Por turnos: uno dibuja la tanda, otro verifica las tarjetas al final
   // y cada ✓ le suma un punto al que dibujó.
@@ -2376,7 +2430,7 @@ export default function Juego2() {
   const empezarBloque = () => {
     // Memoria entre tandas, como en los demás juegos: no se repite una
     // cosa hasta agotar el banco de esa fuente y nivel.
-    const clave = `${fuenteBloque}:${nivelBloque}`
+    const clave = `${bloque.memoria ?? fuenteBloque}:${nivelBloque}`
     const pool = bloque.pool(nivelBloque)
     let libres = pool.filter((c) => !(usadosBloque.current[clave] ?? []).includes(c))
     if (libres.length < bloqueTam) {
@@ -2419,6 +2473,14 @@ export default function Juego2() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [corriendoBloque, restaBloque, pausaBloque])
 
+  // Si la fuente lo pide, la grilla final llega ya revelada: la
+  // animación escalonada la muestra en orden, rapidito.
+  useEffect(() => {
+    if (terminadoBloque && bloque.revelada)
+      setReveladasBloque(listaBloque.map((_, i) => i))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terminadoBloque])
+
   // Lee la cosa en voz alta al aparecer (si la voz está activa). El tic
   // marca el corte; la voz entra después para no pisarse.
   useEffect(() => {
@@ -2460,6 +2522,10 @@ export default function Juego2() {
   // Todos los bloques comparten motor: abrir uno es solo elegir la fuente.
   const abrirBloque = (fuente: string) => {
     cuentaSeq.current++ // corta cualquier cuenta regresiva pendiente
+    const f = FUENTES_BLOQUE[fuente] ?? FUENTES_BLOQUE.cosas
+    setSegBloque(f.segDefault ?? 10)
+    const tams = f.tamanos ?? [12, 24]
+    if (!tams.includes(bloqueTam)) setBloqueTam(tams.includes(12) ? 12 : tams[0])
     setFuenteBloque(fuente)
     setCorriendoBloque(false)
     setTerminadoBloque(false)
@@ -2473,20 +2539,24 @@ export default function Juego2() {
   // agregar un objeto acá, y el archivado le sale gratis.
   const JUEGOS: { id: string; titulo: string; resumen: string; abrir: () => void }[] = [
     {
-      // Cosas 101 y Bloque de cosas eran el mismo juego con distinta ropa:
-      // ahora es uno solo sobre el motor del bloque, con tanda cerrada,
-      // tarjetas al final y puntos por turno.
       id: 'cosas101',
       titulo: 'Cosas 101',
       resumen:
-        'Tanda cerrada de 12 o 24 cosas para entrar en calor, con los segundos que quieras. Al final, las tarjetas para comparar y sumar puntos.',
+        'Para entrar en calor, todos a la vez: tanda de 12 o 24 cosas y al final las tarjetas se revelan solas para comparar.',
       abrir: () => abrirBloque('cosas'),
+    },
+    {
+      id: 'bloque-cosas',
+      titulo: 'Bloque de cosas',
+      resumen:
+        'El mismo mazo pero por turnos: uno dibuja la tanda, otro marca ✓ o ✗ en las tarjetas y los puntos se suman solos.',
+      abrir: () => abrirBloque('bloquecosas'),
     },
     {
       id: 'bloque-emojis',
       titulo: 'Bloque de emojis',
       resumen:
-        'Lo mismo pero con emojis, sacados de todos los que tiene el teléfono. Aparecen cosas que nadie sabe ni cómo se llaman.',
+        'De memoria: pasan de a uno, un segundo cada uno, y se dibujan sin mirar. Tres niveles, del fácil al imposible.',
       abrir: () => abrirBloque('emojis'),
     },
     {
@@ -2812,9 +2882,13 @@ export default function Juego2() {
           <LuzBorde tipo={luzBloque} />
           <h2 className="jp-titulo">{bloque.titulo}</h2>
           <p className="jp-sub">
-            Una tanda cerrada: {bloqueTam} {bloque.unidad},{' '}
-            {segBloque} segundo{segBloque === 1 ? '' : 's'} cada uno. Al final aparecen todos
-            juntos.
+            {bloque.esEmoji && sinTurnos
+              ? `${bloqueTam} emojis de memoria: pasan de a uno, ${segBloque} segundo${
+                  segBloque === 1 ? '' : 's'
+                } cada uno, y después se dibujan sin mirar. Al final se destapan para comparar.`
+              : `Una tanda cerrada: ${bloqueTam} ${bloque.unidad}, ${segBloque} segundo${
+                  segBloque === 1 ? '' : 's'
+                } cada uno. Al final aparecen todos juntos.`}
           </p>
 
           {previaBloque && !corriendoBloque && !terminadoBloque && (
@@ -2822,6 +2896,14 @@ export default function Juego2() {
               <div className="jp-consigna jp-rafaga">
                 {cuentaBloque ? (
                   <div className="jp-consigna-txt">{cuentaBloque}</div>
+                ) : sinTurnos ? (
+                  <>
+                    <div className="jp-consigna-cat">dibujan</div>
+                    <div className="jp-consigna-txt">Todos</div>
+                    <button type="button" className="btn btn-primary" onClick={largarBloque}>
+                      Empezar
+                    </button>
+                  </>
                 ) : (
                   <>
                     <div className="jp-consigna-cat">turno de</div>
@@ -2866,7 +2948,7 @@ export default function Juego2() {
 
           {!previaBloque && !corriendoBloque && !terminadoBloque && (
             <>
-              {infoBloque && (
+              {infoBloque && !sinTurnos && (
                 <div className="jp-info">
                   <button
                     type="button"
@@ -2883,6 +2965,33 @@ export default function Juego2() {
                   tarjeta — un toque la revela, otro la marca ✓, otro ✗. Cada ✓ suma un
                   punto solo. Los jugadores se agregan en el marcador de abajo.
                 </div>
+              )}
+
+              {bloque.esEmoji && (
+                <>
+                  <div className="jp-etiqueta">Modo</div>
+                  <div className="filtros">
+                    {(
+                      [
+                        { id: 'todos', nombre: 'Todos a la vez' },
+                        { id: 'turnos', nombre: 'Por turnos' },
+                      ] as const
+                    ).map((m) => (
+                      <button
+                        type="button"
+                        key={m.id}
+                        className={chip(modoEmojis === m.id)}
+                        onClick={() => {
+                          setModoEmojis(m.id)
+                          // De memoria alcanza 1 segundo; dibujando, no
+                          setSegBloque(m.id === 'todos' ? 1 : 10)
+                        }}
+                      >
+                        {m.nombre}
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
 
               {bloque.niveles && (
@@ -2905,7 +3014,7 @@ export default function Juego2() {
 
               <div className="jp-etiqueta">{bloque.pregunta}</div>
               <div className="filtros">
-                {[12, 24].map((n) => (
+                {(bloque.tamanos ?? [12, 24]).map((n) => (
                   <button
                     type="button"
                     key={n}
@@ -3015,27 +3124,33 @@ export default function Juego2() {
             <>
               <div className="jp-etiqueta">
                 {reveladasBloque.length === listaBloque.length
-                  ? `Los ${listaBloque.length} de ${nombreTurno}`
+                  ? sinTurnos
+                    ? `Las ${listaBloque.length} de la tanda`
+                    : `Los ${listaBloque.length} de ${nombreTurno}`
                   : `Tocá para ir descubriendo · ${reveladasBloque.length} de ${listaBloque.length}`}
-                {Object.keys(marcasBloque).length > 0 &&
+                {!sinTurnos &&
+                  Object.keys(marcasBloque).length > 0 &&
                   ` · ✓ ${Object.values(marcasBloque).filter((m) => m === 'ok').length}`}
               </div>
-              <ol className="jp-bloque-grid">
+              <ol className={`jp-bloque-grid ${bloque.revelada ? 'jp-bloque-anim' : ''}`}>
                 {listaBloque.map((c, i) => {
                   const abierta = reveladasBloque.includes(i)
-                  const marca = marcasBloque[i]
+                  const marca = sinTurnos ? undefined : marcasBloque[i]
                   return (
                     <li key={i}>
-                      {/* La tarjeta entera es el botón: revela, y después
-                          cicla ✓ → ✗ → neutra. El color es el veredicto. */}
+                      {/* La tarjeta entera es el botón: revela, y en modo
+                          por turnos después cicla ✓ → ✗ → neutra. */}
                       <button
                         type="button"
                         className={`jp-bloque-celda ${abierta ? 'is-abierta' : ''} ${
                           marca === 'ok' ? 'is-ok' : marca === 'mal' ? 'is-mal' : ''
                         }`}
+                        style={bloque.revelada ? { animationDelay: `${i * 70}ms` } : undefined}
                         onClick={() =>
                           abierta
-                            ? cicloBloque(i)
+                            ? sinTurnos
+                              ? undefined
+                              : cicloBloque(i)
                             : setReveladasBloque((r) => (r.includes(i) ? r : [...r, i]))
                         }
                       >
@@ -3080,14 +3195,15 @@ export default function Juego2() {
                 type="button"
                 className="btn btn-primary jp-siguiente"
                 onClick={() => {
-                  // El turno pasa solo al siguiente y se confirma en la previa
-                  setTurnoBloque((idxTurno + 1) % Math.max(1, jugadores.length))
+                  // Con turnos pasa al siguiente jugador; sin turnos, otra tanda
+                  if (!sinTurnos)
+                    setTurnoBloque((idxTurno + 1) % Math.max(1, jugadores.length))
                   setTerminadoBloque(false)
                   setListaBloque([])
                   setPreviaBloque(true)
                 }}
               >
-                Siguiente
+                {sinTurnos ? 'Otra tanda' : 'Siguiente'}
               </button>
             </>
           )}
