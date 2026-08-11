@@ -539,6 +539,14 @@
   background: var(--line);
 }
 
+/* Link a la hoja imprimible, discreto en la bajada */
+.jp-imprimir {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Empezar de la previa compartida: call to action a lo ancho */
 .jp-empezar {
   width: 100%;

@@ -10,6 +10,7 @@ import Juego2 from './Juego2'
 import AppHeader from '../components/AppHeader'
 
 const TOOLS = [
+  { id: 'juego2', label: 'Juegos de papel' },
   { id: 'crm', label: 'CRM' },
   { id: 'gastos', label: 'Gastos' },
   { id: 'pto', label: 'PTO Planner' },
@@ -17,7 +18,6 @@ const TOOLS = [
   { id: 'tareas', label: 'Mis tareas' },
   { id: 'subs', label: 'Subs' },
   { id: 'juego1', label: 'Juego 1' },
-  { id: 'juego2', label: 'Juego 2' },
 ] as const
 
 type ToolId = (typeof TOOLS)[number]['id']
@@ -27,7 +27,7 @@ const TOOL_KEY = 'dolar-crm:tool'
 export default function Herramientas() {
   const [tool, setTool] = useState<ToolId>(() => {
     const guardada = localStorage.getItem(TOOL_KEY)
-    return TOOLS.some((t) => t.id === guardada) ? (guardada as ToolId) : 'crm'
+    return TOOLS.some((t) => t.id === guardada) ? (guardada as ToolId) : 'juego2'
   })
 
   const elegir = (id: ToolId) => {

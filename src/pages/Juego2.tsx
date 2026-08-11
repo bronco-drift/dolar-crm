@@ -2757,7 +2757,15 @@ export default function Juego2() {
         ) : (
           <p className="conv-nota jp-bajada">
             Juegos para una mesa con hojas y lápices. La pantalla solo reparte consignas y
-            controla el tiempo.
+            controla el tiempo.{' '}
+            <a
+              className="jp-imprimir"
+              href="/hoja-de-juego.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Imprimir hoja cuadriculada
+            </a>
           </p>
         )}
 

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hoja de juego · Juegos de papel</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        color: #111;
+        background: #fff;
+        padding: 24px;
+        max-width: 210mm;
+        margin: 0 auto;
+      }
+
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+
+      h1 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .jugador {
+        font-size: 13px;
+        color: #555;
+      }
+
+      .jugador i {
+        display: inline-block;
+        width: 150px;
+        border-bottom: 1px solid #999;
+      }
+
+      .controles {
+        display: flex;
+        gap: 8px;
+        margin: 14px 0 18px;
+      }
+
+      .controles button {
+        height: 36px;
+        padding: 0 16px;
+        border: 1px solid #d7d7dc;
+        border-radius: 10px;
+        background: #fff;
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .controles button.is-active,
+      .controles .imprimir {
+        background: #111;
+        border-color: #111;
+        color: #fff;
+      }
+
+      .controles .imprimir {
+        margin-left: auto;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .grid.g24 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .celda {
+        position: relative;
+        border: 1px solid #c7c7cc;
+        border-radius: 8px;
+        aspect-ratio: 1 / 1.05;
+      }
+
+      .celda span {
+        position: absolute;
+        top: 4px;
+        left: 7px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #b5b5ba;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .nota {
+        margin-top: 12px;
+        font-size: 11.5px;
+        color: #888;
+      }
+
+      @media print {
+        body {
+          padding: 0;
+        }
+
+        .controles,
+        .nota {
+          display: none;
+        }
+
+        .celda {
+          border-radius: 0;
+          break-inside: avoid;
+        }
+
+        /* 12 celdas grandes o 24 más chicas: siempre en una carilla */
+        .grid .celda {
+          aspect-ratio: auto;
+          height: 62mm;
+        }
+
+        .grid.g24 .celda {
+          height: 41mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Juegos de papel</h1>
+      <div class="jugador">Jugador: <i></i></div>
+    </header>
+
+    <div class="controles">
+      <button type="button" id="b12" class="is-active" onclick="armar(12)">12 casillas</button>
+      <button type="button" id="b24" onclick="armar(24)">24 casillas</button>
+      <button type="button" class="imprimir" onclick="window.print()">Imprimir</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <p class="nota">
+      Una casilla por dibujo, en orden: la número 1 es el primer dibujo de la tanda. Con 12
+      quedan casilleros bien grandes; con 24 entra la tanda larga en una sola carilla.
+    </p>
+
+    <script>
+      function armar(n) {
+        var grid = document.getElementById('grid')
+        grid.className = 'grid' + (n === 24 ? ' g24' : '')
+        grid.innerHTML = ''
+        for (var i = 1; i <= n; i++) {
+          var c = document.createElement('div')
+          c.className = 'celda'
+          c.innerHTML = '<span>' + i + '</span>'
+          grid.appendChild(c)
+        }
+        document.getElementById('b12').className = n === 12 ? 'is-active' : ''
+        document.getElementById('b24').className = n === 24 ? 'is-active' : ''
+      }
+      armar(12)
+    </script>
+  </body>
+</html>
