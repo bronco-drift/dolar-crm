@@ -309,7 +309,7 @@ const COSAS_DIFICILES = [
   'Un pulpo tocando el piano',
   'Una jirafa con bufanda',
   'Un despertador a cuerda',
-  'Un helicóptero',
+  'Un helicóptero apagando un incendio',
   'Una máquina de escribir',
   'Un carrito de supermercado',
   'Un tocadiscos',
@@ -843,6 +843,90 @@ function Marcador({
           Poner en cero
         </button>
       </div>
+    </section>
+  )
+}
+
+// ── Inventario interino ─────────────────────────────────────────────
+// Pantallazo completo de los bancos de cosas para auditar contenido:
+// KPIs arriba y la tabla entera abajo. Vive en Juegos archivados hasta
+// que deje de hacer falta.
+function InventarioCosas() {
+  const secciones = Object.entries(FUENTES_BLOQUE)
+    .filter(([id]) => id !== 'emojis')
+    .map(([id, f]) => ({
+      id,
+      titulo: f.titulo,
+      niveles: (f.niveles ?? []).map((n) => ({ nombre: n.nombre, items: f.pool(n.id) })),
+    }))
+
+  // Cada cosa y en qué bancos aparece: si está en más de uno, es repetida.
+  const veces = new Map<string, string[]>()
+  for (const s of secciones)
+    for (const n of s.niveles)
+      for (const it of n.items) {
+        const k = it.toLowerCase().trim()
+        veces.set(k, [...(veces.get(k) ?? []), `${s.titulo} · ${n.nombre}`])
+      }
+  const total = [...veces.values()].reduce((a, v) => a + v.length, 0)
+  const repetidas = [...veces.values()].filter((v) => v.length > 1).length
+
+  return (
+    <section className="jp-inv">
+      <h3 className="jp-inv-titulo">Inventario de cosas</h3>
+      <p className="conv-nota">
+        Vista interina para auditar los bancos. Cosas 101 usa el mismo banco que el nivel
+        fácil del Bloque de cosas.
+      </p>
+      <div className="jp-inv-kpis">
+        <span>
+          <strong>{total}</strong> cosas
+        </span>
+        <span>
+          <strong>{veces.size}</strong> únicas
+        </span>
+        <span className={repetidas > 0 ? 'is-alerta' : ''}>
+          <strong>{repetidas}</strong> repetidas
+        </span>
+        <span>
+          <strong>{secciones.length}</strong> bancos
+        </span>
+      </div>
+
+      {secciones.map((s) => (
+        <div key={s.id} className="jp-inv-banco">
+          <div className="jp-inv-cab">
+            <span>{s.titulo}</span>
+            <span className="jp-inv-cifras">
+              {s.niveles.map((n) => `${n.nombre} ${n.items.length}`).join(' · ')} ·{' '}
+              {s.niveles.reduce((a, n) => a + n.items.length, 0)} en total
+            </span>
+          </div>
+          <table className="jp-inv-tabla">
+            <tbody>
+              {s.niveles.flatMap((n) =>
+                n.items.map((it, i) => {
+                  const donde = veces.get(it.toLowerCase().trim()) ?? []
+                  return (
+                    <tr key={`${n.nombre}-${i}`}>
+                      <td className="jp-inv-num">{i + 1}</td>
+                      <td>{it}</td>
+                      <td className="jp-inv-nivel">{n.nombre}</td>
+                      <td className="jp-inv-rep">
+                        {donde.length > 1 && (
+                          <span title={donde.join(' | ')}>
+                            repetida ×{donde.length}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                }),
+              )}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </section>
   )
 }
@@ -1396,7 +1480,7 @@ const BLOQUE_ARG_DIFICIL = [
   'El Caminito de La Boca',
   'Una milanesa a caballo',
   'Un gaucho revoleando las boleadoras',
-  'La Casa Rosada',
+  'Un tanguero cantando bajo un farol',
   'Una pareja bailando en la milonga',
   'El Monumento a la Bandera',
   'Una cola para cargar la SUBE',
@@ -2150,7 +2234,7 @@ export default function Juego2() {
             </p>
           )}
 
-          {!enArchivo && guardados.length > 0 && (
+          {!enArchivo && (
             <button
               type="button"
               className="jp-card jp-card-archivo"
@@ -2162,12 +2246,17 @@ export default function Juego2() {
               <span className="jp-num">🗂️</span>
               <span className="jp-card-titulo">Juegos archivados</span>
               <span className="jp-card-txt">
-                {guardados.length} guardado{guardados.length === 1 ? '' : 's'}:{' '}
-                {guardados.map((g) => g.titulo).join(', ')}
+                {guardados.length > 0
+                  ? `${guardados.length} guardado${guardados.length === 1 ? '' : 's'}: ${guardados
+                      .map((g) => g.titulo)
+                      .join(', ')}`
+                  : 'Nada archivado todavía · adentro está el inventario de cosas'}
               </span>
             </button>
           )}
         </div>
+
+        {enArchivo && <InventarioCosas />}
 
         {!enArchivo && <Marcador jugadores={jugadores} guardar={guardarJugadores} />}
       </>
