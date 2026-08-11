@@ -974,6 +974,10 @@ function bancosInventario() {
   meter('🎵 Música', 'Difícil', 'general', BLOQUE_MUSICA_DIFICIL)
   meter('🍳 Cocina', 'Fácil', 'general', BLOQUE_COCINA_FACIL)
   meter('🍳 Cocina', 'Difícil', 'general', BLOQUE_COCINA_DIFICIL)
+  // Cada uno lo suyo arma la consigna combinando sujeto + situación,
+  // así que sus dos piezas entran como categorías propias, sin nivel.
+  meter('Cada uno lo suyo', '—', 'sujetos', SUJETOS)
+  meter('Cada uno lo suyo', '—', 'situaciones', SITUACIONES)
   return filas
 }
 
