@@ -543,6 +543,7 @@
   border-radius: 8px;
   background: var(--surface);
   font: inherit;
+  font-size: 16px; /* menos de 16px y iOS hace zoom al enfocar */
   color: var(--ink);
   resize: vertical;
 }
