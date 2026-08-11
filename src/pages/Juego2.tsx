@@ -849,27 +849,62 @@ function Marcador({
 
 // ── Inventario interino ─────────────────────────────────────────────
 // Pantallazo completo de los bancos de cosas para auditar contenido:
-// KPIs arriba y la tabla entera abajo. Vive en Juegos archivados hasta
-// que deje de hacer falta.
+// KPIs, filtros por juego / nivel / categoría y la tabla entera.
+// Vive en Juegos archivados hasta que deje de hacer falta.
+function bancosInventario() {
+  const filas: { juego: string; nivel: string; cat: string; cosa: string }[] = []
+  const meter = (juego: string, nivel: string, cat: string, items: string[]) =>
+    items.forEach((cosa) => filas.push({ juego, nivel, cat, cosa }))
+
+  meter('Cosas', 'Fácil', 'general', COSAS_101)
+  meter('Cosas', 'Difícil', 'general', COSAS_DIFICILES)
+  for (const [cat, items] of Object.entries(TEMATICOS.argentina.banco))
+    meter('🇦🇷 Argentina', 'Fácil', cat, items)
+  meter('🇦🇷 Argentina', 'Difícil', 'general', BLOQUE_ARG_DIFICIL)
+  for (const [cat, items] of Object.entries(TEMATICOS.venezuela.banco))
+    meter('🇻🇪 Venezuela', 'Fácil', cat, items)
+  meter('🇻🇪 Venezuela', 'Difícil', 'general', BLOQUE_VEN_DIFICIL)
+  meter('⚽ Fútbol', 'Fácil', 'general', BLOQUE_FUTBOL_FACIL)
+  meter('⚽ Fútbol', 'Difícil', 'general', BLOQUE_FUTBOL_DIFICIL)
+  meter('🎵 Música', 'Fácil', 'general', BLOQUE_MUSICA_FACIL)
+  meter('🎵 Música', 'Difícil', 'general', BLOQUE_MUSICA_DIFICIL)
+  meter('🍳 Cocina', 'Fácil', 'general', BLOQUE_COCINA_FACIL)
+  meter('🍳 Cocina', 'Difícil', 'general', BLOQUE_COCINA_DIFICIL)
+  return filas
+}
+
 function InventarioCosas() {
-  const secciones = Object.entries(FUENTES_BLOQUE)
-    .filter(([id]) => id !== 'emojis')
-    .map(([id, f]) => ({
-      id,
-      titulo: f.titulo,
-      niveles: (f.niveles ?? []).map((n) => ({ nombre: n.nombre, items: f.pool(n.id) })),
-    }))
+  const [fJuego, setFJuego] = useState('todos')
+  const [fNivel, setFNivel] = useState('todos')
+  const [fCat, setFCat] = useState('todas')
+
+  const filas = bancosInventario()
 
   // Cada cosa y en qué bancos aparece: si está en más de uno, es repetida.
   const veces = new Map<string, string[]>()
-  for (const s of secciones)
-    for (const n of s.niveles)
-      for (const it of n.items) {
-        const k = it.toLowerCase().trim()
-        veces.set(k, [...(veces.get(k) ?? []), `${s.titulo} · ${n.nombre}`])
-      }
-  const total = [...veces.values()].reduce((a, v) => a + v.length, 0)
+  for (const f of filas) {
+    const k = f.cosa.toLowerCase().trim()
+    veces.set(k, [...(veces.get(k) ?? []), `${f.juego} · ${f.nivel}`])
+  }
   const repetidas = [...veces.values()].filter((v) => v.length > 1).length
+
+  const pasa = (f: (typeof filas)[number], sin?: 'juego' | 'nivel' | 'cat') =>
+    (sin === 'juego' || fJuego === 'todos' || f.juego === fJuego) &&
+    (sin === 'nivel' || fNivel === 'todos' || f.nivel === fNivel) &&
+    (sin === 'cat' || fCat === 'todas' || f.cat === fCat)
+
+  const visibles = filas.filter((f) => pasa(f))
+
+  // Cada fila de chips cuenta respetando los otros dos filtros.
+  const juegos = [...new Set(filas.map((f) => f.juego))]
+  const cuentaJuego = (j: string) =>
+    filas.filter((f) => f.juego === j && pasa(f, 'juego')).length
+  const cuentaNivel = (n: string) =>
+    filas.filter((f) => f.nivel === n && pasa(f, 'nivel')).length
+  const cats = [...new Set(filas.filter((f) => pasa(f, 'cat')).map((f) => f.cat))]
+  const cuentaCat = (c: string) => filas.filter((f) => f.cat === c && pasa(f, 'cat')).length
+
+  const chipInv = (activo: boolean) => `filtro ${activo ? 'is-active' : ''}`
 
   return (
     <section className="jp-inv">
@@ -880,7 +915,7 @@ function InventarioCosas() {
       </p>
       <div className="jp-inv-kpis">
         <span>
-          <strong>{total}</strong> cosas
+          <strong>{filas.length}</strong> cosas
         </span>
         <span>
           <strong>{veces.size}</strong> únicas
@@ -889,44 +924,91 @@ function InventarioCosas() {
           <strong>{repetidas}</strong> repetidas
         </span>
         <span>
-          <strong>{secciones.length}</strong> bancos
+          <strong>{visibles.length}</strong> en vista
         </span>
       </div>
 
-      {secciones.map((s) => (
-        <div key={s.id} className="jp-inv-banco">
-          <div className="jp-inv-cab">
-            <span>{s.titulo}</span>
-            <span className="jp-inv-cifras">
-              {s.niveles.map((n) => `${n.nombre} ${n.items.length}`).join(' · ')} ·{' '}
-              {s.niveles.reduce((a, n) => a + n.items.length, 0)} en total
-            </span>
-          </div>
-          <table className="jp-inv-tabla">
-            <tbody>
-              {s.niveles.flatMap((n) =>
-                n.items.map((it, i) => {
-                  const donde = veces.get(it.toLowerCase().trim()) ?? []
-                  return (
-                    <tr key={`${n.nombre}-${i}`}>
-                      <td className="jp-inv-num">{i + 1}</td>
-                      <td>{it}</td>
-                      <td className="jp-inv-nivel">{n.nombre}</td>
-                      <td className="jp-inv-rep">
-                        {donde.length > 1 && (
-                          <span title={donde.join(' | ')}>
-                            repetida ×{donde.length}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                }),
-              )}
-            </tbody>
-          </table>
-        </div>
-      ))}
+      <div className="jp-etiqueta">Juego</div>
+      <div className="filtros">
+        <button
+          type="button"
+          className={chipInv(fJuego === 'todos')}
+          onClick={() => setFJuego('todos')}
+        >
+          Todos {filas.filter((f) => pasa(f, 'juego')).length}
+        </button>
+        {juegos.map((j) => (
+          <button
+            type="button"
+            key={j}
+            className={chipInv(fJuego === j)}
+            onClick={() => setFJuego(j)}
+          >
+            {j} {cuentaJuego(j)}
+          </button>
+        ))}
+      </div>
+
+      <div className="jp-etiqueta">Nivel</div>
+      <div className="filtros">
+        {['todos', 'Fácil', 'Difícil'].map((n) => (
+          <button
+            type="button"
+            key={n}
+            className={chipInv(fNivel === n)}
+            onClick={() => setFNivel(n)}
+          >
+            {n === 'todos'
+              ? `Todos ${filas.filter((f) => pasa(f, 'nivel')).length}`
+              : `${n} ${cuentaNivel(n)}`}
+          </button>
+        ))}
+      </div>
+
+      <div className="jp-etiqueta">Categoría</div>
+      <div className="filtros">
+        <button
+          type="button"
+          className={chipInv(fCat === 'todas')}
+          onClick={() => setFCat('todas')}
+        >
+          Todas {filas.filter((f) => pasa(f, 'cat')).length}
+        </button>
+        {cats.map((c) => (
+          <button
+            type="button"
+            key={c}
+            className={chipInv(fCat === c)}
+            onClick={() => setFCat(c)}
+          >
+            {c} {cuentaCat(c)}
+          </button>
+        ))}
+      </div>
+
+      <div className="jp-inv-banco">
+        <table className="jp-inv-tabla">
+          <tbody>
+            {visibles.map((f, i) => {
+              const donde = veces.get(f.cosa.toLowerCase().trim()) ?? []
+              return (
+                <tr key={i}>
+                  <td className="jp-inv-num">{i + 1}</td>
+                  <td>{f.cosa}</td>
+                  <td className="jp-inv-nivel">{f.juego}</td>
+                  <td className="jp-inv-nivel">{f.nivel}</td>
+                  <td className="jp-inv-nivel">{f.cat === 'general' ? '—' : f.cat}</td>
+                  <td className="jp-inv-rep">
+                    {donde.length > 1 && (
+                      <span title={donde.join(' | ')}>×{donde.length}</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }
