@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import {
   type Jugador,
   getArchivados,
+  getInfoBloqueCerrada,
   getJugadores,
   saveArchivados,
+  saveInfoBloqueCerrada,
   saveJugadores,
 } from '../lib/storage'
 import { emojisDisponibles } from '../lib/emojis'
@@ -1382,6 +1384,225 @@ const consignaAlAzar = () =>
     SITUACIONES[Math.floor(Math.random() * SITUACIONES.length)]
   }`
 
+// ── Bancos propios de los bloques temáticos ─────────────────────────
+// El nivel fácil de Argentina y Venezuela reutiliza el banco de su juego
+// temático; el difícil y los temas nuevos viven acá.
+const BLOQUE_ARG_DIFICIL = [
+  'La mano de Dios',
+  'Un colectivo lleno en hora pico',
+  'El Glaciar Perito Moreno desprendiéndose',
+  'Un mozo llevando seis pizzas',
+  'Un fernet con coca servido con espuma',
+  'El Caminito de La Boca',
+  'Una milanesa a caballo',
+  'Un gaucho revoleando las boleadoras',
+  'La Casa Rosada',
+  'Una pareja bailando en la milonga',
+  'El Monumento a la Bandera',
+  'Una cola para cargar la SUBE',
+  'Un choripán chorreando chimichurri',
+  'El repulgue de una empanada',
+  'Un kiosco abierto a las 3 de la mañana',
+  'La Bombonera vista desde adentro',
+  'Un cartonero con su carro',
+  'Un puesto de flores porteño',
+  'Una parrilla con achuras y todo',
+  'El Planetario de Buenos Aires',
+  'Un hincha abrazado al televisor',
+  'La 9 de Julio con siete carriles',
+  'Un alfajor triple mordido',
+  'Un relator gritando un gol eterno',
+]
+
+const BLOQUE_VEN_DIFICIL = [
+  'El relámpago del Catatumbo de noche',
+  'Una gaita zuliana con furro, cuatro y tambora',
+  'El teleférico de Mérida entre las nubes',
+  'Una hallaca a medio amarrar',
+  'El metro de Caracas en hora pico',
+  'La cruz del Ávila iluminada en diciembre',
+  'Un carrito de raspados con sus botellas de colores',
+  'Los Diablos Danzantes con sus máscaras',
+  'Una mesa de dominó en plena partida',
+  'Un chinchorro colgado entre dos palmeras',
+  'Una arepera abierta a medianoche',
+  'Un autobús por puesto lleno',
+  'Un pescador en el Lago de Maracaibo',
+  'Un llanero con arpa, cuatro y maracas',
+  'Una iguana asoleándose en el parque',
+  'Una cola para echar gasolina',
+  'Un mango cayendo en un techo de zinc',
+  'La Basílica de la Chinita',
+  'Un niño empinando un papagayo',
+  'Una vendedora de empanadas en la playa',
+  'El Obelisco de Barquisimeto',
+  'Una parrilla con bollitos y guasacaca',
+  'Un juego de bolas criollas',
+  'Un apagón con todos alumbrando con el teléfono',
+]
+
+const BLOQUE_FUTBOL_FACIL = [
+  'Una pelota de fútbol',
+  'Un arco con su red',
+  'Una tarjeta roja',
+  'Un silbato',
+  'Una copa dorada',
+  'Unos botines con tapones',
+  'Una camiseta con el número 10',
+  'Un banderín de córner',
+  'Una cancha vista desde arriba',
+  'Un arquero volando al ángulo',
+  'Un árbitro sacando tarjeta',
+  'Una barrera esperando el tiro libre',
+  'Un gol de cabeza',
+  'Una hinchada con banderas',
+  'Un penal a punto de patearse',
+  'Un banco de suplentes',
+  'Un jugador festejando de rodillas',
+  'Una vuelta olímpica con la copa',
+  'Un caño',
+  'La ola en la tribuna',
+  'Un técnico gritando desde el banco',
+  'Un alcanzapelotas aburrido',
+  'Una chilena',
+  'Una tanda de penales',
+]
+
+const BLOQUE_FUTBOL_DIFICIL = [
+  'Un fuera de juego marcado con la línea del VAR',
+  'El VAR anulando un gol',
+  'Una jugada dibujada en la pizarra del técnico',
+  'Un hat-trick',
+  'Una tapada con la punta de los dedos',
+  'Un túnel de jugadores saliendo a la cancha',
+  'Un festejo sacándose la camiseta y la amarilla',
+  'Una rabona',
+  'Un gol olímpico',
+  'Un utilero ordenando los conos',
+  'Un partido bajo un diluvio',
+  'Un hincha escuchando la radio en la tribuna',
+  'El quinto penal de la tanda',
+  'Un arquero jugando de delantero en el último minuto',
+  'Un banderazo en la puerta del hotel',
+  'Un suplente congelado de frío en el banco',
+  'Una tribuna vacía con un solo hincha',
+  'Un cabezazo en el segundo palo',
+  'Un árbitro revisando el monitor',
+  'Una camiseta intercambiada al final',
+  'Un tiro libre por encima de la barrera',
+  'Un lateral largo al área',
+  'Un gol festejado antes de tiempo y anulado',
+  'Un abrazo de todo el equipo en el córner',
+]
+
+const BLOQUE_MUSICA_FACIL = [
+  'Una guitarra',
+  'Un micrófono',
+  'Una batería completa',
+  'Un piano de cola',
+  'Un violín',
+  'Unos auriculares',
+  'Un parlante gigante',
+  'Una nota musical',
+  'Un DJ con sus bandejas',
+  'Una trompeta',
+  'Un acordeón',
+  'Unas maracas',
+  'Un tambor',
+  'Un atril con partitura',
+  'Un vinilo girando',
+  'Un casete con la cinta salida',
+  'Una radio vieja',
+  'Una flauta',
+  'Un ukelele',
+  'Un saxofón',
+  'Un cantante de ópera',
+  'Un coro cantando',
+  'Un karaoke con la letra en pantalla',
+  'Una campana',
+]
+
+const BLOQUE_MUSICA_DIFICIL = [
+  'Un director de orquesta transpirando',
+  'Un recital con luces y humo',
+  'Un bajista que nadie mira',
+  'Un violinista tocando en el subte',
+  'Un mariachi completo',
+  'Una gaita escocesa',
+  'Un arpa llanera',
+  'Un baterista rompiendo el parche',
+  'Un guitarrista afinando de oído',
+  'Una banda ensayando en un garage',
+  'Un cantante olvidándose la letra',
+  'Un solo de guitarra de rodillas',
+  'Un piano al que le falta una tecla',
+  'Un contrabajo entrando a duras penas en un auto',
+  'Un triángulo esperando su momento',
+  'Una orquesta sinfónica entera',
+  'Un DJ con la multitud con las manos arriba',
+  'Un acomodador con linterna en el teatro',
+  'Un músico callejero con la gorra llena de monedas',
+  'Un coro de iglesia desafinando',
+  'Un rockero revoleando la guitarra',
+  'Una púa perdida adentro de la guitarra',
+  'Un ecualizador con las barras saltando',
+  'Un vecino golpeando la pared por el ruido',
+]
+
+const BLOQUE_COCINA_FACIL = [
+  'Una sartén con un huevo frito',
+  'Una olla echando vapor',
+  'Un cuchillo de cocina',
+  'Una tabla de picar con verduras',
+  'Un batidor de mano',
+  'Un delantal',
+  'Un gorro de chef',
+  'Una pizza entera',
+  'Una hamburguesa completa',
+  'Una torta con velitas',
+  'Un rallador de queso',
+  'Una cafetera',
+  'Una heladera abierta y llena',
+  'Un microondas',
+  'Una pava silbando',
+  'Un colador con fideos',
+  'Una empanada',
+  'Un sushi',
+  'Un taco',
+  'Una cuchara de madera',
+  'Un panqueque saltando de la sartén',
+  'Un bol con masa y la cuchara',
+  'Una parrilla con carne',
+  'Un helado de tres bochas',
+]
+
+const BLOQUE_COCINA_DIFICIL = [
+  'Un chef flambeando con la llama alta',
+  'Una cocina de restaurante en pleno servicio',
+  'Un soufflé desinflándose',
+  'Una masa madre burbujeando en el frasco',
+  'Un plato de alta cocina servido con pinzas',
+  'Una tortilla dada vuelta por el aire',
+  'Un lavaplatos tapado de ollas',
+  'Un mozo llevando cinco platos',
+  'Una cebolla haciendo llorar a todos',
+  'Un pulpo entero en la tabla',
+  'Una olla a presión a punto de silbar',
+  'Un pan quemado y el humo en la cocina',
+  'Una heladera llena de tuppers',
+  'Un jurado probando con cara de nada',
+  'Una balanza pesando harina',
+  'Un delivery llegando con la pizza fría',
+  'Una fuente de ñoquis del 29',
+  'Un termómetro pinchado en el pavo',
+  'Una manga decorando una torta',
+  'Un mortero moliendo especias',
+  'Una bandeja de facturas',
+  'Un fideo pegado en la pared',
+  'Un recetario manchado de salsa',
+  'Un huevo estrellado fuera de la sartén',
+]
+
 // ── Fuentes del Bloque ──────────────────────────────────────────────
 // El motor del bloque es uno solo; cada fuente solo dice de dónde salen
 // las cosas. Un bloque temático nuevo es una entrada acá (y si el tema
@@ -1396,15 +1617,18 @@ interface FuenteBloque {
   pool: (nivel: string) => string[]
 }
 
+// Fácil / Difícil es el estándar de todos los bloques de cosas.
+const NIVELES_2 = [
+  { id: 'facil', nombre: 'Fácil' },
+  { id: 'dificil', nombre: 'Difícil' },
+]
+
 const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   cosas: {
     titulo: 'Bloque de cosas',
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
-    niveles: [
-      { id: 'facil', nombre: 'Fácil' },
-      { id: 'dificil', nombre: 'Difícil' },
-    ],
+    niveles: NIVELES_2,
     pool: (nivel) => (nivel === 'dificil' ? [...COSAS_DIFICILES] : [...COSAS_101]),
   },
   emojis: {
@@ -1418,7 +1642,42 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
     titulo: '🇦🇷 Bloque argentino',
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
-    pool: () => Object.values(TEMATICOS.argentina.banco).flat(),
+    niveles: NIVELES_2,
+    pool: (nivel) =>
+      nivel === 'dificil'
+        ? [...BLOQUE_ARG_DIFICIL]
+        : Object.values(TEMATICOS.argentina.banco).flat(),
+  },
+  venezuela: {
+    titulo: '🇻🇪 Bloque venezolano',
+    unidad: 'cosas',
+    pregunta: 'Cuántas cosas',
+    niveles: NIVELES_2,
+    pool: (nivel) =>
+      nivel === 'dificil'
+        ? [...BLOQUE_VEN_DIFICIL]
+        : Object.values(TEMATICOS.venezuela.banco).flat(),
+  },
+  futbol: {
+    titulo: '⚽ Bloque futbolero',
+    unidad: 'cosas',
+    pregunta: 'Cuántas cosas',
+    niveles: NIVELES_2,
+    pool: (nivel) => (nivel === 'dificil' ? [...BLOQUE_FUTBOL_DIFICIL] : [...BLOQUE_FUTBOL_FACIL]),
+  },
+  musica: {
+    titulo: '🎵 Bloque musical',
+    unidad: 'cosas',
+    pregunta: 'Cuántas cosas',
+    niveles: NIVELES_2,
+    pool: (nivel) => (nivel === 'dificil' ? [...BLOQUE_MUSICA_DIFICIL] : [...BLOQUE_MUSICA_FACIL]),
+  },
+  cocina: {
+    titulo: '🍳 Bloque de cocina',
+    unidad: 'cosas',
+    pregunta: 'Cuántas cosas',
+    niveles: NIVELES_2,
+    pool: (nivel) => (nivel === 'dificil' ? [...BLOQUE_COCINA_DIFICIL] : [...BLOQUE_COCINA_FACIL]),
   },
 }
 
@@ -1552,6 +1811,32 @@ export default function Juego2() {
   const [luzBloque, setLuzBloque] = useState<'verde' | null>(null)
   const bloque = FUENTES_BLOQUE[fuenteBloque] ?? FUENTES_BLOQUE.cosas
 
+  // Por turnos: uno dibuja la tanda, otro verifica las tarjetas al final
+  // y cada ✓ le suma un punto al que dibujó.
+  const [turnoBloque, setTurnoBloque] = useState(0)
+  const [marcasBloque, setMarcasBloque] = useState<Record<number, 'ok' | 'mal'>>({})
+  const [infoBloque, setInfoBloque] = useState(() => !getInfoBloqueCerrada())
+  // Si se borraron jugadores, el turno no puede apuntar al vacío.
+  const idxTurno = jugadores[turnoBloque] ? turnoBloque : 0
+  const nombreTurno = jugadores[idxTurno]?.nombre || `Jugador ${idxTurno + 1}`
+
+  const marcarBloque = (i: number, marca: 'ok' | 'mal') => {
+    const actual = marcasBloque[i]
+    const next = { ...marcasBloque }
+    if (actual === marca) delete next[i]
+    else next[i] = marca
+    setMarcasBloque(next)
+    // El punto va y viene con la marca, sin botón de "sumar".
+    const delta = (next[i] === 'ok' ? 1 : 0) - (actual === 'ok' ? 1 : 0)
+    if (delta !== 0 && jugadores[idxTurno]) {
+      guardarJugadores(
+        jugadores.map((j, ix) =>
+          ix === idxTurno ? { ...j, puntos: Math.max(0, j.puntos + delta) } : j,
+        ),
+      )
+    }
+  }
+
   const empezarBloque = () => {
     const pool = bloque.pool(nivelBloque)
     const elegidas: string[] = []
@@ -1564,6 +1849,7 @@ export default function Juego2() {
     setTerminadoBloque(false)
     setPausaBloque(false)
     setReveladasBloque([])
+    setMarcasBloque({})
     setCorriendoBloque(true)
     setLuzBloque('verde')
     setTimeout(() => setLuzBloque(null), 1700)
@@ -1660,6 +1946,30 @@ export default function Juego2() {
       resumen:
         'La tanda cerrada, pero todo argentino: comida, lugares y cultura del banco de Argentina.',
       abrir: () => abrirBloque('argentina'),
+    },
+    {
+      id: 'bloque-venezuela',
+      titulo: '🇻🇪 Bloque venezolano',
+      resumen: 'La tanda cerrada versión Venezuela: arepas, Ávila, gaita y apagones.',
+      abrir: () => abrirBloque('venezuela'),
+    },
+    {
+      id: 'bloque-futbol',
+      titulo: '⚽ Bloque futbolero',
+      resumen: 'Todo lo que pasa en una cancha, de la pelota al VAR.',
+      abrir: () => abrirBloque('futbol'),
+    },
+    {
+      id: 'bloque-musica',
+      titulo: '🎵 Bloque musical',
+      resumen: 'Instrumentos y escenas de músico, del ukelele al director transpirado.',
+      abrir: () => abrirBloque('musica'),
+    },
+    {
+      id: 'bloque-cocina',
+      titulo: '🍳 Bloque de cocina',
+      resumen: 'De la sartén con huevo frito al plato de alta cocina con pinzas.',
+      abrir: () => abrirBloque('cocina'),
     },
     {
       id: 'garabato',
@@ -1923,6 +2233,39 @@ export default function Juego2() {
 
           {!corriendoBloque && !terminadoBloque && (
             <>
+              {infoBloque && (
+                <div className="jp-info">
+                  <button
+                    type="button"
+                    className="jp-info-x"
+                    aria-label="Cerrar ayuda"
+                    onClick={() => {
+                      setInfoBloque(false)
+                      saveInfoBloqueCerrada()
+                    }}
+                  >
+                    ×
+                  </button>
+                  Se juega por turnos: elegí quién dibuja la tanda. Al final, otro jugador
+                  revela las tarjetas y marca ✓ o ✗ — cada ✓ suma un punto solo. Los
+                  jugadores se agregan en el marcador de abajo.
+                </div>
+              )}
+
+              <div className="jp-etiqueta">Dibuja</div>
+              <div className="filtros">
+                {jugadores.map((j, i) => (
+                  <button
+                    type="button"
+                    key={i}
+                    className={chip(idxTurno === i)}
+                    onClick={() => setTurnoBloque(i)}
+                  >
+                    {j.nombre || `Jugador ${i + 1}`}
+                  </button>
+                ))}
+              </div>
+
               {bloque.niveles && (
                 <>
                   <div className="jp-etiqueta">Nivel</div>
@@ -1989,7 +2332,7 @@ export default function Juego2() {
               <div className="jp-consigna jp-rafaga">
                 <BotonSonido />
                 <div className="jp-consigna-cat">
-                  {idxBloque + 1} de {listaBloque.length}
+                  dibuja {nombreTurno} · {idxBloque + 1} de {listaBloque.length}
                 </div>
                 <div
                   className={`jp-consigna-txt ${
@@ -2046,28 +2389,65 @@ export default function Juego2() {
             <>
               <div className="jp-etiqueta">
                 {reveladasBloque.length === listaBloque.length
-                  ? `Los ${listaBloque.length} del bloque`
+                  ? `Los ${listaBloque.length} de ${nombreTurno}`
                   : `Tocá para ir descubriendo · ${reveladasBloque.length} de ${listaBloque.length}`}
+                {Object.keys(marcasBloque).length > 0 &&
+                  ` · ✓ ${Object.values(marcasBloque).filter((m) => m === 'ok').length}`}
               </div>
               <ol className="jp-bloque-grid">
                 {listaBloque.map((c, i) => {
                   const abierta = reveladasBloque.includes(i)
+                  const marca = marcasBloque[i]
+                  const texto = (
+                    <>
+                      <span className="jp-bloque-num">{i + 1}</span>
+                      <span
+                        className={`jp-bloque-txt ${bloque.esEmoji ? 'jp-bloque-emoji' : ''}`}
+                      >
+                        {c}
+                      </span>
+                    </>
+                  )
                   return (
                     <li key={i}>
-                      <button
-                        type="button"
-                        className={`jp-bloque-celda ${abierta ? 'is-abierta' : ''}`}
-                        onClick={() =>
-                          setReveladasBloque((r) => (r.includes(i) ? r : [...r, i]))
-                        }
-                      >
-                        <span className="jp-bloque-num">{i + 1}</span>
-                        <span
-                          className={`jp-bloque-txt ${bloque.esEmoji ? 'jp-bloque-emoji' : ''}`}
+                      {abierta ? (
+                        // Revelada deja de ser botón: adentro van los de veredicto
+                        <div
+                          className={`jp-bloque-celda is-abierta ${
+                            marca === 'ok' ? 'is-ok' : marca === 'mal' ? 'is-mal' : ''
+                          }`}
                         >
-                          {c}
-                        </span>
-                      </button>
+                          {texto}
+                          <div className="jp-veredicto">
+                            <button
+                              type="button"
+                              aria-label={`La ${i + 1} salió bien`}
+                              className={marca === 'ok' ? 'is-on' : ''}
+                              onClick={() => marcarBloque(i, 'ok')}
+                            >
+                              ✓
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`La ${i + 1} no salió`}
+                              className={marca === 'mal' ? 'is-on' : ''}
+                              onClick={() => marcarBloque(i, 'mal')}
+                            >
+                              ✗
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="jp-bloque-celda"
+                          onClick={() =>
+                            setReveladasBloque((r) => (r.includes(i) ? r : [...r, i]))
+                          }
+                        >
+                          {texto}
+                        </button>
+                      )}
                     </li>
                   )
                 })}
@@ -2082,8 +2462,17 @@ export default function Juego2() {
                     Revelar todas
                   </button>
                 )}
-                <button type="button" className="btn btn-primary" onClick={empezarBloque}>
-                  Otro bloque
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    // El turno pasa solo al siguiente jugador
+                    setTurnoBloque((idxTurno + 1) % Math.max(1, jugadores.length))
+                    empezarBloque()
+                  }}
+                >
+                  Turno de {jugadores[(idxTurno + 1) % Math.max(1, jugadores.length)]?.nombre ||
+                    'siguiente'}
                 </button>
                 <button
                   type="button"

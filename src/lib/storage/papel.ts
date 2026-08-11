@@ -40,3 +40,14 @@ export function getArchivados(): string[] {
 export function saveArchivados(ids: string[]) {
   localStorage.setItem(K_ARCHIVADOS, JSON.stringify(ids))
 }
+
+// La ayudita del bloque por turnos se muestra hasta que se cierra.
+const K_INFO_BLOQUE = 'dolar-crm:papel-info-bloque'
+
+export function getInfoBloqueCerrada(): boolean {
+  return localStorage.getItem(K_INFO_BLOQUE) === '1'
+}
+
+export function saveInfoBloqueCerrada() {
+  localStorage.setItem(K_INFO_BLOQUE, '1')
+}

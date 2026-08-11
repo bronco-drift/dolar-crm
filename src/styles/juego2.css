@@ -492,6 +492,98 @@
   transform: none;
 }
 
+/* Ayudita descartable del modo por turnos */
+.jp-info {
+  position: relative;
+  padding: 11px 38px 11px 13px;
+  background: var(--soft);
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.jp-info-x {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.jp-info-x:hover {
+  background: var(--line);
+}
+
+/* Veredicto del verificador: ✓ suma el punto, ✗ no */
+.jp-veredicto {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.jp-veredicto button {
+  width: 32px;
+  height: 25px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted);
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.jp-veredicto button.is-on {
+  border-color: currentColor;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* La tarjeta toma el color del veredicto, como los días de Hábitos */
+.jp-bloque-celda.is-ok {
+  background: #a8e6cf;
+  border-color: #a8e6cf;
+}
+
+.jp-bloque-celda.is-mal {
+  background: #f5c0b8;
+  border-color: #f5c0b8;
+}
+
+.jp-bloque-celda.is-ok .jp-bloque-txt,
+.jp-bloque-celda.is-ok .jp-bloque-num {
+  color: #1b4332;
+  opacity: 1;
+}
+
+.jp-bloque-celda.is-mal .jp-bloque-txt,
+.jp-bloque-celda.is-mal .jp-bloque-num {
+  color: #7f1d1d;
+  opacity: 1;
+}
+
+.jp-bloque-celda.is-ok .jp-veredicto button,
+.jp-bloque-celda.is-mal .jp-veredicto button {
+  background: rgb(255 255 255 / 0.5);
+  border-color: transparent;
+  color: inherit;
+}
+
+.jp-bloque-celda.is-ok .jp-veredicto button.is-on {
+  color: #1b4332;
+  border-color: #1b4332;
+}
+
+.jp-bloque-celda.is-mal .jp-veredicto button.is-on {
+  color: #7f1d1d;
+  border-color: #7f1d1d;
+}
+
 /* Fútbol emoji */
 .jp-futbol-emojis span {
   font-size: clamp(38px, 12vw, 56px);
