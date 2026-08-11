@@ -2221,6 +2221,7 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   },
   argentina: {
     titulo: '🇦🇷 Bloque argentino',
+    segDefault: 3,
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
     niveles: NIVELES_2,
@@ -2231,6 +2232,7 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   },
   venezuela: {
     titulo: '🇻🇪 Bloque venezolano',
+    segDefault: 3,
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
     niveles: NIVELES_2,
@@ -2241,6 +2243,7 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   },
   futbol: {
     titulo: '⚽ Bloque futbolero',
+    segDefault: 3,
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
     niveles: NIVELES_2,
@@ -2248,6 +2251,7 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   },
   musica: {
     titulo: '🎵 Bloque musical',
+    segDefault: 3,
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
     niveles: NIVELES_2,
@@ -2255,6 +2259,7 @@ const FUENTES_BLOQUE: Record<string, FuenteBloque> = {
   },
   cocina: {
     titulo: '🍳 Bloque de cocina',
+    segDefault: 3,
     unidad: 'cosas',
     pregunta: 'Cuántas cosas',
     niveles: NIVELES_2,
@@ -2986,11 +2991,7 @@ export default function Juego2() {
                         type="button"
                         key={m.id}
                         className={chip(modoEmojis === m.id)}
-                        onClick={() => {
-                          setModoEmojis(m.id)
-                          // De memoria alcanza 1 segundo; dibujando, no
-                          setSegBloque(m.id === 'todos' ? 1 : 10)
-                        }}
+                        onClick={() => setModoEmojis(m.id)}
                       >
                         {m.nombre}
                       </button>
