@@ -3250,13 +3250,22 @@ export default function Juego2() {
                     {turno + 1 < jugadores.length ? 'Listo, siguiente' : 'Listo, a dibujar'}
                   </button>
                 ) : (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => setVerConsigna(true)}
-                  >
-                    Ver mi consigna
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setVerConsigna(true)}
+                    >
+                      Ver mi consigna
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => setJugando(false)}
+                    >
+                      Cambiar ajustes
+                    </button>
+                  </>
                 )}
               </div>
             </>
@@ -3327,6 +3336,13 @@ export default function Juego2() {
               <div className="jp-acciones">
                 <button type="button" className="btn btn-primary" onClick={nuevaRonda}>
                   Ronda nueva
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setJugando(false)}
+                >
+                  Cambiar ajustes
                 </button>
               </div>
             </>
